@@ -61,6 +61,17 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 #r-t-a3:checked    ~ main #t-a3   {display:block}
 #r-t-gate:checked  ~ main #t-gate {display:block}
 
+#r-p-pre:checked ~ main #p-pre{display:block}
+#r-t-verd:checked ~ main #t-verd{display:block}
+#r-t-p1:checked ~ main #t-p1{display:block}
+#r-t-p2:checked ~ main #t-p2{display:block}
+#r-t-p3:checked ~ main #t-p3{display:block}
+#r-t-p4:checked ~ main #t-p4{display:block}
+#r-t-p5:checked ~ main #t-p5{display:block}
+#r-t-p6:checked ~ main #t-p6{display:block}
+#r-t-p7:checked ~ main #t-p7{display:block}
+#r-t-nits:checked ~ main #t-nits{display:block}
+
 #r-t-sym:checked   ~ main #t-sym  {display:block}
 #r-t-zomb:checked  ~ main #t-zomb {display:block}
 #r-t-app:checked   ~ main #t-app  {display:block}
@@ -90,7 +101,8 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 .skipto-menu{display:flex;flex-direction:column;gap:5px}
 #r-p-issue:checked ~ .skipto label[for="r-p-issue"],
 #r-p-fix:checked   ~ .skipto label[for="r-p-fix"],
-#r-p-adj:checked   ~ .skipto label[for="r-p-adj"]{background:var(--bg);color:var(--accent)}
+#r-p-adj:checked   ~ .skipto label[for="r-p-adj"],
+#r-p-pre:checked   ~ .skipto label[for="r-p-pre"]{background:var(--bg);color:var(--accent)}
 @media (max-width:1180px){
   .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
   .skipto-toggle{display:flex}
@@ -125,6 +137,26 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 #r-t-a3:checked    ~ main label[for="r-t-a3"],
 #r-t-gate:checked  ~ main label[for="r-t-gate"]{
   color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+/* page 4 reuses group 1's colour: the palette is verified for three groups only, and no two
+   pages are ever co-visible, so cycling beats inventing an untested fourth hue */
+#r-t-verd:checked ~ main label[for="r-t-verd"],
+#r-t-p1:checked ~ main label[for="r-t-p1"],
+#r-t-p2:checked ~ main label[for="r-t-p2"],
+#r-t-p3:checked ~ main label[for="r-t-p3"],
+#r-t-p4:checked ~ main label[for="r-t-p4"],
+#r-t-p5:checked ~ main label[for="r-t-p5"],
+#r-t-p6:checked ~ main label[for="r-t-p6"],
+#r-t-p7:checked ~ main label[for="r-t-p7"],
+#r-t-nits:checked ~ main label[for="r-t-nits"]{
+  color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+
+/* severity chips - filled rectangle, the glossary's priority shape */
+.prio{display:inline-block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;border:0}
+.prio.blocking{background:#3B1D1D;color:#E58A8A}
+.prio.high    {background:#33280F;color:#f77027}
+.prio.medium  {background:#33300F;color:#DCC55E}
+.prio.low     {background:#16301F;color:#6FBF95}
 
 /* ---------- the container ---------- */
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
@@ -254,6 +286,16 @@ td code{white-space:normal}
 <input class="st" type="radio" name="tadj" id="r-t-a2">
 <input class="st" type="radio" name="tadj" id="r-t-a3">
 <input class="st" type="radio" name="tadj" id="r-t-gate">
+<input class="st" type="radio" name="pg" id="r-p-pre">
+<input class="st" type="radio" name="tpre" id="r-t-verd" checked>
+<input class="st" type="radio" name="tpre" id="r-t-p1">
+<input class="st" type="radio" name="tpre" id="r-t-p2">
+<input class="st" type="radio" name="tpre" id="r-t-p3">
+<input class="st" type="radio" name="tpre" id="r-t-p4">
+<input class="st" type="radio" name="tpre" id="r-t-p5">
+<input class="st" type="radio" name="tpre" id="r-t-p6">
+<input class="st" type="radio" name="tpre" id="r-t-p7">
+<input class="st" type="radio" name="tpre" id="r-t-nits">
 <input class="st" type="checkbox" id="navtoggle">
 
 <nav class="skipto" aria-label="Pages">
@@ -265,6 +307,7 @@ td code{white-space:normal}
     <label for="r-p-issue">Issue</label>
     <label for="r-p-fix">Proposed Fix</label>
     <label for="r-p-adj">Fix Adjustments</label>
+    <label for="r-p-pre">Preflight</label>
   </div>
 </nav>
 
@@ -1496,6 +1539,568 @@ EXIT=0</pre></div>
 </div><!-- /t-gate -->
 
 </section><!-- /p-adj -->
+
+<!-- ================= PAGE 4 — PREFLIGHT ================= -->
+<section class="page" id="p-pre">
+
+<div class="head">
+  <h1>Preflight — not ready</h1>
+  <p class="lede">Two reviewers landed on the same conclusion independently: the watcher can
+  fail to arm, and one of the ways it fails is the ticket's own reproduction.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-verd">Verdict</label>
+  <label class="tab" for="r-t-p1">P1 · Arming</label>
+  <label class="tab" for="r-t-p2">P2 · Untested Wiring</label>
+  <label class="tab" for="r-t-p3">P3 · Silent E2E</label>
+  <label class="tab" for="r-t-p4">P4 · Home &amp; Name</label>
+  <label class="tab" for="r-t-p5">P5 · Wrong Comment</label>
+  <label class="tab" for="r-t-p6">P6 · Stale Lambda</label>
+  <label class="tab" for="r-t-p7">P7 · Dead Test</label>
+  <label class="tab" for="r-t-nits">Nits</label>
+</div>
+
+<!-- ---------------- VERDICT ---------------- -->
+<div class="tabpanel" id="t-verd">
+
+<h2><span class="rail r1">│</span> Verdict</h2>
+
+<div class="note bad">
+  <b>NOT READY — P1 first</b>
+  <p>The fix as written can miss the arming transition, and the clearest way it misses is a
+  drag that begins while the sheet is still opening. That is verbatim what MMA-6047's
+  reproduction step 4 describes. Until P1 lands, the fix may be inert on the one path the
+  ticket actually reports.</p>
+</div>
+
+<div class="card">
+  <p class="ct">All nine findings</p>
+  <div class="tw"><table>
+  <tr><th></th><th>Finding</th><th>Severity</th><th>Raised by</th></tr>
+  <tr><td>P1</td><td>The watcher can fail to arm, including on the ticket's own repro</td>
+      <td><span class="prio blocking">Blocking</span></td><td>both reviewers, independently</td></tr>
+  <tr><td>P2</td><td>Nothing tests the wiring — deleting the call leaves the suite green</td>
+      <td><span class="prio blocking">Blocking</span></td><td>test reviewer</td></tr>
+  <tr><td>P3</td><td>The existing instrumented drag-dismiss test asserts nothing</td>
+      <td><span class="prio blocking">Blocking</span></td><td>test reviewer</td></tr>
+  <tr><td>P4</td><td>Wrong module and wrong name for a general-purpose helper</td>
+      <td><span class="prio high">Should fix</span></td><td>both reviewers + hygiene sweep</td></tr>
+  <tr><td>P5</td><td>The rationale comment states something that is not true</td>
+      <td><span class="prio high">Should fix</span></td><td>code reviewer</td></tr>
+  <tr><td>P6</td><td><code>onHidden</code> is captured once and can go stale</td>
+      <td><span class="prio medium">Should fix</span></td><td>code reviewer</td></tr>
+  <tr><td>P7</td><td>The third test is a strict duplicate of the second</td>
+      <td><span class="prio medium">Should fix</span></td><td>test reviewer + self-review</td></tr>
+  <tr><td>P8</td><td><code>dismissBottomSheet</code> runs twice on the happy path</td>
+      <td><span class="prio low">Nit</span></td><td>both reviewers</td></tr>
+  <tr><td>P9</td><td>Sibling sheets carry the identical defect, unfixed</td>
+      <td><span class="prio low">Nit</span></td><td>both reviewers + hygiene sweep</td></tr>
+  </table></div>
+</div>
+
+<div class="card">
+  <p class="ct">What passed</p>
+  <div class="tw"><table>
+  <tr><th>Check</th><th>Result</th></tr>
+  <tr><td>Forbidden patterns — Hilt, <code>androidx.room</code>, <code>OutlinedTextField</code>,
+          JUnit 4 in main, <code>runTest</code></td><td>clean</td></tr>
+  <tr><td>Leftovers — <code>println</code>, <code>Log.d</code>, TODO, <code>!!</code>,
+          unused imports, hardcoded strings</td><td>clean</td></tr>
+  <tr><td>PII in logs · unit-boundary exposure</td><td>clean</td></tr>
+  <tr><td>In-flux schema JSONs staged (R49)</td><td>clean — all three untracked</td></tr>
+  <tr><td>Dependency direction · Koin registration · detekt line length</td><td>clean</td></tr>
+  <tr><td>JUnit 4 exemption for the Robolectric runner</td><td>sanctioned by
+          <code>konsist/JunitTest.kt:38-52</code></td></tr>
+  <tr><td>Config-change and process-death restore after the state move</td>
+      <td>verified sound by the code reviewer</td></tr>
+  </table></div>
+</div>
+
+<div class="note calm">
+  <b>The build gate was skipped by instruction</b>
+  <p>No Gradle run in this pass. The result carried forward is the earlier targeted gate:
+  <span class="m">BUILD SUCCESSFUL in 40s</span>, 13 tests, 0 failures, detekt clean. Still
+  deferred to CI: whole-project lint and detekt, kover thresholds, assemble, and
+  dependent-module tests.</p>
+</div>
+
+</div><!-- /t-verd -->
+
+<!-- ---------------- P1 ---------------- -->
+<div class="tabpanel" id="t-p1">
+
+<h2><span class="rail r1">│</span> P1 — the watcher can fail to arm <span class="prio blocking">Blocking</span></h2>
+
+<div class="note bad">
+  <b>Two independent paths, one of them the ticket's reproduction</b>
+  <p>The arming line waits for <span class="m">currentValue</span> to leave
+  <span class="m">Hidden</span>. If it never does, the watcher never arms, the later drag to
+  Hidden is missed, and MMA-6047 recurs with a fully green suite.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Path A — the open animation is interrupted</p>
+  <p><span class="m">SheetState.currentValue</span> is
+  <span class="m">anchoredDraggableState.settledValue</span>
+  (<span class="m">SheetDefaults.kt:198-202</span>), and <span class="m">settledValue</span> is
+  assigned <i>after</i> the cancellable section of <span class="m">anchoredDrag</span>. Grab
+  the sheet mid-open and the open never settles, so <span class="m">settledValue</span> never
+  leaves <span class="m">Hidden</span>.</p>
+  <p>MMA-6047's reproduction step 4, verbatim: "dismiss it by <b>dragging it down</b> (a prompt
+  drag, possibly while the sheet is still settling)." That is this path.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Path B — <span class="m">snapshotFlow</span> conflates</p>
+  <p class="desc">capacity-1 channel plus a distinct-until-changed guard, from the runtime source</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> needToRerunBlock = Channel&lt;Unit&gt;(<span class="n">1</span>)
+<span class="k">var</span> lastValue = manager.runAndWatch(needToRerunBlock, block)
+emit(lastValue)
+<span class="k">while</span> (<span class="k">true</span>) {
+    needToRerunBlock.receive()
+    <span class="k">val</span> newValue = manager.runAndWatch(needToRerunBlock, block)
+    <span class="k">if</span> (newValue != lastValue) { lastValue = newValue; emit(newValue) }
+}</pre></div>
+  <ul class="why">
+    <li><b>Consequence:</b> a <code>Hidden → Expanded → Hidden</code> round trip completed
+    before the collector resumes re-reads <code>Hidden</code>, equals <code>lastValue</code>,
+    and emits nothing. AOSP's own KDoc: "State change events are conflated."</li>
+    <li><b>Reachable via:</b> <code>updateAnchors</code> snapping <code>settledValue</code>
+    during layout (<code>BottomSheet.kt:310-326</code>), so two layout passes in one frame can
+    produce a round trip the collector never sees.</li>
+  </ul>
+</div>
+
+<div class="card typed">
+  <span class="tag t-edit">EDIT</span>
+  <p class="ct">1.1 — Arm off <span class="m">targetValue</span>, Fire off <span class="m">currentValue</span></p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt:122-127</span>
+  <p class="desc">two independent signals, so both windows must be missed to fail</p>
+  <div class="code"><span class="lang">kotlin</span><pre>LaunchedEffect(sheetState) {
+ <span class="rm">-</span>  snapshotFlow { sheetState.<span class="fld">currentValue</span> }.first { it != SheetValue.<span class="fld">Hidden</span> }
+ <span class="ad">+</span>  <span class="cm">// targetValue flips at the START of the show animation, so an interrupted</span>
+ <span class="ad">+</span>  <span class="cm">// open still arms the watcher; currentValue only moves once a settle lands.</span>
+ <span class="ad">+</span>  snapshotFlow { sheetState.<span class="fld">targetValue</span> }.first { it != SheetValue.<span class="fld">Hidden</span> }
+    snapshotFlow { sheetState.<span class="fld">currentValue</span> }.first { it == SheetValue.<span class="fld">Hidden</span> }
+    onHidden()
+}</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>B</b> — MMA-6047 repro step 4 is Path A; without this the fix may not touch the
+    reported bug at all</li>
+    <li><b>C</b> — both reviewers proposed this same two-signal split independently</li>
+  </ul>
+</div>
+
+<div class="note">
+  <b>The residual risk P1 does not remove</b>
+  <p>Firing still depends on <span class="m">currentValue</span> reaching
+  <span class="m">Hidden</span>. Both reviewers independently noted that
+  <span class="m">onDismissRequest</span>'s own guards read
+  <span class="m">isVisible</span>, which is the <i>other</i> signal
+  (<span class="m">anchoredDraggableState.currentValue</span>, eager —
+  <span class="m">SheetDefaults.kt:216</span> against <span class="m">:202</span>). If the
+  stranded state has <span class="m">settledValue != Hidden</span>, the watcher never fires.</p>
+  <p>Only P3 settles this. It is the same open question the Proposed Fix page recorded, now
+  confirmed by two independent readings of the upstream source.</p>
+</div>
+
+</div><!-- /t-p1 -->
+
+<!-- ---------------- P2 ---------------- -->
+<div class="tabpanel" id="t-p2">
+
+<h2><span class="rail r1">│</span> P2 — nothing tests the wiring <span class="prio blocking">Blocking</span></h2>
+
+<div class="note bad">
+  <b>Delete one line and the suite stays green</b>
+  <p>Remove <span class="m">HelpScreen.kt:93</span>, the call to
+  <span class="m">DismissWhenHidden</span>, and the bug returns in full — every user-visible
+  symptom. All three tests still pass, because not one of them references
+  <span class="m">WhatsNewBottomSheet</span>.</p>
+  <p>The mutation check on the Fix Adjustments page mutated the helper. It never mutated the
+  wiring, which is the part that can silently go missing.</p>
+</div>
+
+<div class="card">
+  <p class="ct">What the suite does and does not reach</p>
+  <div class="tw"><table>
+  <tr><th>Under test</th><th>Covered</th><th>Mutation that survives</th></tr>
+  <tr><td><code>DismissWhenHidden</code> arming rule</td><td>Yes</td>
+      <td>none — deleting the arming line fails all three</td></tr>
+  <tr><td>The call at <code>HelpScreen.kt:93</code></td><td><b>No</b></td>
+      <td>delete the line; wrap it in a false condition; pass a different
+          <code>SheetState</code>; pass the wrong lambda</td></tr>
+  <tr><td>The state move at <code>HelpScreen.kt:91</code></td><td><b>No</b></td>
+      <td>hoist it back above the <code>if</code></td></tr>
+  <tr><td>The real settle path</td><td><b>No</b></td>
+      <td>see P1 — the test uses the no-anchor shortcut</td></tr>
+  </table></div>
+</div>
+
+<div class="card typed">
+  <span class="tag t-edit">EDIT</span>
+  <p class="ct">2.1 — Point the Test at <span class="m">WhatsNewBottomSheet</span></p>
+  <span class="loc">app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt</span>
+  <p class="desc">compose the shipping composable, not the helper it happens to call</p>
+  <div class="code"><span class="lang">kotlin</span><pre>composeRule.setContent {
+    AppTheme {
+        WhatsNewBottomSheet(
+            showBottomSheetFlow = MutableStateFlow(listOf(<span class="cm">/* one WhatsNewItem */</span>)),
+            dismissBottomSheet = { dismissCount++ },
+        )
+    }
+}
+composeRule.onNodeWithText(context.getString(R.string.whats_new)).assertIsDisplayed()</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — a helper that is correct and uncalled is the commonest way a fix regresses</li>
+    <li><b>Risk:</b> <code>ModalBottomSheet</code> renders into a dialog window and there is no
+    precedent for driving one under Robolectric in <code>app/src/test</code>. If it will not
+    resolve, P3 carries this instead</li>
+  </ul>
+</div>
+
+<div class="card typed">
+  <span class="tag t-add">ADD</span>
+  <p class="ct">2.2 — Cover the State Move With a Restoration Test</p>
+  <span class="loc">app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt</span>
+  <p class="desc">one test that closes the wiring hole and the state-scoping hole together</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> restorationTester = StateRestorationTester(composeRule)
+restorationTester.setContent { <span class="cm">/* WhatsNewBottomSheet, non-null flow */</span> }
+
+composeRule.onNodeWithText(whatsNewHeader).assertIsDisplayed()
+restorationTester.emulateSavedInstanceStateRestore()
+composeRule.onNodeWithText(whatsNewHeader).assertIsDisplayed()</pre></div>
+</div>
+
+</div><!-- /t-p2 -->
+
+<!-- ---------------- P3 ---------------- -->
+<div class="tabpanel" id="t-p3">
+
+<h2><span class="rail r1">│</span> P3 — the real drag-dismiss test asserts nothing <span class="prio blocking">Blocking</span></h2>
+
+<div class="note good">
+  <b>The cheapest genuine regression gate already exists and is switched off</b>
+  <p>An instrumented test performs the real <span class="m">swipeDown()</span> dismissal today
+  — the exact gesture MMA-6047 is about — and then checks nothing. It passes with the bug
+  fully present.</p>
+</div>
+
+<div class="card">
+  <p class="ct">The test as it stands</p>
+  <span class="loc">app/src/androidTest/kotlin/WhatsNewTests/WhatsNewTests.kt:221-226</span>
+  <p class="desc">real gesture, then waitForIdle, then nothing</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">private fun</span> <span class="fn">dismissWhatsNewBottomSheet</span>() {
+    composeTestRule.onAllNodesWithText(whatsNewHeaderText, useUnmergedTree = <span class="k">true</span>)
+        .onFirst()
+        .performTouchInput { swipeDown() }
+    composeTestRule.waitForIdle()
+    <span class="cm">// no assertion -- passes whether or not the sheet is gone</span>
+}</pre></div>
+</div>
+
+<div class="card">
+  <p class="ct">The asserting helper that already exists, unused</p>
+  <span class="loc">app/src/androidTest/kotlin/Pages/WhatsNew.kt:35-73</span>
+  <p class="desc">drag, poll semantics, and check -- built for exactly this</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> <span class="fn">dragWhatsNewAway</span>() {
+    <span class="k">if</span> (!sheetShown()) <span class="k">return</span>
+    ...
+    <span class="k">if</span> (waitUntilSheetGone(DISMISS_WAIT_MS)) <span class="k">return</span>
+    check(waitUntilSheetGone(FINAL_WAIT_MS)) { ... }
+}
+
+<span class="k">private fun</span> <span class="fn">waitUntilSheetGone</span>(timeoutMs: Long): Boolean =
+    composeTestRule.waitUntil(timeoutMs) { !sheetShown() }</pre></div>
+  <ul class="why">
+    <li><b>New here:</b></li>
+    <li>the helper polls <b>semantics</b> rather than trusting <code>waitForIdle</code> — its
+    own KDoc records that composition never reports idle while the sheet is up, which is the
+    device symptom this ticket is about</li>
+  </ul>
+</div>
+
+<div class="card typed">
+  <span class="tag t-edit">EDIT</span>
+  <p class="ct">3.1 — Route the Dismissal Through the Asserting Helper</p>
+  <span class="loc">app/src/androidTest/kotlin/WhatsNewTests/WhatsNewTests.kt:221-226</span>
+  <p class="desc">turns four existing instrumented tests into real MMA-6047 gates</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">private fun</span> <span class="fn">dismissWhatsNewBottomSheet</span>() {
+ <span class="rm">-</span>  composeTestRule.onAllNodesWithText(whatsNewHeaderText, useUnmergedTree = <span class="k">true</span>)
+ <span class="rm">-</span>      .onFirst()
+ <span class="rm">-</span>      .performTouchInput { swipeDown() }
+ <span class="rm">-</span>  composeTestRule.waitForIdle()
+ <span class="ad">+</span>  WhatsNew(composeTestRule).dragWhatsNewAway()
+}</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>B</b> — this is the only gate that exercises the real gesture on a real device, so
+    it is the only one that can settle P1's residual risk</li>
+    <li><b>C</b> — the assertion is already written; the test simply is not calling it</li>
+  </ul>
+</div>
+
+<div class="note">
+  <b>This is also the device verification the PR owes</b>
+  <p>The Fix Adjustments page recorded that no emulator pass had been run. Making this test
+  assert turns that manual step into a repeatable one, and its result is what belongs in the
+  PR's test evidence.</p>
+</div>
+
+</div><!-- /t-p3 -->
+
+<!-- ---------------- P4 ---------------- -->
+<div class="tabpanel" id="t-p4">
+
+<h2><span class="rail r1">│</span> P4 — wrong home, wrong name <span class="prio high">Should fix</span></h2>
+
+<div class="card">
+  <p class="ct">The name breaks a convention with no exceptions</p>
+  <div class="tw"><table>
+  <tr><th>Observation</th><th>Count</th></tr>
+  <tr><td>Effect-only composables named <code>Handle*</code></td><td>38</td></tr>
+  <tr><td>Effect-only composables named anything else</td><td><b>0</b></td></tr>
+  <tr><td>Called on the line directly above ours in <code>MainActivity</code></td>
+      <td><code>HandleDialog</code></td></tr>
+  </table></div>
+  <p class="desc">rename to HandleSheetDismissal -- the name is free repo-wide</p>
+</div>
+
+<div class="card">
+  <p class="ct">The module is wrong too, and the right one already has a broken stand-in</p>
+  <span class="loc">core/ui/src/main/java/org/lds/ldstools/core/ui/bottomsheet/SheetStateExt.kt:9-17</span>
+  <p class="desc">the sole occupant of the natural home, with zero callers and the same defect</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> SheetState.<span class="fn">animateHide</span>(coroutineScope: CoroutineScope, onHideComplete: () -&gt; Unit) {
+    coroutineScope.launch {
+        hide()
+    }.invokeOnCompletion {
+        <span class="k">if</span> (!<span class="fld">isVisible</span>) {        <span class="cm">// the exact pattern MMA-6047 is about</span>
+            onHideComplete()
+        }
+    }
+}</pre></div>
+  <ul class="why">
+    <li><b>Consequence:</b> the package <code>core.ui.bottomsheet</code> already exists, is
+    empty of anything useful, and its one helper reproduces the bug. Replacing it is cheaper
+    than leaving a trap next to the fix.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">Why the placement matters more than usual here</p>
+  <ul>
+    <li><code>DismissWhenHidden</code> takes a bare <code>SheetState</code>, has a generic
+    name and a general KDoc — it is a reusable fix by construction, walled inside
+    <code>:app</code> where no <code>feature/*</code> module can reach it.</li>
+    <li>56 files build a <code>ModalBottomSheet</code> with their own sheet state. The
+    reviewers spot-checked two —
+    <code>AddMilitaryServiceScreen.HandleBottomSheet</code> and
+    <code>WelcomeScreen.LegalBottomSheet:220-244</code> — and both have the identical
+    hoisted-state, callback-only shape.</li>
+    <li><code>core/ui</code> is where the other <code>Handle*</code> effect composables live,
+    <code>HandlePhotoEvents.kt</code> is its own file, and
+    <code>core/ui/src/test</code> already runs Robolectric Compose tests — so the move costs
+    nothing in test setup.</li>
+  </ul>
+</div>
+
+<div class="note">
+  <b>The open decision</b>
+  <p>Moving to <span class="m">core:ui</span> makes the diff touch a second module and turns a
+  one-screen bug fix into a shared utility. Leaving it in
+  <span class="m">:app</span> keeps the change small and defers the move to whoever adopts it
+  second. Both reviewers recommended the move; neither rated it blocking.</p>
+</div>
+
+</div><!-- /t-p4 -->
+
+<!-- ---------------- P5 ---------------- -->
+<div class="tabpanel" id="t-p5">
+
+<h2><span class="rail r1">│</span> P5 — the rationale comment is wrong <span class="prio high">Should fix</span></h2>
+
+<div class="note bad">
+  <b>The comment names a failure that cannot happen</b>
+  <p>It says a stale <span class="m">Hidden</span> "can pair with a live show flag and strand
+  the sheet before it ever opens." A stale <span class="m">Hidden</span> is indistinguishable
+  from a fresh one as far as opening goes.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Why a stale Hidden is harmless</p>
+  <span class="loc">material3/commonMain/.../ModalBottomSheet.kt:175-186</span>
+  <p class="desc">the auto-open effect fires precisely when targetValue is Hidden</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">if</span> (sheetState.<span class="fld">hasExpandedState</span>) {
+    LaunchedEffect(sheetState) {
+        <span class="k">val</span> shouldShow = <span class="k">if</span> (ComposeMaterial3Flags.<span class="fld">isModalBottomSheetStateRestorationFixEnabled</span>) {
+            sheetState.<span class="fld">targetValue</span> == <span class="fld">Hidden</span>        <span class="cm">// stale Hidden -&gt; true -&gt; it DOES open</span>
+        } <span class="k">else</span> {
+            <span class="k">true</span>
+        }
+        <span class="k">if</span> (shouldShow) { sheetState.show() }
+    }
+}</pre></div>
+</div>
+
+<div class="card typed">
+  <span class="tag t-edit">EDIT</span>
+  <p class="ct">5.1 — Say What Is Actually True</p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt:88-90</span>
+  <p class="desc">the two real reasons, neither of which is the one written today</p>
+  <div class="code"><span class="lang">kotlin</span><pre> <span class="rm">-</span>  <span class="cm">// Scoped to the branch so every show starts from Hidden. Hoisted, the state is</span>
+ <span class="rm">-</span>  <span class="cm">// rememberSaveable-backed and outlives the sheet, so a stale Hidden can pair with a</span>
+ <span class="rm">-</span>  <span class="cm">// live show flag and strand the sheet before it ever opens (MMA-6047).</span>
+ <span class="ad">+</span>  <span class="cm">// Scoped to the branch, not hoisted: rememberSaveable would otherwise carry this</span>
+ <span class="ad">+</span>  <span class="cm">// sheet's anchors and position into the next show. Two things depend on a fresh</span>
+ <span class="ad">+</span>  <span class="cm">// state -- stale anchors are discarded, and HandleSheetDismissal's arming rule</span>
+ <span class="ad">+</span>  <span class="cm">// requires that the state begins at Hidden (MMA-6047).</span></pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — violates R39 (<i>seen 3×</i>): comments must match actual behaviour</li>
+    <li><b>C</b> — this comment is the only thing stopping a future maintainer re-hoisting the
+    state, so it has to be right to do its job</li>
+  </ul>
+</div>
+
+<div class="note">
+  <b>This also corrects the Proposed Fix page</b>
+  <p>Step 2's "Where the idea came from" table carries the same wrong claim. It should be read
+  as superseded by this tab.</p>
+</div>
+
+</div><!-- /t-p5 -->
+
+<!-- ---------------- P6 ---------------- -->
+<div class="tabpanel" id="t-p6">
+
+<h2><span class="rail r1">│</span> P6 — <span class="m">onHidden</span> can go stale <span class="prio medium">Should fix</span></h2>
+
+<div class="card typed">
+  <span class="tag t-edit">EDIT</span>
+  <p class="ct">6.1 — Wrap <span class="m">onHidden</span> in <span class="m">rememberUpdatedState</span></p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt:121-127</span>
+  <p class="desc">LaunchedEffect keys only on sheetState, so the first lambda is the one kept</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">internal fun</span> <span class="fn">HandleSheetDismissal</span>(sheetState: SheetState, onHidden: () -&gt; Unit) {
+ <span class="ad">+</span>  <span class="k">val</span> currentOnHidden <span class="k">by</span> rememberUpdatedState(onHidden)
+    LaunchedEffect(sheetState) {
+        ...
+ <span class="rm">-</span>      onHidden()
+ <span class="ad">+</span>      currentOnHidden()
+    }
+}</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — harmless at today's only call site, which always forwards to the same
+    <code>viewModel::dismissBottomSheet</code>, but a landmine in a helper written for reuse</li>
+    <li><b>C</b> — mandatory if P4 moves it to <code>core:ui</code> as public API</li>
+  </ul>
+</div>
+
+</div><!-- /t-p6 -->
+
+<!-- ---------------- P7 ---------------- -->
+<div class="tabpanel" id="t-p7">
+
+<h2><span class="rail r1">│</span> P7 — the third test earns nothing <span class="prio medium">Should fix</span></h2>
+
+<div class="note bad">
+  <b>The justification recorded on the Fix Adjustments page was wrong</b>
+  <p>It claimed test 3 catches a watcher that fires on any settled value. Test 2 already
+  catches that, at its mid-point assertion. Test 3 is a strict prefix of test 2 and kills no
+  mutation test 2 does not. The suite is effectively two tests, not three.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Replace it with the property that genuinely has no coverage</p>
+  <span class="loc">app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt:61-70</span>
+  <p class="desc">the helper is one-shot by construction, and nothing says so</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="an">@Test</span>
+<span class="k">fun</span> <span class="fn">`only the first dismissal is reported, by design`</span>() {
+    setWatcher()
+
+    runBlocking { sheetState.show(); sheetState.hide() }
+    runBlocking { sheetState.show(); sheetState.hide() }
+    composeRule.waitForIdle()
+
+    assertThat(dismissCount).isEqualTo(<span class="n">1</span>)
+}</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — the effect body is linear, so it completes after one <code>onHidden()</code>
+    and cannot fire again for that state instance</li>
+    <li><b>C</b> — safe today only because the state and the effect both sit inside the
+    <code>if</code>, so leaving the branch cancels the effect. Hoisting the call above the
+    <code>if</code> — an obvious-looking cleanup — would silently restore the bug for every
+    dismissal after the first. This test writes that constraint down</li>
+  </ul>
+</div>
+
+</div><!-- /t-p7 -->
+
+<!-- ---------------- NITS ---------------- -->
+<div class="tabpanel" id="t-nits">
+
+<h2><span class="rail r1">│</span> Nits</h2>
+
+<div class="grid2">
+
+  <div class="card">
+    <p class="ct">P8 — <span class="m">dismissBottomSheet</span> runs twice</p>
+    <p>On an uninterrupted dismissal both edges fire: <span class="m">onDismissRequest</span>
+    and the watcher. Verified harmless today —
+    <span class="m">showBottomSheetStateFlow.value = false</span> is idempotent and
+    <span class="m">tipsUtil.tipsShownAsync()</span> writes the same version twice.</p>
+    <p><b>Suggested:</b> one line in
+    <span class="m">HelpViewModel.dismissBottomSheet()</span> recording that it must stay
+    idempotent. Adding analytics or a counter there later would fire twice with nothing to
+    catch it.</p>
+  </div>
+
+  <div class="card">
+    <p class="ct">P9 — the same defect next door</p>
+    <p>56 files build a <span class="m">ModalBottomSheet</span> with their own state. Two were
+    read closely and both match the pre-fix shape:</p>
+    <ul>
+      <li><code>WelcomeScreen.kt:220-244</code> — <code>LegalBottomSheet</code></li>
+      <li><code>AddMilitaryServiceScreen.kt:94-106</code> — <code>HandleBottomSheet</code></li>
+    </ul>
+    <p><b>Suggested:</b> a follow-up ticket, and a line in the PR saying it was considered, so
+    a reviewer does not have to ask.</p>
+  </div>
+
+</div>
+
+<div class="card">
+  <p class="ct">Raised and dismissed</p>
+  <div class="tw"><table>
+  <tr><th>Candidate</th><th>Why it is not a finding</th></tr>
+  <tr><td>R23 — every composable takes a <code>Modifier</code></td>
+      <td>All 38 <code>Handle*</code> effect composables omit it; the rule is about composables
+          that emit a layout</td></tr>
+  <tr><td><code>internal</code> should be <code>private</code> +
+          <code>@VisibleForTesting</code></td>
+      <td>16 <code>internal</code> composables already exist in <code>app/src/main</code>;
+          P4 supersedes this by making it public in <code>core:ui</code></td></tr>
+  <tr><td><code>lateinit var sheetState</code> assigned inside <code>setContent</code></td>
+      <td>Not a flake risk — <code>setContent</code> composes before returning. Becomes unsafe
+          only if a future wrapper skips the composable</td></tr>
+  <tr><td>The gap <i>between</i> the two <code>first{}</code> calls</td>
+      <td>Safe — the second flow reads the value at collection time, so a value already back
+          at <code>Hidden</code> is caught by its initial emission</td></tr>
+  <tr><td>Config-change / process-death restore after the state move</td>
+      <td>Verified sound: the ViewModel survives rotation so the branch is re-entered, and on
+          process death the flag resets so the orphaned value is never consumed</td></tr>
+  <tr><td>An isolated-UI (T-ISO) test</td>
+      <td>Single screen, no nav edge, no DI change — the wrong harness here</td></tr>
+  </table></div>
+</div>
+
+</div><!-- /t-nits -->
+
+</section><!-- /p-pre -->
 
 </main>
 </body>
