@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6047 — What's New sheet stuck at Hidden</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+@media (max-width:1180px){ main{padding-top:72px} }
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.6rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media (max-width:900px){ .head{grid-template-columns:1fr} .head .lede{margin-top:1.1rem} }
+
+h2{font-size:1.32rem;margin:2.1rem 0 .9rem;font-weight:600;letter-spacing:-.01em}
+h2:first-child{margin-top:0}
+h3{font-size:1.06rem;margin:1.5rem 0 .6rem;font-weight:650;letter-spacing:-.008em}
+p{margin:0 0 .7rem}
+ul,ol{margin:0 0 .7rem;padding-left:1.2rem}
+li{margin:0 0 .28rem}
+a{color:var(--accent);overflow-wrap:anywhere}
+
+code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
+  border-radius:4px;overflow-wrap:anywhere}
+.m{font-family:var(--mono);font-size:.93em;letter-spacing:-.01em;overflow-wrap:anywhere}
+
+/* ---------- controls: CSS only, no script ---------- */
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.page{display:none}
+.tabpanel{display:none}
+
+#r-p-issue:checked ~ main #p-issue{display:block}
+
+#r-t-sym:checked   ~ main #t-sym  {display:block}
+#r-t-zomb:checked  ~ main #t-zomb {display:block}
+#r-t-app:checked   ~ main #t-app  {display:block}
+#r-t-dead:checked  ~ main #t-dead {display:block}
+#r-t-led:checked   ~ main #t-led  {display:block}
+
+/* ---------- tab bar ---------- */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+#r-t-sym:checked  ~ main label[for="r-t-sym"],
+#r-t-zomb:checked ~ main label[for="r-t-zomb"],
+#r-t-app:checked  ~ main label[for="r-t-app"],
+#r-t-dead:checked ~ main label[for="r-t-dead"],
+#r-t-led:checked  ~ main label[for="r-t-led"]{
+  color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+
+/* ---------- the container ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:15px 17px;margin:0 0 14px;position:relative}
+.card > *:last-child{margin-bottom:0}
+
+.ct{font-size:1.06rem;font-weight:650;color:#f5f7f9;margin:0 0 .55rem;
+  letter-spacing:-.008em}
+.ct .m{font-size:.9em}
+.rail{font-weight:400}
+.r1{color:var(--g1)} .r2{color:var(--g2)} .r3{color:var(--g3)}
+
+.tag{position:absolute;top:12px;right:15px;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;font-weight:700;opacity:.6;pointer-events:none;
+  font-family:var(--mono)}
+.typed .ct{padding-right:5.4rem}
+
+.card.hi{background:#242a32;border-color:var(--border-strong)}
+.card.hi .ct{font-size:1.18rem;color:#ffffff;font-weight:680;padding:0 0 .52rem;
+  margin:0 0 .62rem;border-bottom:1px solid rgba(255,255,255,.14)}
+.card.hi p:not(.ct),.card.hi li{color:var(--muted)}
+
+.grid{display:grid;gap:14px;margin:0 0 14px;
+  grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.grid2{display:grid;gap:14px;margin:0 0 14px;
+  grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
+.grid .card,.grid2 .card,.grid .note,.grid2 .note{margin:0}
+
+/* ---------- block-type colours ---------- */
+.t-new{color:#2AB8C9} .t-new-g{color:#2E93DB} .t-add{color:#3DAF62}
+.t-add-g{color:#46B08C} .t-edit{color:#D98C3B} .t-replace{color:#C9705B}
+.t-replace-g{color:#C95B7A} .t-run{color:#A16BD9}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;max-width:100%;margin:0;border:1px solid var(--border);
+  border-radius:9px;background:rgba(0,0,0,.16)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--faint);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;background:rgba(0,0,0,.24)}
+tr:last-child td{border-bottom:0}
+td code{white-space:normal}
+
+/* ---------- file path: its own grey chip ---------- */
+.loc{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-family:var(--mono);
+  font-size:12.2px;line-height:1.5;color:var(--muted);background:rgba(0,0,0,.3);
+  border:1px solid rgba(255,255,255,.085);border-radius:6px;padding:3px 9px;
+  margin:0 0 .5rem}
+
+/* ---------- code ---------- */
+.desc{color:var(--muted);font-size:13.6px;margin:0 0 .5rem}
+.code{position:relative;margin:0 0 .6rem}
+.code pre{margin:0;background:var(--bg);border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;padding:13px 15px;overflow-x:auto;max-width:100%;
+  font-family:var(--mono);font-size:12.8px;line-height:1.56}
+.code .lang{position:absolute;top:6px;right:9px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--bg);
+  padding:1px 4px;border-radius:3px;pointer-events:none;font-family:var(--mono)}
+.k{color:#A25494} .ty{color:#4368A8} .ad{color:#2E8B62} .rm{color:#C24A4A}
+.cm{color:var(--faint)}
+.why{font-size:14px;margin:0}
+.why > li{margin:0 0 .2rem}
+
+/* ---------- callout kinds ---------- */
+.note{--nc:var(--warn);--ns:var(--warn-soft);
+  border:1px solid var(--nc);background:var(--ns);border-radius:12px;
+  padding:13px 17px;margin:0 0 14px;position:relative}
+.note b{display:block;color:var(--nc);font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;font-weight:700;margin:0 0 5px}
+.note > *:last-child{margin-bottom:0}
+.note.good{--nc:#5FBF8F;--ns:#13291f}
+.note.calm{--nc:#8FD0E8;--ns:#152833}
+.note.pre {--nc:#B79CE8;--ns:#221b33}
+.note.ref {--nc:#5C9CD6;--ns:#141f2b}
+.note.bad {--nc:#C24A4A;--ns:#2b1414}
+.note.pre b,.note.good b,.note.calm b,.note.ref b,.note.bad b{
+  text-transform:none;font-size:1.04rem;letter-spacing:-.008em;font-weight:650;
+  margin:0 0 .45rem}
+.note.pre b .m,.note.good b .m,.note.calm b .m,.note.ref b .m,.note.bad b .m{font-size:.9em}
+.note .tw{border-color:rgba(255,255,255,.1)}
+.note .tag{color:var(--nc)}
+.note.tagged b{padding-right:4.4rem}
+
+/* ---------- flow diagram: plain text, monospace, one scope ---------- */
+.flow{font-family:var(--mono);font-size:12.6px;line-height:1.62;color:var(--ink);
+  background:var(--bg);border:1px solid rgba(255,255,255,.07);border-radius:9px;
+  padding:13px 15px;overflow-x:auto;max-width:100%;margin:0 0 .6rem}
+.flow .ok{color:#2E8B62} .flow .no{color:#C24A4A} .flow .dim{color:var(--faint)}
+
+@media (max-width:720px){ .tabs{flex-wrap:wrap} .typed .ct{padding-right:0}
+  .note.tagged b{padding-right:0}
+  .tag{position:static;display:block;margin:0 0 .3rem} }
+</style>
+</head>
+<body>
+
+<input class="st" type="radio" name="pg" id="r-p-issue" checked>
+<input class="st" type="radio" name="tissue" id="r-t-sym" checked>
+<input class="st" type="radio" name="tissue" id="r-t-zomb">
+<input class="st" type="radio" name="tissue" id="r-t-app">
+<input class="st" type="radio" name="tissue" id="r-t-dead">
+<input class="st" type="radio" name="tissue" id="r-t-led">
+
+<main>
+
+<!-- ================= PAGE 1 — ISSUE ================= -->
+<section class="page" id="p-issue">
+
+<div class="head">
+  <h1>MMA-6047 — What's New sheet stuck at Hidden</h1>
+  <p class="lede">The sheet is not gone. It is still composed, parked at its Hidden anchor,
+  behind a transparent full-screen scrim that still takes every tap.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-sym">Symptom</label>
+  <label class="tab" for="r-t-zomb">The Zombie</label>
+  <label class="tab" for="r-t-app">App Code</label>
+  <label class="tab" for="r-t-dead">Three Dead Exits</label>
+  <label class="tab" for="r-t-led">Proven vs Inferred</label>
+</div>
+
+<!-- ---------------- SYMPTOM ---------------- -->
+<div class="tabpanel" id="t-sym">
+
+<h2><span class="rail r1">│</span> What the reporter saw</h2>
+
+<div class="grid2">
+
+  <div class="card hi">
+    <p class="ct">Reproduction</p>
+    <ol>
+      <li>Sign in with a proxy user; dismiss What's New if shown.</li>
+      <li>Settings → Account → Clear Data → OK.</li>
+      <li>Re-enter the same proxy username, Sync, set the PIN.</li>
+      <li>When What's New appears over Home, dismiss it by <b>dragging it down</b>, promptly,
+      possibly while the sheet is still settling.</li>
+      <li>Tap anything.</li>
+    </ol>
+    <p>Pixel 9 emulator, API 36, debug build, proxied as Harbor Ward BISHOP. Reproduced
+    repeatedly under instrumentation, including on <span class="m">16c5e2d7bb</span>.</p>
+  </div>
+
+  <div class="note bad">
+    <b>Every input is swallowed, and the app looks healthy</b>
+    <p>Home renders normally. No sheet is on screen. Taps on the Home edit button, the tiles,
+    the bottom bar and the scrim itself all do nothing, and the hardware back button does
+    nothing. Only killing the process recovers.</p>
+    <p>An app that looks fine and ignores all input is indistinguishable from a hang.</p>
+  </div>
+
+</div>
+
+<div class="card">
+  <p class="ct">The window dump taken while unresponsive</p>
+  <p class="desc">one full-screen clickable node, no sheet content anywhere in the tree</p>
+  <div class="code"><span class="lang">xml</span><pre>&lt;<span class="ty">node</span> <span class="k">class</span>=<span class="ad">"android.view.View"</span> <span class="k">package</span>=<span class="ad">"org.lds.ldstools.dev"</span>
+      <span class="k">content-desc</span>=<span class="ad">"Close sheet"</span> <span class="k">clickable</span>=<span class="ad">"true"</span> <span class="k">enabled</span>=<span class="ad">"true"</span>
+      <span class="k">visible-to-user</span>=<span class="ad">"true"</span> <span class="k">bounds</span>=<span class="ad">"[0,0][1080,2424]"</span> /&gt;</pre></div>
+  <ul class="why">
+    <li><b>Why it matters:</b> <span class="m">"Close sheet"</span> is the Material 3
+    <span class="m">ModalBottomSheet</span> scrim's content description. The sheet's dialog
+    window is still alive.</li>
+    <li><b>What is absent:</b> no node for the sheet surface, the drag handle, or any
+    What's New row.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">The test suite already works around it</p>
+  <div class="tw"><table>
+  <tr><th>Where</th><th>What it does</th></tr>
+  <tr>
+    <td><code>app/src/androidTest/kotlin/HomeTests/HomeScreenTests.kt:309</code></td>
+    <td><code>dumpScreenForDiagnosis</code> — the capture helper that produced the node
+        above. Still in the file, called from two failure paths.</td>
+  </tr>
+  <tr>
+    <td><code>HomeScreenTests.kt:369</code></td>
+    <td>Diagnoses the clear-data recovery failure — the exact repro path.</td>
+  </tr>
+  <tr>
+    <td><code>HomeScreenTests.kt:526</code></td>
+    <td>Diagnoses the Home edit menu failure — the first tap that gets swallowed.</td>
+  </tr>
+  </table></div>
+</div>
+
+<div class="note calm">
+  <b>The reporter's own hypothesis was right, and this document narrows it</b>
+  <p>The ticket guesses "the composable that hosts the sheet believes it is already dismissed
+  (so <span class="m">onDismissRequest</span> no-ops) while the sheet was never removed from
+  composition." The Material 3 sources confirm the second half exactly, and invert the first:
+  the composable believes the sheet is still <b>showing</b>, while the sheet believes it is
+  <b>Hidden</b>.</p>
+</div>
+
+</div><!-- /t-sym -->
+
+<!-- ---------------- THE ZOMBIE ---------------- -->
+<div class="tabpanel" id="t-zomb">
+
+<h2><span class="rail r1">│</span> What the invisible view actually is</h2>
+
+<div class="note pre">
+  <b>Not a leaked window. A live, correct <span class="m">ModalBottomSheet</span> in a state
+  the app never checks for.</b>
+  <p>Every quoted block below is from
+  <span class="m">androidx.compose.material3:material3-android:1.5.0-alpha27</span>, the version
+  pinned at <span class="m">gradle/libs.versions.toml:66</span>. Nothing here is Material 3
+  misbehaving — it is Material 3 doing precisely what it says it does, with a
+  <span class="m">SheetValue</span> the app has no opinion about.</p>
+</div>
+
+<div class="card">
+  <p class="ct">1 · The scrim's tap handling does not depend on its alpha</p>
+  <span class="loc">material3/commonMain/.../Scrim.kt:50-77</span>
+  <p class="desc">alpha reaches only drawRect; pointerInput and semantics are unconditional</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">public</span> @<span class="ty">Composable</span> <span class="k">fun</span> <span class="ty">Scrim</span>(contentDescription: <span class="ty">String</span>?, ..., alpha: () -&gt; <span class="ty">Float</span>) {
+    ...
+    <span class="k">val</span> dismissModifier = <span class="k">if</span> (dismissEnabled) {
+        <span class="ty">Modifier</span>.pointerInput(onClick) { detectTapGestures { onClick() } }   <span class="cm">// no alpha here</span>
+            .semantics(mergeDescendants = <span class="k">true</span>) { <span class="k">this</span>.contentDescription = ... }
+    } <span class="k">else</span> <span class="ty">Modifier</span>
+    <span class="ty">Canvas</span>(modifier = modifier.fillMaxSize().then(dismissModifier)) {
+        drawRect(color = color, alpha = alpha().coerceIn(0f, 1f))          <span class="cm">// only here</span>
+    }
+}</pre></div>
+  <ul class="why">
+    <li><b>Consequence:</b> at <span class="m">alpha 0</span> the scrim is a full-screen,
+    fully clickable, accessibility-visible node that draws nothing.</li>
+    <li><b>Consequence:</b> that is the node in the window dump, character for character.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">2 · The alpha goes to zero the moment the sheet targets Hidden</p>
+  <span class="loc">material3/commonMain/.../ModalBottomSheet.kt:143-156</span>
+  <p class="desc">Scrim stays composed; only its opacity animates out</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="ty">Box</span>(modifier = <span class="ty">Modifier</span>.fillMaxSize()...) {
+    <span class="k">val</span> isScrimVisible: <span class="ty">Boolean</span> <span class="k">by</span> remember {
+        derivedStateOf { sheetState.targetValue != <span class="ty">Hidden</span> }
+    }
+    <span class="k">val</span> scrimAlpha <span class="k">by</span> animateFloatAsState(targetValue = <span class="k">if</span> (isScrimVisible) 1f <span class="k">else</span> 0f, ...)
+    <span class="ty">Scrim</span>(contentDescription = getString(<span class="ty">Strings</span>.CloseSheet), ..., alpha = { scrimAlpha })
+    <span class="ty">BottomSheet</span>(modifier = modifier.align(<span class="ty">TopCenter</span>)..., state = sheetState, ...)
+}</pre></div>
+  <ul class="why">
+    <li><b>Consequence:</b> Hidden makes the scrim invisible, never absent. Removing the scrim
+    is the caller's job, done by removing the whole composable.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">3 · The sheet content translates off-screen, so it leaves the dump</p>
+  <span class="loc">material3/commonMain/.../BottomSheet.kt:293-300</span>
+  <p class="desc">the Hidden anchor is the full height of the window</p>
+  <div class="code"><span class="lang">kotlin</span><pre>.draggableAnchors(state.anchoredDraggableState, <span class="ty">Orientation</span>.Vertical) { sheetSize, constraints -&gt;
+    <span class="k">val</span> fullHeight = constraints.maxHeight.toFloat()
+    <span class="k">val</span> newAnchors = <span class="ty">DraggableAnchors</span> {
+        <span class="ty">Hidden</span> at fullHeight                                <span class="cm">// offset == window height</span>
+        ...
+    }
+    ...
+}</pre></div>
+  <ul class="why">
+    <li><b>Consequence:</b> at Hidden the sheet Surface sits one full screen below the
+    viewport. Off-screen nodes are omitted from <span class="m">dumpWindowHierarchy</span>,
+    which is why the dump shows the scrim and nothing else.</li>
+  </ul>
+</div>
+
+<div class="note bad">
+  <b>The terminal state, stated once</b>
+  <p><span class="m">whatsNewItems != null</span> and
+  <span class="m">sheetState.currentValue == Hidden</span> at the same time.</p>
+  <p>Composition says showing. The sheet says gone. Nothing in the app reconciles the two, and
+  the only bridge between them runs in one direction.</p>
+</div>
+
+</div><!-- /t-zomb -->
+
+<!-- ---------------- APP CODE ---------------- -->
+<div class="tabpanel" id="t-app">
+
+<h2><span class="rail r1">│</span> The two sources of truth, and the one edge between them</h2>
+
+<div class="card hi">
+  <p class="ct">The shape of the defect</p>
+  <div class="flow">HelpViewModel                       SheetState
+<span class="dim">──────────────</span>                      <span class="dim">──────────────</span>
+showBottomSheetStateFlow            currentValue
+      │                                   │
+      │  null / non-null decides           │  Hidden / Expanded decides
+      │  whether the composable exists     │  where the sheet is drawn
+      ▼                                   ▼
+<span class="ok">   composed  ──────────────────────────▶  shown</span>
+<span class="no">   composed  ◀──────  onDismissRequest  ──  Hidden      ← the only edge back</span>
+<span class="no">   composed          (nothing)             Hidden      ← when that edge is missed</span></div>
+  <p>The forward direction is structural — a non-null list composes the sheet. The return
+  direction is a single callback fired from the completion of a coroutine inside Material 3.
+  Miss it once and the two never re-synchronise.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Source of truth one — the ViewModel flag</p>
+  <span class="loc">app/.../ux/help/HelpViewModel.kt:55-69</span>
+  <p class="desc">a non-null list is the entire instruction to show the sheet</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> showBottomSheetFlow: <span class="ty">StateFlow</span>&lt;<span class="ty">List</span>&lt;<span class="ty">WhatsNewItem</span>&gt;?&gt; = combine(
+    showBottomSheetStateFlow, settingsRepository.getVisibilityOnboardingCompletionDateFlow(),
+    permissionsFlow, whatNewBottomSheetHasShownFlow,
+) { ... }.mapLatest { (showBottomSheet, visibilityOnboardingCompletionDate, ...) -&gt;
+    <span class="k">if</span> (showBottomSheet &amp;&amp; !<span class="ty">SecurityManager</span>.isSessionExpired() &amp;&amp; (... != <span class="k">null</span> || ...)) {
+        whatNewBottomSheetHasShownFlow.value = <span class="k">true</span>      <span class="cm">// writes to its own upstream</span>
+        getWhatsNewItems(permissions)
+    } <span class="k">else</span> {
+        <span class="k">null</span>
+    }
+}.stateInDefault(viewModelScope, <span class="k">null</span>)</pre></div>
+  <ul class="why">
+    <li><b>Note:</b> the flow knows nothing about <span class="m">SheetValue</span>. It cannot
+    tell a showing sheet from a Hidden one.</li>
+    <li><b>Note:</b> <span class="m">whatNewBottomSheetHasShownFlow.value = true</span> is a
+    write from inside <span class="m">mapLatest</span> into that same <span class="m">combine</span>'s
+    upstream, which cancels and restarts the block it is written in.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">Source of truth two — the sheet position</p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt:80-98</span>
+  <p class="desc">state remembered above the if, so it outlives every show and dismiss</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> <span class="ty">WhatsNewBottomSheet</span>(showBottomSheetFlow: <span class="ty">StateFlow</span>&lt;<span class="ty">List</span>&lt;<span class="ty">WhatsNewItem</span>&gt;?&gt;, dismissBottomSheet: () -&gt; <span class="ty">Unit</span>) {
+    <span class="k">val</span> whatsNewItems = showBottomSheetFlow.collectAsStateWithLifecycle().value
+    <span class="k">val</span> bottomSheetState = rememberBottomSheetState(
+        initialValue = <span class="ty">SheetValue</span>.Hidden, enabledValues = setOf(<span class="ty">SheetValue</span>.Hidden, <span class="ty">SheetValue</span>.Expanded))
+
+    <span class="k">if</span> (whatsNewItems != <span class="k">null</span>) {
+        <span class="ty">ModalBottomSheet</span>(sheetState = bottomSheetState, onDismissRequest = { dismissBottomSheet() }, ...) {
+            <span class="ty">WhatsNewList</span>(whatsNewItems, ...)
+        }
+    }
+}</pre></div>
+  <ul class="why">
+    <li><b>Note:</b> <span class="m">rememberBottomSheetState</span> is
+    <span class="m">rememberSaveable</span>-backed and saves
+    <span class="m">currentValue</span> — the position survives the dismiss, and survives
+    process death.</li>
+    <li><b>Note:</b> dropping <span class="m">PartiallyExpanded</span> from
+    <span class="m">enabledValues</span> means <span class="m">hasPartiallyExpandedState</span>
+    is false, so every settle path goes straight to <span class="m">hide()</span>.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">The bridge, and what it costs to miss</p>
+  <span class="loc">app/.../ux/help/HelpViewModel.kt:81-84</span>
+  <p class="desc">the only thing that ever un-composes the sheet</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> dismissBottomSheet() {
+    showBottomSheetStateFlow.value = <span class="k">false</span>
+    tipsUtil.tipsShownAsync()
+}</pre></div>
+  <ul class="why">
+    <li><b>Reached from:</b> <span class="m">onDismissRequest</span> only — nothing else in the
+    app clears the flag.</li>
+    <li><b>Fired by:</b> three Material 3 call sites, every one of them the completion handler
+    of a coroutine, listed under Three Dead Exits.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">The sheet is hosted over every screen in the app</p>
+  <span class="loc">app/.../ux/main/MainActivity.kt:146-149</span>
+  <p class="desc">a sibling of Nav3Host, so a stuck sheet blocks the whole app, not one screen</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">if</span> (state.ready) {
+    <span class="ty">HandleDialog</span>( ... )
+    <span class="ty">WhatsNewBottomSheet</span>(
+        showBottomSheetFlow = helpViewModel.showBottomSheetFlow,
+        dismissBottomSheet = { helpViewModel.dismissBottomSheet() },
+    )
+}</pre></div>
+  <ul class="why">
+    <li><b>Consequence:</b> the scrim covers Home, the drawer, the bottom bar and every
+    destination inside <span class="m">Nav3Host</span>.</li>
+  </ul>
+</div>
+
+<div class="note">
+  <b>A second, independent host exists</b>
+  <p><span class="m">HelpScreen.Content</span> composes its own
+  <span class="m">WhatsNewBottomSheet</span> at
+  <span class="m">HelpScreen.kt:65-68</span>, driven by a different
+  <span class="m">HelpViewModel</span> instance — <span class="m">MainActivity</span> takes one
+  by <span class="m">viewModel()</span>, the Help nav entry takes another by
+  <span class="m">koinViewModel()</span>
+  (<span class="m">nav3/di/Nav3HelpKoinModule.kt:46</span>).</p>
+  <p>Two hosts, two flags, one shared sheet concept. This is not the reported repro path, which
+  happens on Home, but it is the same defect class and it is worth deciding about while the fix
+  is being designed.</p>
+</div>
+
+</div><!-- /t-app -->
+
+<!-- ---------------- THREE DEAD EXITS ---------------- -->
+<div class="tabpanel" id="t-dead">
+
+<h2><span class="rail r1">│</span> Why nothing the user does recovers it</h2>
+
+<div class="note pre">
+  <b>All three exits are gated on the same invariant the state has already broken</b>
+  <p>Each one asks, in its own way, "is the sheet visible?" — and at Hidden the honest answer
+  is no, so each one declines to act. The state that needs dismissing is the one state in which
+  nothing will dismiss it.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Exit 1 · The hardware back button is switched off at Hidden</p>
+  <span class="loc">material3/commonMain/.../BottomSheet.kt:157, SheetDefaults.kt:215-216</span>
+  <p class="desc">enabled is false exactly when the sheet is already Hidden</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="cm">// BottomSheet.kt</span>
+<span class="ty">PredictiveBackHandler</span>(enabled = backHandlerEnabled &amp;&amp; state.isVisible) { progress -&gt; ... }
+
+<span class="cm">// SheetDefaults.kt</span>
+<span class="k">public val</span> isVisible: <span class="ty">Boolean</span>
+    <span class="k">get</span>() = anchoredDraggableState.currentValue != <span class="ty">Hidden</span></pre></div>
+  <ul class="why">
+    <li><b>Result:</b> no back handler is registered, and the dialog window still holds focus,
+    so the press reaches nothing. Matches "repeated back-presses all failed".</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">Exit 2 · Tapping the scrim asks a mutex that a stalled drag may still hold</p>
+  <span class="loc">material3/commonMain/.../ModalBottomSheet.kt:113-123</span>
+  <p class="desc">hide() is a mutation on the same anchored-draggable state the drag owns</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> animateToDismiss: () -&gt; <span class="ty">Unit</span> = {
+    <span class="k">if</span> (sheetState.confirmValueChange(<span class="ty">Hidden</span>)) {
+        scope.launch { sheetState.hide() }
+            .invokeOnCompletion { <span class="k">if</span> (!sheetState.isVisible) { onDismissRequest() } }
+    }
+}</pre></div>
+  <ul class="why">
+    <li><b>If the drag coroutine completed:</b> this works, and the scrim tap would have
+    recovered the app. It did not, in any observed reproduction.</li>
+    <li><b>If it did not:</b> <span class="m">hide()</span> is a lower-priority mutation than a
+    user-input drag, so it waits behind it and
+    <span class="m">invokeOnCompletion</span> never runs.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">Exit 3 · The settle callback only fires if its coroutine finishes</p>
+  <span class="loc">material3/commonMain/.../BottomSheet.kt:249-256</span>
+  <p class="desc">the dismiss for a drag lives in a finally inside performFling</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">override suspend fun</span> <span class="ty">ScrollScope</span>.performFling(initialVelocity: <span class="ty">Float</span>): <span class="ty">Float</span> {
+    ...
+    <span class="k">var</span> remainingVelocity = 0f
+    <span class="k">try</span> {
+        remainingVelocity = <span class="k">with</span>(anchoredDraggableFlingBehavior) { performFling(safeVelocity) }
+    } <span class="k">finally</span> {
+        <span class="k">if</span> (!state.isVisible) onDismissRequest()          <span class="cm">// the whole dismiss, for a drag</span>
+    }
+    <span class="k">return</span> remainingVelocity
+}</pre></div>
+  <ul class="why">
+    <li><b>Result:</b> a drag that settles to Hidden without this coroutine reaching its
+    <span class="m">finally</span> leaves the flag set and the composable alive. There is no
+    later re-check.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">The app adds no fourth exit</p>
+  <div class="tw"><table>
+  <tr><th>Possible recovery</th><th>Present?</th><th>Why not</th></tr>
+  <tr><td>A <code>LaunchedEffect</code> watching <code>currentValue == Hidden</code></td>
+      <td>No</td>
+      <td><code>WhatsNewBottomSheet</code> has no effect of any kind</td></tr>
+  <tr><td>Clearing the flag when the sheet leaves the screen</td>
+      <td>No</td>
+      <td>Nothing observes <code>bottomSheetState</code> at all</td></tr>
+  <tr><td>Resetting the flag on re-entry to Home or Ready</td>
+      <td>No</td>
+      <td><code>enterReadyState</code> is one-shot, guarded by <code>readyEntered</code></td></tr>
+  <tr><td>Snapping the state back to Expanded on a stale show</td>
+      <td>No</td>
+      <td><code>rememberBottomSheetState</code> is hoisted and never reset</td></tr>
+  </table></div>
+</div>
+
+</div><!-- /t-dead -->
+
+<!-- ---------------- PROVEN VS INFERRED ---------------- -->
+<div class="tabpanel" id="t-led">
+
+<h2><span class="rail r1">│</span> What this document can and cannot claim</h2>
+
+<div class="card">
+  <p class="ct">The ledger</p>
+  <div class="tw"><table>
+  <tr><th>Claim</th><th>Standing</th><th>Evidence</th></tr>
+  <tr>
+    <td>The blocking node is the Material 3 scrim, not a leaked window</td>
+    <td><b>Proven</b></td>
+    <td><code>Scrim.kt:50-77</code> plus the content description and bounds in the dump</td>
+  </tr>
+  <tr>
+    <td>The scrim is clickable and accessibility-visible at alpha 0</td>
+    <td><b>Proven</b></td>
+    <td><code>Scrim.kt:59-74</code> — alpha reaches only <code>drawRect</code></td>
+  </tr>
+  <tr>
+    <td>The terminal state is <code>whatsNewItems != null</code> with
+        <code>currentValue == Hidden</code></td>
+    <td><b>Proven</b></td>
+    <td>The only state producing every observation at once, including the absent sheet nodes</td>
+  </tr>
+  <tr>
+    <td>Back is dead because the handler is disabled at Hidden</td>
+    <td><b>Proven</b></td>
+    <td><code>BottomSheet.kt:157</code> with <code>SheetDefaults.kt:215-216</code></td>
+  </tr>
+  <tr>
+    <td>The app has no path that clears the flag other than
+        <code>onDismissRequest</code></td>
+    <td><b>Proven</b></td>
+    <td><code>HelpViewModel.kt:81-84</code>; the only callers are the two hosts</td>
+  </tr>
+  <tr>
+    <td>The precise race that strands the drag coroutine</td>
+    <td><b>Inferred</b></td>
+    <td>Three candidates below; none isolated on a device yet</td>
+  </tr>
+  </table></div>
+</div>
+
+<div class="card">
+  <p class="ct">Candidates for the trigger, none yet isolated</p>
+  <div class="tw"><table>
+  <tr><th>#</th><th>Candidate</th><th>Why it fits</th></tr>
+  <tr>
+    <td>1</td>
+    <td>A drag begun while the opening <code>show()</code> animation is still running</td>
+    <td>Matches the repro wording exactly. Two mutations contend for the same anchored-draggable
+        state, and the loser's <code>finally</code> is the dismiss.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>The sheet leaving and re-entering composition mid-gesture as
+        <code>hostStateFlow</code> reseeds during re-login</td>
+    <td>Clear-data re-login drives Download → PIN → Home, each reseeding
+        <code>hostState</code>, and <code>state.ready</code> gates the sheet's composition.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>Fallout from the pool-closed crash, MMA-6046</td>
+    <td>The reporter notes MMA-6046 had fired earlier in every observed reproduction. The
+        ticket itself asks for both together and in isolation.</td>
+  </tr>
+  </table></div>
+</div>
+
+<div class="note">
+  <b>The fix should not depend on identifying the trigger</b>
+  <p>All three candidates end in the same place, and so would a fourth nobody has thought of:
+  the sheet reaches Hidden and the flag stays set. A fix that reconciles the two sources of
+  truth closes every one of them at once; a fix that chases one race closes one.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Open questions for the fix</p>
+  <ol>
+    <li>Should the second host in <code>HelpScreen.Content</code> stay, given
+        <code>MainActivity</code> already renders the sheet over every destination?</li>
+    <li>Does MMA-6046 need to be fixed or excluded first, or is this independent of it?</li>
+    <li>Should <code>whatNewBottomSheetHasShownFlow.value = true</code> move out of
+        <code>mapLatest</code>, or is that a separate ticket?</li>
+  </ol>
+</div>
+
+<div class="note calm">
+  <b>Interim decisions taken while writing this page</b>
+  <p>The <span class="m">-report</span> content type requires a Files changed table, an edits
+  Changelog and a Checks run section. No edit exists yet, so those three parts are deferred to
+  the later pages rather than filled with placeholders, and this page runs as Narrative only.
+  Every line number above was read from the file or the sources jar; none is estimated.</p>
+</div>
+
+</div><!-- /t-led -->
+
+</section><!-- /p-issue -->
+
+</main>
+</body>
+</html>

@@ -1,13 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTMLer Files</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+h2{font-size:1.32rem;margin:2.1rem 0 .9rem;font-weight:600;letter-spacing:-.01em}
+p{margin:0 0 .7rem;color:var(--muted)}
+a{color:var(--accent);text-decoration:none;overflow-wrap:anywhere}
+a:hover{text-decoration:underline}
+.tw{overflow-x:auto;max-width:100%;border:1px solid var(--border);
+  border-radius:9px;background:rgba(0,0,0,.16)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--faint);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;background:rgba(0,0,0,.24)}
+tr:last-child td{border-bottom:0}
+</style>
 </head>
 <body>
+<main>
 
-    <a href="MMA-6006-pt2-impl.html">MMA-6006-pt2</a>
+<h1>HTMLer Files</h1>
+<p>Generated OMLR documents. Newest first.</p>
 
+<h2>MemberTools tickets</h2>
+<div class="tw"><table>
+<tr><th>Document</th><th>What it is</th></tr>
+<tr><td><a href="MMA-6047-report.html">MMA-6047 — What's New sheet stuck at Hidden</a></td>
+    <td>Issue analysis of the invisible full-screen scrim that blocks all input</td></tr>
+<tr><td><a href="MMA-6006-pt2-impl.html">MMA-6006 pt 2 — Manage RSVPs Tab</a></td>
+    <td>Implementation plan, second pass</td></tr>
+<tr><td><a href="MMA-6006-impl.html">MMA-6006 — Manage RSVPs Tab</a></td>
+    <td>Implementation plan, first pass</td></tr>
+<tr><td><a href="MMA-6082-report.html">MMA-6082 — Calendar subscription Location title</a></td>
+    <td>Report</td></tr>
+<tr><td><a href="MMA-6040-views-restructure-plan.html">MMA-6040 — Views restructure</a></td>
+    <td>Implementation plan</td></tr>
+<tr><td><a href="MMA-6039-Calendar-Filter-Icons.html">MMA-6039 — Calendar filter icons</a></td>
+    <td>Implementation plan</td></tr>
+<tr><td><a href="MMA-6010-calendar-visibility-filter-plan.html">MMA-6010 — Calendar visibility filter</a></td>
+    <td>Implementation plan</td></tr>
+<tr><td><a href="MMA-6005-preliminary-plan.html">MMA-6005 — Preliminary plan</a></td>
+    <td>Implementation plan, with per-commit pages</td></tr>
+<tr><td><a href="MMA-5878-report.html">MMA-5878 — Publish and QR</a></td>
+    <td>Report</td></tr>
+<tr><td><a href="MMA-5964-month-view-plan.html">MMA-5964 — Calendar month view</a></td>
+    <td>Implementation plan</td></tr>
+<tr><td><a href="MMA-5963-multi-day-views-plan.html">MMA-5963 — Calendar week and 3-day views</a></td>
+    <td>Implementation plan</td></tr>
+<tr><td><a href="MMA-5962-day-view-plan.html">MMA-5962 — Calendar day view</a></td>
+    <td>Implementation plan</td></tr>
+<tr><td><a href="MMA-5961-calendar-groundwork-plan.html">MMA-5961 — Calendar groundwork</a></td>
+    <td>Implementation plan</td></tr>
+<tr><td><a href="MMA-5966-seminary-institute-tiles-plan.html">MMA-5966 — Seminary and institute tiles</a></td>
+    <td>Implementation plan</td></tr>
+</table></div>
+
+<h2>Other</h2>
+<div class="tw"><table>
+<tr><th>Document</th><th>What it is</th></tr>
+<tr><td><a href="dev-workflow-checklist-ref.html">Dev workflow checklist</a></td><td>Reference</td></tr>
+<tr><td><a href="calendar-qa-findings-impl.html">Calendar QA findings</a></td><td>Implementation plan</td></tr>
+<tr><td><a href="calendar-manage-migration.html">Calendar manage migration</a></td><td>Plan</td></tr>
+<tr><td><a href="calendar-spec.html">Calendar spec</a></td><td>Reference</td></tr>
+<tr><td><a href="byui-browser-workflow-setup.html">BYUI browser workflow setup</a></td><td>Reference</td></tr>
+<tr><td><a href="byui-browser-org-guide.html">BYUI browser org guide</a></td><td>Reference</td></tr>
+<tr><td><a href="byui-browser-map.html">BYUI browser map</a></td><td>Architecture map</td></tr>
+<tr><td><a href="data-structures-tutor-ref.html">Data structures tutor</a></td><td>Reference</td></tr>
+<tr><td><a href="laminarflow-ui-framework-research.html">LaminarFlow UI framework</a></td><td>Research</td></tr>
+<tr><td><a href="E-LAM-0002-summary.html">E-LAM-0002</a></td><td>Epic summary</td></tr>
+<tr><td><a href="LAM-6-split-repos.html">LAM-6 — Split repos</a></td><td>Implementation plan</td></tr>
+<tr><td><a href="LAM-5-write-path-enforcement.html">LAM-5 — Write path enforcement</a></td><td>Implementation plan</td></tr>
+<tr><td><a href="LAM-39-changes.html">LAM-39</a></td><td>Changes</td></tr>
+<tr><td><a href="LAM-29-changes.html">LAM-29</a></td><td>Changes</td></tr>
+<tr><td><a href="LAM-28-changes.html">LAM-28</a></td><td>Changes</td></tr>
+<tr><td><a href="apartment-cleanup-plan.html">Apartment cleanup</a></td><td>Plan</td></tr>
+<tr><td><a href="deskdashboard-sdd-alignment-review.html">DeskDashboard SDD alignment</a></td><td>Review</td></tr>
+</table></div>
+
+</main>
 </body>
 </html>
