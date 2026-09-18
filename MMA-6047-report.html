@@ -13,6 +13,8 @@
   --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
   --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  /* Android Studio Darcula editor surface */
+  --as-bg:#2B2B2B; --as-fg:#A9B7C6;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -123,14 +125,28 @@ td code{white-space:normal}
 /* ---------- code ---------- */
 .desc{color:var(--muted);font-size:13.6px;margin:0 0 .5rem}
 .code{position:relative;margin:0 0 .6rem}
-.code pre{margin:0;background:var(--bg);border:1px solid rgba(255,255,255,.07);
-  border-radius:9px;padding:13px 15px;overflow-x:auto;max-width:100%;
-  font-family:var(--mono);font-size:12.8px;line-height:1.56}
+.code pre{margin:0;background:var(--as-bg);color:var(--as-fg);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;padding:15px 17px;overflow-x:auto;max-width:100%;
+  font-family:var(--mono);font-size:12.8px;line-height:1.9}
 .code .lang{position:absolute;top:6px;right:9px;font-size:10px;letter-spacing:.1em;
-  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--bg);
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--as-bg);
   padding:1px 4px;border-radius:3px;pointer-events:none;font-family:var(--mono)}
-.k{color:#A25494} .ty{color:#4368A8} .ad{color:#2E8B62} .rm{color:#C24A4A}
-.cm{color:var(--faint)}
+
+/* Android Studio Darcula syntax colours */
+.k  {color:#CC7832}            /* keyword                      */
+.s  {color:#6A8759}            /* string literal               */
+.n  {color:#6897BB}            /* number literal               */
+.cm {color:#808080}            /* line comment                 */
+.fn {color:#FFC66D}            /* function declaration         */
+.an {color:#BBB529}            /* annotation                   */
+.fld{color:#9876AA}            /* property, enum constant      */
+.ty {color:var(--as-fg)}       /* class name - plain in Darcula */
+.xt {color:#E8BF6A}            /* xml tag                      */
+.xa {color:#BABABA}            /* xml attribute name           */
+.xv {color:#A5C261}            /* xml attribute value          */
+/* diff markers keep the glossary's held meanings, not Darcula's */
+.ad{color:#2E8B62} .rm{color:#C24A4A}
 .why{font-size:14px;margin:0}
 .why > li{margin:0 0 .2rem}
 
@@ -227,9 +243,9 @@ td code{white-space:normal}
 <div class="card">
   <p class="ct">The window dump taken while unresponsive</p>
   <p class="desc">one full-screen clickable node, no sheet content anywhere in the tree</p>
-  <div class="code"><span class="lang">xml</span><pre>&lt;<span class="ty">node</span> <span class="k">class</span>=<span class="ad">"android.view.View"</span> <span class="k">package</span>=<span class="ad">"org.lds.ldstools.dev"</span>
-      <span class="k">content-desc</span>=<span class="ad">"Close sheet"</span> <span class="k">clickable</span>=<span class="ad">"true"</span> <span class="k">enabled</span>=<span class="ad">"true"</span>
-      <span class="k">visible-to-user</span>=<span class="ad">"true"</span> <span class="k">bounds</span>=<span class="ad">"[0,0][1080,2424]"</span> /&gt;</pre></div>
+  <div class="code"><span class="lang">xml</span><pre><span class="xt">&lt;node</span> <span class="xa">class</span>=<span class="xv">"android.view.View"</span> <span class="xa">package</span>=<span class="xv">"org.lds.ldstools.dev"</span>
+      <span class="xa">content-desc</span>=<span class="xv">"Close sheet"</span> <span class="xa">clickable</span>=<span class="xv">"true"</span> <span class="xa">enabled</span>=<span class="xv">"true"</span>
+      <span class="xa">visible-to-user</span>=<span class="xv">"true"</span> <span class="xa">bounds</span>=<span class="xv">"[0,0][1080,2424]"</span> <span class="xt">/&gt;</span></pre></div>
   <ul class="why">
     <li><b>Why it matters:</b> <span class="m">"Close sheet"</span> is the Material 3
     <span class="m">ModalBottomSheet</span> scrim's content description. The sheet's dialog
@@ -289,14 +305,14 @@ td code{white-space:normal}
   <p class="ct">1 · The scrim's tap handling does not depend on its alpha</p>
   <span class="loc">material3/commonMain/.../Scrim.kt:50-77</span>
   <p class="desc">alpha reaches only drawRect; pointerInput and semantics are unconditional</p>
-  <div class="code"><span class="lang">kotlin</span><pre><span class="k">public</span> @<span class="ty">Composable</span> <span class="k">fun</span> <span class="ty">Scrim</span>(contentDescription: <span class="ty">String</span>?, ..., alpha: () -&gt; <span class="ty">Float</span>) {
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">public</span> <span class="an">@Composable</span> <span class="k">fun</span> <span class="fn">Scrim</span>(contentDescription: String?, ..., alpha: () -&gt; Float) {
     ...
     <span class="k">val</span> dismissModifier = <span class="k">if</span> (dismissEnabled) {
-        <span class="ty">Modifier</span>.pointerInput(onClick) { detectTapGestures { onClick() } }   <span class="cm">// no alpha here</span>
-            .semantics(mergeDescendants = <span class="k">true</span>) { <span class="k">this</span>.contentDescription = ... }
-    } <span class="k">else</span> <span class="ty">Modifier</span>
-    <span class="ty">Canvas</span>(modifier = modifier.fillMaxSize().then(dismissModifier)) {
-        drawRect(color = color, alpha = alpha().coerceIn(0f, 1f))          <span class="cm">// only here</span>
+        Modifier.pointerInput(onClick) { detectTapGestures { onClick() } }   <span class="cm">// no alpha here</span>
+            .semantics(mergeDescendants = <span class="k">true</span>) { <span class="k">this</span>.<span class="fld">contentDescription</span> = ... }
+    } <span class="k">else</span> Modifier
+    Canvas(modifier = modifier.fillMaxSize().then(dismissModifier)) {
+        drawRect(color = color, alpha = alpha().coerceIn(<span class="n">0f</span>, <span class="n">1f</span>))          <span class="cm">// only here</span>
     }
 }</pre></div>
   <ul class="why">
@@ -310,13 +326,13 @@ td code{white-space:normal}
   <p class="ct">2 · The alpha goes to zero the moment the sheet targets Hidden</p>
   <span class="loc">material3/commonMain/.../ModalBottomSheet.kt:143-156</span>
   <p class="desc">Scrim stays composed; only its opacity animates out</p>
-  <div class="code"><span class="lang">kotlin</span><pre><span class="ty">Box</span>(modifier = <span class="ty">Modifier</span>.fillMaxSize()...) {
-    <span class="k">val</span> isScrimVisible: <span class="ty">Boolean</span> <span class="k">by</span> remember {
-        derivedStateOf { sheetState.targetValue != <span class="ty">Hidden</span> }
+  <div class="code"><span class="lang">kotlin</span><pre>Box(modifier = Modifier.fillMaxSize()...) {
+    <span class="k">val</span> isScrimVisible: Boolean <span class="k">by</span> remember {
+        derivedStateOf { sheetState.<span class="fld">targetValue</span> != <span class="fld">Hidden</span> }
     }
-    <span class="k">val</span> scrimAlpha <span class="k">by</span> animateFloatAsState(targetValue = <span class="k">if</span> (isScrimVisible) 1f <span class="k">else</span> 0f, ...)
-    <span class="ty">Scrim</span>(contentDescription = getString(<span class="ty">Strings</span>.CloseSheet), ..., alpha = { scrimAlpha })
-    <span class="ty">BottomSheet</span>(modifier = modifier.align(<span class="ty">TopCenter</span>)..., state = sheetState, ...)
+    <span class="k">val</span> scrimAlpha <span class="k">by</span> animateFloatAsState(targetValue = <span class="k">if</span> (isScrimVisible) <span class="n">1f</span> <span class="k">else</span> <span class="n">0f</span>, ...)
+    Scrim(contentDescription = getString(Strings.<span class="fld">CloseSheet</span>), ..., alpha = { scrimAlpha })
+    BottomSheet(modifier = modifier.align(<span class="fld">TopCenter</span>)..., state = sheetState, ...)
 }</pre></div>
   <ul class="why">
     <li><b>Consequence:</b> Hidden makes the scrim invisible, never absent. Removing the scrim
@@ -328,10 +344,10 @@ td code{white-space:normal}
   <p class="ct">3 · The sheet content translates off-screen, so it leaves the dump</p>
   <span class="loc">material3/commonMain/.../BottomSheet.kt:293-300</span>
   <p class="desc">the Hidden anchor is the full height of the window</p>
-  <div class="code"><span class="lang">kotlin</span><pre>.draggableAnchors(state.anchoredDraggableState, <span class="ty">Orientation</span>.Vertical) { sheetSize, constraints -&gt;
-    <span class="k">val</span> fullHeight = constraints.maxHeight.toFloat()
-    <span class="k">val</span> newAnchors = <span class="ty">DraggableAnchors</span> {
-        <span class="ty">Hidden</span> at fullHeight                                <span class="cm">// offset == window height</span>
+  <div class="code"><span class="lang">kotlin</span><pre>.draggableAnchors(state.<span class="fld">anchoredDraggableState</span>, Orientation.<span class="fld">Vertical</span>) { sheetSize, constraints -&gt;
+    <span class="k">val</span> fullHeight = constraints.<span class="fld">maxHeight</span>.toFloat()
+    <span class="k">val</span> newAnchors = DraggableAnchors {
+        <span class="fld">Hidden</span> at fullHeight                                <span class="cm">// offset == window height</span>
         ...
     }
     ...
@@ -379,12 +395,12 @@ showBottomSheetStateFlow            currentValue
   <p class="ct">Source of truth one — the ViewModel flag</p>
   <span class="loc">app/.../ux/help/HelpViewModel.kt:55-69</span>
   <p class="desc">a non-null list is the entire instruction to show the sheet</p>
-  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> showBottomSheetFlow: <span class="ty">StateFlow</span>&lt;<span class="ty">List</span>&lt;<span class="ty">WhatsNewItem</span>&gt;?&gt; = combine(
-    showBottomSheetStateFlow, settingsRepository.getVisibilityOnboardingCompletionDateFlow(),
-    permissionsFlow, whatNewBottomSheetHasShownFlow,
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> <span class="fld">showBottomSheetFlow</span>: StateFlow&lt;List&lt;WhatsNewItem&gt;?&gt; = combine(
+    <span class="fld">showBottomSheetStateFlow</span>, settingsRepository.getVisibilityOnboardingCompletionDateFlow(),
+    <span class="fld">permissionsFlow</span>, <span class="fld">whatNewBottomSheetHasShownFlow</span>,
 ) { ... }.mapLatest { (showBottomSheet, visibilityOnboardingCompletionDate, ...) -&gt;
-    <span class="k">if</span> (showBottomSheet &amp;&amp; !<span class="ty">SecurityManager</span>.isSessionExpired() &amp;&amp; (... != <span class="k">null</span> || ...)) {
-        whatNewBottomSheetHasShownFlow.value = <span class="k">true</span>      <span class="cm">// writes to its own upstream</span>
+    <span class="k">if</span> (showBottomSheet &amp;&amp; !SecurityManager.isSessionExpired() &amp;&amp; (... != <span class="k">null</span> || ...)) {
+        <span class="fld">whatNewBottomSheetHasShownFlow</span>.<span class="fld">value</span> = <span class="k">true</span>      <span class="cm">// writes to its own upstream</span>
         getWhatsNewItems(permissions)
     } <span class="k">else</span> {
         <span class="k">null</span>
@@ -403,14 +419,15 @@ showBottomSheetStateFlow            currentValue
   <p class="ct">Source of truth two — the sheet position</p>
   <span class="loc">app/.../ux/help/HelpScreen.kt:80-98</span>
   <p class="desc">state remembered above the if, so it outlives every show and dismiss</p>
-  <div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> <span class="ty">WhatsNewBottomSheet</span>(showBottomSheetFlow: <span class="ty">StateFlow</span>&lt;<span class="ty">List</span>&lt;<span class="ty">WhatsNewItem</span>&gt;?&gt;, dismissBottomSheet: () -&gt; <span class="ty">Unit</span>) {
-    <span class="k">val</span> whatsNewItems = showBottomSheetFlow.collectAsStateWithLifecycle().value
+  <div class="code"><span class="lang">kotlin</span><pre><span class="an">@Composable</span>
+<span class="k">fun</span> <span class="fn">WhatsNewBottomSheet</span>(showBottomSheetFlow: StateFlow&lt;List&lt;WhatsNewItem&gt;?&gt;, dismissBottomSheet: () -&gt; Unit) {
+    <span class="k">val</span> whatsNewItems = showBottomSheetFlow.collectAsStateWithLifecycle().<span class="fld">value</span>
     <span class="k">val</span> bottomSheetState = rememberBottomSheetState(
-        initialValue = <span class="ty">SheetValue</span>.Hidden, enabledValues = setOf(<span class="ty">SheetValue</span>.Hidden, <span class="ty">SheetValue</span>.Expanded))
+        initialValue = SheetValue.<span class="fld">Hidden</span>, enabledValues = setOf(SheetValue.<span class="fld">Hidden</span>, SheetValue.<span class="fld">Expanded</span>))
 
     <span class="k">if</span> (whatsNewItems != <span class="k">null</span>) {
-        <span class="ty">ModalBottomSheet</span>(sheetState = bottomSheetState, onDismissRequest = { dismissBottomSheet() }, ...) {
-            <span class="ty">WhatsNewList</span>(whatsNewItems, ...)
+        ModalBottomSheet(sheetState = bottomSheetState, onDismissRequest = { dismissBottomSheet() }, ...) {
+            WhatsNewList(whatsNewItems, ...)
         }
     }
 }</pre></div>
@@ -429,9 +446,9 @@ showBottomSheetStateFlow            currentValue
   <p class="ct">The bridge, and what it costs to miss</p>
   <span class="loc">app/.../ux/help/HelpViewModel.kt:81-84</span>
   <p class="desc">the only thing that ever un-composes the sheet</p>
-  <div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> dismissBottomSheet() {
-    showBottomSheetStateFlow.value = <span class="k">false</span>
-    tipsUtil.tipsShownAsync()
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> <span class="fn">dismissBottomSheet</span>() {
+    <span class="fld">showBottomSheetStateFlow</span>.<span class="fld">value</span> = <span class="k">false</span>
+    <span class="fld">tipsUtil</span>.tipsShownAsync()
 }</pre></div>
   <ul class="why">
     <li><b>Reached from:</b> <span class="m">onDismissRequest</span> only — nothing else in the
@@ -445,11 +462,11 @@ showBottomSheetStateFlow            currentValue
   <p class="ct">The sheet is hosted over every screen in the app</p>
   <span class="loc">app/.../ux/main/MainActivity.kt:146-149</span>
   <p class="desc">a sibling of Nav3Host, so a stuck sheet blocks the whole app, not one screen</p>
-  <div class="code"><span class="lang">kotlin</span><pre><span class="k">if</span> (state.ready) {
-    <span class="ty">HandleDialog</span>( ... )
-    <span class="ty">WhatsNewBottomSheet</span>(
-        showBottomSheetFlow = helpViewModel.showBottomSheetFlow,
-        dismissBottomSheet = { helpViewModel.dismissBottomSheet() },
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">if</span> (state.<span class="fld">ready</span>) {
+    HandleDialog( ... )
+    WhatsNewBottomSheet(
+        showBottomSheetFlow = <span class="fld">helpViewModel</span>.<span class="fld">showBottomSheetFlow</span>,
+        dismissBottomSheet = { <span class="fld">helpViewModel</span>.dismissBottomSheet() },
     )
 }</pre></div>
   <ul class="why">
@@ -491,11 +508,11 @@ showBottomSheetStateFlow            currentValue
   <span class="loc">material3/commonMain/.../BottomSheet.kt:157, SheetDefaults.kt:215-216</span>
   <p class="desc">enabled is false exactly when the sheet is already Hidden</p>
   <div class="code"><span class="lang">kotlin</span><pre><span class="cm">// BottomSheet.kt</span>
-<span class="ty">PredictiveBackHandler</span>(enabled = backHandlerEnabled &amp;&amp; state.isVisible) { progress -&gt; ... }
+PredictiveBackHandler(enabled = backHandlerEnabled &amp;&amp; state.<span class="fld">isVisible</span>) { progress -&gt; ... }
 
 <span class="cm">// SheetDefaults.kt</span>
-<span class="k">public val</span> isVisible: <span class="ty">Boolean</span>
-    <span class="k">get</span>() = anchoredDraggableState.currentValue != <span class="ty">Hidden</span></pre></div>
+<span class="k">public val</span> <span class="fld">isVisible</span>: Boolean
+    <span class="k">get</span>() = <span class="fld">anchoredDraggableState</span>.<span class="fld">currentValue</span> != <span class="fld">Hidden</span></pre></div>
   <ul class="why">
     <li><b>Result:</b> no back handler is registered, and the dialog window still holds focus,
     so the press reaches nothing. Matches "repeated back-presses all failed".</li>
@@ -506,10 +523,10 @@ showBottomSheetStateFlow            currentValue
   <p class="ct">Exit 2 · Tapping the scrim asks a mutex that a stalled drag may still hold</p>
   <span class="loc">material3/commonMain/.../ModalBottomSheet.kt:113-123</span>
   <p class="desc">hide() is a mutation on the same anchored-draggable state the drag owns</p>
-  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> animateToDismiss: () -&gt; <span class="ty">Unit</span> = {
-    <span class="k">if</span> (sheetState.confirmValueChange(<span class="ty">Hidden</span>)) {
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> animateToDismiss: () -&gt; Unit = {
+    <span class="k">if</span> (sheetState.confirmValueChange(<span class="fld">Hidden</span>)) {
         scope.launch { sheetState.hide() }
-            .invokeOnCompletion { <span class="k">if</span> (!sheetState.isVisible) { onDismissRequest() } }
+            .invokeOnCompletion { <span class="k">if</span> (!sheetState.<span class="fld">isVisible</span>) { onDismissRequest() } }
     }
 }</pre></div>
   <ul class="why">
@@ -525,13 +542,13 @@ showBottomSheetStateFlow            currentValue
   <p class="ct">Exit 3 · The settle callback only fires if its coroutine finishes</p>
   <span class="loc">material3/commonMain/.../BottomSheet.kt:249-256</span>
   <p class="desc">the dismiss for a drag lives in a finally inside performFling</p>
-  <div class="code"><span class="lang">kotlin</span><pre><span class="k">override suspend fun</span> <span class="ty">ScrollScope</span>.performFling(initialVelocity: <span class="ty">Float</span>): <span class="ty">Float</span> {
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">override suspend fun</span> ScrollScope.<span class="fn">performFling</span>(initialVelocity: Float): Float {
     ...
-    <span class="k">var</span> remainingVelocity = 0f
+    <span class="k">var</span> remainingVelocity = <span class="n">0f</span>
     <span class="k">try</span> {
         remainingVelocity = <span class="k">with</span>(anchoredDraggableFlingBehavior) { performFling(safeVelocity) }
     } <span class="k">finally</span> {
-        <span class="k">if</span> (!state.isVisible) onDismissRequest()          <span class="cm">// the whole dismiss, for a drag</span>
+        <span class="k">if</span> (!state.<span class="fld">isVisible</span>) onDismissRequest()          <span class="cm">// the whole dismiss, for a drag</span>
     }
     <span class="k">return</span> remainingVelocity
 }</pre></div>
