@@ -53,6 +53,13 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 
 #r-p-issue:checked ~ main #p-issue{display:block}
 #r-p-fix:checked   ~ main #p-fix  {display:block}
+#r-p-adj:checked   ~ main #p-adj  {display:block}
+
+#r-t-delta:checked ~ main #t-delta{display:block}
+#r-t-a1:checked    ~ main #t-a1   {display:block}
+#r-t-a2:checked    ~ main #t-a2   {display:block}
+#r-t-a3:checked    ~ main #t-a3   {display:block}
+#r-t-gate:checked  ~ main #t-gate {display:block}
 
 #r-t-sym:checked   ~ main #t-sym  {display:block}
 #r-t-zomb:checked  ~ main #t-zomb {display:block}
@@ -82,7 +89,8 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 .skipto-toggle svg{transition:.15s}
 .skipto-menu{display:flex;flex-direction:column;gap:5px}
 #r-p-issue:checked ~ .skipto label[for="r-p-issue"],
-#r-p-fix:checked   ~ .skipto label[for="r-p-fix"]{background:var(--bg);color:var(--accent)}
+#r-p-fix:checked   ~ .skipto label[for="r-p-fix"],
+#r-p-adj:checked   ~ .skipto label[for="r-p-adj"]{background:var(--bg);color:var(--accent)}
 @media (max-width:1180px){
   .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
   .skipto-toggle{display:flex}
@@ -111,6 +119,12 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 #r-t-f3:checked   ~ main label[for="r-t-f3"],
 #r-t-f4:checked   ~ main label[for="r-t-f4"]{
   color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t-delta:checked ~ main label[for="r-t-delta"],
+#r-t-a1:checked    ~ main label[for="r-t-a1"],
+#r-t-a2:checked    ~ main label[for="r-t-a2"],
+#r-t-a3:checked    ~ main label[for="r-t-a3"],
+#r-t-gate:checked  ~ main label[for="r-t-gate"]{
+  color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
 
 /* ---------- the container ---------- */
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
@@ -234,6 +248,12 @@ td code{white-space:normal}
 <input class="st" type="radio" name="tfix" id="r-t-f2">
 <input class="st" type="radio" name="tfix" id="r-t-f3">
 <input class="st" type="radio" name="tfix" id="r-t-f4">
+<input class="st" type="radio" name="pg" id="r-p-adj">
+<input class="st" type="radio" name="tadj" id="r-t-delta" checked>
+<input class="st" type="radio" name="tadj" id="r-t-a1">
+<input class="st" type="radio" name="tadj" id="r-t-a2">
+<input class="st" type="radio" name="tadj" id="r-t-a3">
+<input class="st" type="radio" name="tadj" id="r-t-gate">
 <input class="st" type="checkbox" id="navtoggle">
 
 <nav class="skipto" aria-label="Pages">
@@ -244,6 +264,7 @@ td code{white-space:normal}
     <div class="navlabel">Pages</div>
     <label for="r-p-issue">Issue</label>
     <label for="r-p-fix">Proposed Fix</label>
+    <label for="r-p-adj">Fix Adjustments</label>
   </div>
 </nav>
 
@@ -1188,6 +1209,293 @@ PredictiveBackHandler(enabled = backHandlerEnabled &amp;&amp; state.<span class=
 </div><!-- /t-f4 -->
 
 </section><!-- /p-fix -->
+
+<!-- ================= PAGE 3 — FIX ADJUSTMENTS ================= -->
+<section class="page" id="p-adj">
+
+<div class="head">
+  <h1>Fix adjustments — what the build changed</h1>
+  <p class="lede">The watcher and the state move went in as designed. Three things around them
+  did not, and one verification step was added that the plan never had.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-delta">What Changed</label>
+  <label class="tab" for="r-t-a1">1 · The Test Opt-In</label>
+  <label class="tab" for="r-t-a2">2 · A Third Test</label>
+  <label class="tab" for="r-t-a3">3 · Minimal-Diff Formatting</label>
+  <label class="tab" for="r-t-gate">Gate</label>
+</div>
+
+<!-- ---------------- WHAT CHANGED ---------------- -->
+<div class="tabpanel" id="t-delta">
+
+<h2><span class="rail r3">│</span> Plan against reality</h2>
+
+<div class="note good">
+  <b>The design survived contact unchanged</b>
+  <p><span class="m">DismissWhenHidden</span> compiled and behaved exactly as sketched, and the
+  state move needed no rework. Every adjustment below is around the fix, not in it.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Every deviation, in one table</p>
+  <div class="tw"><table>
+  <tr><th>#</th><th>Planned</th><th>Shipped</th><th>Why</th></tr>
+  <tr>
+    <td>1</td>
+    <td>Test class with the runner, <code>@Config</code> and <code>@GraphicsMode</code></td>
+    <td>Plus <code>@OptIn(ExperimentalMaterial3Api::class)</code></td>
+    <td>Hard compile failure — 15 errors, the plan's sketch would not build</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Two tests</td>
+    <td>Three</td>
+    <td>Nothing covered the sheet staying open, which is the case a too-eager watcher breaks</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>The moved <code>rememberBottomSheetState</code> call reflowed over four lines</td>
+    <td>Left on its original single line, with a comment above it</td>
+    <td>Reflowing turns a one-line move into a five-line rewrite in review</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>No mutation check</td>
+    <td>Arming line deleted, gate re-run, line restored</td>
+    <td>Three passing tests prove nothing until they have been seen to fail</td>
+  </tr>
+  </table></div>
+</div>
+
+<div class="card">
+  <p class="ct">What the plan got right and did not have to revisit</p>
+  <ul>
+    <li>The two sequential <code>first</code> calls close the gap they were meant to —
+    <code>snapshotFlow</code> re-emits the current value on collection, so a flip to
+    <code>Hidden</code> between them is caught by the second one's first emission.</li>
+    <li><code>show()</code> and <code>hide()</code> with no sheet laid out do update
+    <code>currentValue</code>, as <code>SheetDefaults.kt:307-319</code> documents. The test
+    harness depends on this and it held.</li>
+    <li>The effect ends after one <code>onHidden()</code>, so the callback cannot fire twice
+    while the flag write makes its way back through <code>combine</code> and
+    <code>mapLatest</code>.</li>
+    <li>Konsist raised nothing. <code>ComposeTest</code> only requires a default on a
+    <code>modifier</code> parameter, and <code>DismissWhenHidden</code> has none.</li>
+  </ul>
+</div>
+
+<div class="note bad">
+  <b>Unrelated, and caught on the way past</b>
+  <p>The build regenerated three untracked schema JSON files — <span class="m">member/49</span>,
+  <span class="m">calendar/9</span> and <span class="m">map/2</span>. They are in-flux versions
+  and <span class="m">domain-context.md</span> says not to commit them, so they were unstaged
+  and left on disk.</p>
+  <p>Worth knowing because <span class="m">git add -A</span> in this worktree will pick all
+  three up.</p>
+</div>
+
+</div><!-- /t-delta -->
+
+<!-- ---------------- ADJUSTMENT 1 ---------------- -->
+<div class="tabpanel" id="t-a1">
+
+<h2><span class="rail r3">│</span> Adjustment 1 — the test needed the opt-in</h2>
+
+<div class="card">
+  <p class="ct">What the build said</p>
+  <span class="loc">gradle :app:testDebugUnitTest --tests …WhatsNewBottomSheetRobolectricTest</span>
+  <p class="desc">fifteen of these, one per experimental symbol the test names</p>
+  <div class="code"><span class="lang">text</span><pre><span class="no">&gt; Task :app:compileDebugUnitTestKotlin FAILED</span>
+e: WhatsNewBottomSheetRobolectricTest.kt:36:38 This material API is experimental
+   and is likely to change or to be removed in the future.
+e: WhatsNewBottomSheetRobolectricTest.kt:51:23 ...
+e: WhatsNewBottomSheetRobolectricTest.kt:76:13 ...
+<span class="no">BUILD FAILED in 3m 46s</span></pre></div>
+</div>
+
+<div class="card typed">
+  <span class="tag t-add">ADD</span>
+  <p class="ct">1.1 — Add the Opt-In to the Test Class</p>
+  <span class="loc">app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt:28-32</span>
+  <p class="desc">one annotation plus its import; nothing else moved</p>
+  <div class="code"><span class="lang">kotlin</span><pre> <span class="ad">+</span>  <span class="an">@OptIn</span>(ExperimentalMaterial3Api::<span class="k">class</span>)
+    <span class="an">@RunWith</span>(RobolectricTestRunner::<span class="k">class</span>)
+    <span class="an">@Config</span>(sdk = [<span class="n">34</span>], application = Application::<span class="k">class</span>)
+    <span class="an">@GraphicsMode</span>(GraphicsMode.Mode.<span class="fld">NATIVE</span>)
+    <span class="k">class</span> WhatsNewBottomSheetRobolectricTest {
+        ...
+    }</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — <code>SheetState</code>, <code>SheetValue</code>,
+    <code>rememberBottomSheetState</code> and <code>DismissWhenHidden</code> are all
+    <code>@ExperimentalMaterial3Api</code>, and the test source set carries no module-wide
+    opt-in</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">Why the plan missed it</p>
+  <p>The production side already had the annotation — <code>WhatsNewBottomSheet</code> opts in
+  at <code>HelpScreen.kt:78</code> and <code>DismissWhenHidden</code> got one when it was
+  written. The plan's Step 3 sketch was modelled on
+  <code>SyncOptionsScreenRobolectricTest</code>, which touches no experimental Material 3 API
+  and so needed none to copy.</p>
+</div>
+
+</div><!-- /t-a1 -->
+
+<!-- ---------------- ADJUSTMENT 2 ---------------- -->
+<div class="tabpanel" id="t-a2">
+
+<h2><span class="rail r3">│</span> Adjustment 2 — a third test</h2>
+
+<div class="card typed">
+  <span class="tag t-add">ADD</span>
+  <p class="ct">2.1 — Assert a Shown Sheet Stays Shown</p>
+  <span class="loc">app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt:62-69</span>
+  <p class="desc">the case a watcher that fires on every value would break</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="an">@Test</span>
+<span class="k">fun</span> <span class="fn">`a sheet that is shown and stays shown is not dismissed`</span>() {
+    setWatcher()
+
+    runBlocking { sheetState.show() }
+    composeRule.waitForIdle()
+
+    assertThat(dismissCount).isEqualTo(<span class="n">0</span>)
+}</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — the two planned tests both end at <code>Hidden</code>, so a watcher
+    rewritten to fire on any settled value would still pass both of them</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">The dropped fourth idea</p>
+  <p>The plan floated an optional integration test asserting that a null flow leaves no
+  "Close sheet" node behind. It was not written: driving the real
+  <span class="m">ModalBottomSheet</span> through Robolectric brings in a dialog window and an
+  animation clock, and the assertion it produces is weaker than the three direct ones. The
+  on-device pass covers that path better than a JVM test would.</p>
+</div>
+
+</div><!-- /t-a2 -->
+
+<!-- ---------------- ADJUSTMENT 3 ---------------- -->
+<div class="tabpanel" id="t-a3">
+
+<h2><span class="rail r3">│</span> Adjustment 3 — the state move stayed one line</h2>
+
+<div class="card typed">
+  <span class="tag t-edit">EDIT</span>
+  <p class="ct">3.1 — Move the Call Without Reflowing It</p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt:84-93</span>
+  <p class="desc">the same call, three lines lower, with the reason above it</p>
+  <div class="code"><span class="lang">kotlin</span><pre>    <span class="k">val</span> whatsNewItems = whatsNewState.<span class="fld">value</span>
+ <span class="rm">-</span>  <span class="k">val</span> bottomSheetState = rememberBottomSheetState(initialValue = SheetValue.<span class="fld">Hidden</span>, ...)
+
+    <span class="k">if</span> (whatsNewItems != <span class="k">null</span>) {
+ <span class="ad">+</span>      <span class="cm">// Scoped to the branch so every show starts from Hidden. Hoisted, the state is</span>
+ <span class="ad">+</span>      <span class="cm">// rememberSaveable-backed and outlives the sheet, so a stale Hidden can pair with a</span>
+ <span class="ad">+</span>      <span class="cm">// live show flag and strand the sheet before it ever opens (MMA-6047).</span>
+ <span class="ad">+</span>      <span class="k">val</span> bottomSheetState = rememberBottomSheetState(initialValue = SheetValue.<span class="fld">Hidden</span>, ...)
+ <span class="ad">+</span>
+ <span class="ad">+</span>      DismissWhenHidden(bottomSheetState, dismissBottomSheet)
+ <span class="ad">+</span>
+        ModalBottomSheet(
+            ...
+        )
+    }</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — reflowing the argument list would make every one of its lines show as
+    changed, hiding the single fact the reviewer needs: the call moved inside the branch</li>
+  </ul>
+</div>
+
+<div class="note calm">
+  <b>The long line is pre-existing and detekt accepts it</b>
+  <p>The call runs past 150 characters, exactly as it did before. <span class="m">detektDebug
+  </span> passed, so the project's line-length rule already permits it, and tightening it here
+  would be an unrelated change riding along on a bug fix.</p>
+</div>
+
+</div><!-- /t-a3 -->
+
+<!-- ---------------- GATE ---------------- -->
+<div class="tabpanel" id="t-gate">
+
+<h2><span class="rail r3">│</span> What was run, and what it said</h2>
+
+<div class="card">
+  <p class="ct">The command</p>
+  <span class="loc">run from the MMA-6047 worktree</span>
+  <p class="desc">the new tests, the two Konsist suites they could plausibly break, and detekt</p>
+  <div class="code"><span class="lang">bash</span><pre>./gradlew :app:testDebugUnitTest \
+  --tests <span class="s">"org.lds.ldstools.ux.help.*"</span> \
+  --tests <span class="s">"org.lds.ldstools.konsist.ComposeTest"</span> \
+  --tests <span class="s">"org.lds.ldstools.konsist.JunitTest"</span> \
+  :app:detektDebug</pre></div>
+  <div class="code"><span class="lang">text</span><pre><span class="ok">BUILD SUCCESSFUL in 40s</span>
+EXIT=0</pre></div>
+</div>
+
+<div class="card">
+  <p class="ct">Results, from the JUnit XML rather than the console</p>
+  <div class="tw"><table>
+  <tr><th>Suite</th><th>Tests</th><th>Skipped</th><th>Failures</th><th>Errors</th></tr>
+  <tr><td><code>ux.help.WhatsNewBottomSheetRobolectricTest</code></td>
+      <td>3</td><td>0</td><td>0</td><td>0</td></tr>
+  <tr><td><code>ux.help.WhatsNewCatalogTest</code></td>
+      <td>5</td><td>0</td><td>0</td><td>0</td></tr>
+  <tr><td><code>konsist.ComposeTest</code></td>
+      <td>3</td><td>0</td><td>0</td><td>0</td></tr>
+  <tr><td><code>konsist.JunitTest</code></td>
+      <td>2</td><td>0</td><td>0</td><td>0</td></tr>
+  </table></div>
+</div>
+
+<div class="card">
+  <p class="ct">The mutation check — proof the tests are not free</p>
+  <p class="desc">arming line deleted, gate re-run, line restored from a backup</p>
+  <div class="code"><span class="lang">text</span><pre><span class="cm"># with `first { it != SheetValue.Hidden }` deleted from DismissWhenHidden</span>
+<span class="no">WhatsNewBottomSheetRobolectricTest &gt; a sheet that is shown and stays shown … FAILED</span>
+<span class="no">WhatsNewBottomSheetRobolectricTest &gt; a sheet that has never been shown …    FAILED</span>
+<span class="no">WhatsNewBottomSheetRobolectricTest &gt; settling back at Hidden dismisses …    FAILED</span>
+<span class="no">BUILD FAILED in 19s</span>   EXIT=1</pre></div>
+  <p>All three depend on the arming rule, which is the one part of the watcher that is easy to
+  get wrong. The line was restored from a copy taken before the edit and the gate re-run green.</p>
+</div>
+
+<div class="note">
+  <b>Still unverified — the assumption, and the device</b>
+  <p>These tests drive <span class="m">SheetState</span> directly. They prove the watcher
+  reacts to <span class="m">currentValue</span>; they cannot prove
+  <span class="m">currentValue</span> actually reaches <span class="m">Hidden</span> during the
+  real freeze, which is the assumption recorded on the Proposed Fix page.</p>
+  <p>Only the clear-data re-login repro on a device settles that. No emulator pass has been
+  run yet.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Not run, and why</p>
+  <div class="tw"><table>
+  <tr><th>Gate</th><th>Status</th><th>Reason</th></tr>
+  <tr><td>Full <code>:app:testDebugUnitTest</code></td><td>Not run</td>
+      <td>Deliberately narrow while the machine is shared. Belongs in the pre-PR run</td></tr>
+  <tr><td><code>validateDebugScreenshotTest</code></td><td>Not run</td>
+      <td>No composable's appearance changed, and the suite is red on plain main anyway</td></tr>
+  <tr><td>The device repro</td><td>Not run</td>
+      <td>Needs the clear-data re-login sequence on an emulator</td></tr>
+  </table></div>
+</div>
+
+</div><!-- /t-gate -->
+
+</section><!-- /p-adj -->
 
 </main>
 </body>
