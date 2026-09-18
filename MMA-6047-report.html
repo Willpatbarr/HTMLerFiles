@@ -72,6 +72,12 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 #r-t-p7:checked ~ main #t-p7{display:block}
 #r-t-nits:checked ~ main #t-nits{display:block}
 
+#r-p-log:checked ~ main #p-log{display:block}
+#r-t-pr:checked ~ main #t-pr{display:block}
+#r-t-c1:checked ~ main #t-c1{display:block}
+#r-t-c2:checked ~ main #t-c2{display:block}
+#r-t-c3:checked ~ main #t-c3{display:block}
+
 #r-t-sym:checked   ~ main #t-sym  {display:block}
 #r-t-zomb:checked  ~ main #t-zomb {display:block}
 #r-t-app:checked   ~ main #t-app  {display:block}
@@ -102,7 +108,8 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 #r-p-issue:checked ~ .skipto label[for="r-p-issue"],
 #r-p-fix:checked   ~ .skipto label[for="r-p-fix"],
 #r-p-adj:checked   ~ .skipto label[for="r-p-adj"],
-#r-p-pre:checked   ~ .skipto label[for="r-p-pre"]{background:var(--bg);color:var(--accent)}
+#r-p-pre:checked   ~ .skipto label[for="r-p-pre"],
+#r-p-log:checked   ~ .skipto label[for="r-p-log"]{background:var(--bg);color:var(--accent)}
 @media (max-width:1180px){
   .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
   .skipto-toggle{display:flex}
@@ -149,6 +156,18 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 #r-t-p7:checked ~ main label[for="r-t-p7"],
 #r-t-nits:checked ~ main label[for="r-t-nits"]{
   color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t-pr:checked ~ main label[for="r-t-pr"],
+#r-t-c1:checked ~ main label[for="r-t-c1"],
+#r-t-c2:checked ~ main label[for="r-t-c2"],
+#r-t-c3:checked ~ main label[for="r-t-c3"]{
+  color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+
+/* verbatim blocks: git text copied 1:1, no highlighting to imply structure it lacks */
+.verbatim{margin:0 0 .6rem}
+.verbatim pre{margin:0;background:var(--as-bg);color:var(--as-fg);
+  border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:15px 17px;
+  overflow-x:auto;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;
+  font-family:var(--mono);font-size:12.8px;line-height:1.75}
 
 /* severity chips - filled rectangle, the glossary's priority shape */
 .prio{display:inline-block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
@@ -296,6 +315,11 @@ td code{white-space:normal}
 <input class="st" type="radio" name="tpre" id="r-t-p6">
 <input class="st" type="radio" name="tpre" id="r-t-p7">
 <input class="st" type="radio" name="tpre" id="r-t-nits">
+<input class="st" type="radio" name="pg" id="r-p-log">
+<input class="st" type="radio" name="tlog" id="r-t-pr" checked>
+<input class="st" type="radio" name="tlog" id="r-t-c1">
+<input class="st" type="radio" name="tlog" id="r-t-c2">
+<input class="st" type="radio" name="tlog" id="r-t-c3">
 <input class="st" type="checkbox" id="navtoggle">
 
 <nav class="skipto" aria-label="Pages">
@@ -308,6 +332,7 @@ td code{white-space:normal}
     <label for="r-p-fix">Proposed Fix</label>
     <label for="r-p-adj">Fix Adjustments</label>
     <label for="r-p-pre">Preflight</label>
+    <label for="r-p-log">Change Log</label>
   </div>
 </nav>
 
@@ -2101,6 +2126,185 @@ composeRule.onNodeWithText(whatsNewHeader).assertIsDisplayed()</pre></div>
 </div><!-- /t-nits -->
 
 </section><!-- /p-pre -->
+
+<!-- ================= PAGE 5 — CHANGE LOG ================= -->
+<section class="page" id="p-log">
+
+<div class="head">
+  <h1>Change log</h1>
+  <p class="lede">The PR description and the three commit messages, copied verbatim. Nothing on
+  this page is a paraphrase.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-pr">PR Description</label>
+  <label class="tab" for="r-t-c1">Commit 1 · 393ad56257</label>
+  <label class="tab" for="r-t-c2">Commit 2 · 30db427906</label>
+  <label class="tab" for="r-t-c3">Commit 3 · 3fff4578e9</label>
+</div>
+
+<!-- ---------------- PR DESCRIPTION ---------------- -->
+<div class="tabpanel" id="t-pr">
+
+<h2><span class="rail r2">│</span> MMA-6047 Fix the What's New sheet leaving an invisible scrim that blocks all input</h2>
+
+<div class="verbatim"><pre>## Summary
+
+Dismissing the What's New bottom sheet by dragging it down could leave it composed at
+`SheetValue.Hidden`. The Material 3 scrim is a full-screen `Canvas` whose alpha reaches only
+`drawRect` — its `pointerInput` and its "Close sheet" semantics are unconditional — so at alpha 0
+it becomes an invisible, full-screen tap sink. The back handler is disabled at Hidden too
+(`PredictiveBackHandler(enabled = backHandlerEnabled &amp;&amp; state.isVisible)`). The result is an app
+that renders normally and ignores every tap until the process is killed. The sheet is hosted by
+`MainActivity` above every destination, so this blocked Home, the drawer, the bottom bar and every
+screen inside the nav host.
+
+## Root cause
+
+Two sources of truth with one fragile edge between them. `HelpViewModel.showBottomSheetStateFlow`
+decides whether the composable exists; `SheetState` decides where the sheet is drawn. The only
+thing that brought them back into agreement was `onDismissRequest`, and `ModalBottomSheet` fires
+that solely from the completion of the coroutine that ran the dismissal — from a `finally` inside
+`performFling`, or from `invokeOnCompletion` after `hide()`. Interrupt that coroutine and the
+dismissal is lost permanently, with no second check anywhere.
+
+## What changed
+
+`HandleSheetDismissal` (new, `:core:ui`) watches where the sheet actually is and reports a
+dismissal when it settles at Hidden, running alongside `onDismissRequest` rather than replacing it.
+It arms on `targetValue` and fires on `currentValue`: `targetValue` flips at the start of the show
+animation, so an open the user interrupts still arms the watcher, which matters because the
+ticket's reproduction is a drag that begins while the sheet is still settling.
+
+`WhatsNewBottomSheet` calls it, and `rememberBottomSheetState` moved inside the branch that
+composes the sheet so each show starts from a fresh state rather than inheriting the previous
+sheet's anchors and position.
+
+`SheetStateExt.animateHide` is deleted. It had no callers and was built on the same
+`invokeOnCompletion` pattern this ticket is about.
+
+## Not in this PR
+
+56 files build a `ModalBottomSheet` with their own sheet state, and the two that were read closely
+— `WelcomeScreen.LegalBottomSheet` and `AddMilitaryServiceScreen.HandleBottomSheet` — have the
+identical hoisted-state, callback-only shape. `HandleSheetDismissal` is public in `:core:ui` so
+they can adopt it, but converting them belongs in its own ticket. MMA-6046 (the pool-closed crash)
+had fired earlier in every observed reproduction; this fix does not depend on whether that is the
+trigger.
+
+## Test evidence
+
+```
+./gradlew :core:ui:testDebugUnitTest --tests "org.lds.ldstools.core.ui.bottomsheet.*" \
+  :app:testDebugUnitTest --tests "org.lds.ldstools.ux.help.*" --tests "org.lds.ldstools.konsist.*" \
+  :app:detektDebug :core:ui:detektDebug :app:lintDebug :core:ui:lintDebug \
+  :app:compileDebugAndroidTestKotlin
+
+BUILD SUCCESSFUL in 4m 45s
+```
+
+44 tests, 0 failures, 0 skipped. New cover:
+
+- `HandleSheetDismissalRobolectricTest` — 3 tests on the arm-then-fire rule, including that the
+  initial Hidden is not a dismissal and that the helper reports at most once.
+- `WhatsNewBottomSheetRobolectricTest` — 3 tests on the call site, including one that holds the
+  caller in the failure state this ticket describes and asserts the dismissal is still reported.
+- `WhatsNewTests.dismissWhatsNewBottomSheet` now asserts the sheet is gone. It previously swiped
+  and called `waitForIdle` without asserting anything, so it passed with the bug present; four
+  existing instrumented tests become regression cover as a result.
+
+Both mutations were checked by hand: deleting the arming line fails all three helper tests, and
+deleting the `HandleSheetDismissal(...)` call fails the call-site test.
+
+**Device pass still owed.** The JVM tests drive `SheetState` directly and cannot synthesise an
+interrupted settle. The clear-data re-login reproduction on an emulator is what confirms the fix
+resolves the reported hang, and the now-asserting instrumented test is the gate for it.
+
+## Screenshots
+
+No visual change — the sheet looks and behaves identically when dismissal works.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)</pre></div>
+
+</div><!-- /t-pr -->
+
+<!-- ---------------- COMMIT 1 ---------------- -->
+<div class="tabpanel" id="t-c1">
+
+<h2><span class="rail r2">│</span> 393ad56257</h2>
+
+<div class="verbatim"><pre>MMA-6047 fix(ui): report a bottom sheet dismissal from the sheet's position
+
+ModalBottomSheet invokes onDismissRequest only from the completion of the
+coroutine that ran the dismissal. A settle that is cancelled or interrupted
+never reaches it, and the sheet is then stranded at Hidden while its caller
+still believes it is showing: the Material 3 scrim stays composed, full-screen
+and clickable at zero alpha, and the back handler is disabled because it is
+gated on isVisible. The app looks healthy and swallows every tap.
+
+HandleSheetDismissal watches where the sheet actually is instead. It arms on
+targetValue, which flips at the start of the show animation so an open the user
+interrupts still arms it, and fires on currentValue reaching Hidden. It runs
+alongside onDismissRequest rather than replacing it, so whichever edge notices
+first clears the caller's state.
+
+Also drops SheetStateExt.animateHide. It had no callers and was built on the
+same invokeOnCompletion pattern this ticket is about, so leaving it beside the
+fix would be a trap.
+
+Co-Authored-By: Claude Opus 5 &lt;noreply@anthropic.com&gt;</pre></div>
+
+</div><!-- /t-c1 -->
+
+<!-- ---------------- COMMIT 2 ---------------- -->
+<div class="tabpanel" id="t-c2">
+
+<h2><span class="rail r2">│</span> 30db427906</h2>
+
+<div class="verbatim"><pre>MMA-6047 fix(help): tear the What's New sheet down when it settles at Hidden
+
+Wires HandleSheetDismissal into WhatsNewBottomSheet, so a dismissal that never
+reports itself no longer leaves an invisible full-screen scrim over the whole
+app. The sheet is hosted by MainActivity above every destination, so a stranded
+one blocked Home, the drawer, the bottom bar and every screen inside the nav
+host until the process was killed.
+
+Scopes rememberBottomSheetState to the branch that composes the sheet. It is
+rememberSaveable-backed, so hoisted it carried this sheet's anchors and position
+into the next show; a fresh state discards stale anchors and satisfies the
+watcher's requirement that the state begin at Hidden.
+
+Records on HelpViewModel.dismissBottomSheet that it must stay idempotent. One
+dismissal now reaches it twice on the happy path, once from each edge, and
+neither edge can be dropped: the callback is the fast path and the watcher is
+the one that survives an interrupted settle.
+
+Co-Authored-By: Claude Opus 5 &lt;noreply@anthropic.com&gt;</pre></div>
+
+</div><!-- /t-c2 -->
+
+<!-- ---------------- COMMIT 3 ---------------- -->
+<div class="tabpanel" id="t-c3">
+
+<h2><span class="rail r2">│</span> 3fff4578e9</h2>
+
+<div class="verbatim"><pre>MMA-6047 test(whatsnew): assert the sheet is gone after the drag dismissal
+
+dismissWhatsNewBottomSheet swiped the sheet down and then called waitForIdle
+without asserting anything, so it passed whether or not the sheet actually
+went away — including with MMA-6047 leaving an invisible scrim behind.
+
+Routes it through Pages.WhatsNew.dragWhatsNewAway, which already escalates
+through three dismissals and polls semantics for the sheet's title to
+disappear. This is the only gate in the suite that exercises the real drag
+gesture the ticket reproduces with, so four existing instrumented tests become
+real regression cover for free.
+
+Co-Authored-By: Claude Opus 5 &lt;noreply@anthropic.com&gt;</pre></div>
+
+</div><!-- /t-c3 -->
+
+</section><!-- /p-log -->
 
 </main>
 </body>
