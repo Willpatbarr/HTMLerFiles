@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Primary key and touch target · open</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
+  --ok:#2E8B62; --blocked:#C24A4A; --active:#B06A1E;
+  --kw:#A25494; --ty:#4368A8; --add:#2E8B62;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+@media (max-width:1180px){ main{padding-top:72px} }
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.6rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted);font-size:1.02rem}
+@media (max-width:900px){ .head{grid-template-columns:1fr}
+  .head .lede{margin-top:1.1rem} }
+
+h2{font-size:1.3rem;line-height:1.35;margin:2.1rem 0 .7rem;font-weight:600}
+h3{font-size:1.04rem;margin:1.5rem 0 .5rem;font-weight:600;color:var(--ink)}
+p{margin:0 0 .9rem;max-width:68ch}
+ul,ol{margin:0 0 .9rem;padding-left:1.25rem;max-width:68ch}
+li{margin:0 0 .35rem}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;
+  background:var(--card);border:1px solid var(--border);border-radius:5px;
+  padding:1px 5px;overflow-wrap:anywhere;max-width:100%}
+a{color:var(--accent);overflow-wrap:anywhere}
+
+.g1{color:var(--g1)} .g2{color:var(--g2)} .g3{color:var(--g3)}
+
+/* ---- pages and tabs ---- */
+.page{display:none}
+.tabpanel{display:none}
+#r-p-key:checked ~ main #p-key{display:block}
+#r-p-tap:checked ~ main #p-tap{display:block}
+#r-p-con:checked ~ main #p-con{display:block}
+#r-t-k1:checked ~ main #t-k1{display:block}
+#r-t-k2:checked ~ main #t-k2{display:block}
+#r-t-k3:checked ~ main #t-k3{display:block}
+#r-t-p1:checked ~ main #t-p1{display:block}
+#r-t-p2:checked ~ main #t-p2{display:block}
+#r-t-p3:checked ~ main #t-p3{display:block}
+#r-t-p4:checked ~ main #t-p4{display:block}
+#r-t-c1:checked ~ main #t-c1{display:block}
+#r-t-c2:checked ~ main #t-c2{display:block}
+#r-t-c3:checked ~ main #t-c3{display:block}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;
+  border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+#r-t-k1:checked ~ main label[for="r-t-k1"],
+#r-t-k2:checked ~ main label[for="r-t-k2"],
+#r-t-k3:checked ~ main label[for="r-t-k3"]
+  {color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t-p1:checked ~ main label[for="r-t-p1"],
+#r-t-p2:checked ~ main label[for="r-t-p2"],
+#r-t-p3:checked ~ main label[for="r-t-p3"],
+#r-t-p4:checked ~ main label[for="r-t-p4"]
+  {color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t-c1:checked ~ main label[for="r-t-c1"],
+#r-t-c2:checked ~ main label[for="r-t-c2"],
+#r-t-c3:checked ~ main label[for="r-t-c3"]
+  {color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+
+/* ---- floating nav ---- */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;padding:2px 10px 4px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;
+  height:40px;padding:0;background:none;border:0;color:var(--muted);cursor:pointer;
+  border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+#r-p-key:checked ~ .skipto label[for="r-p-key"],
+#r-p-tap:checked ~ .skipto label[for="r-p-tap"],
+#r-p-con:checked ~ .skipto label[for="r-p-con"]
+  {background:var(--bg);color:var(--accent)}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+}
+
+/* ---- tables ---- */
+.tw{overflow-x:auto;margin:0 0 1.25rem;border:1px solid var(--border);
+  border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--faint);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  font-weight:700;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+
+/* ---- code ---- */
+.code{position:relative;margin:0 0 16px}
+.code pre{margin:0;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:15px 17px;overflow-x:auto;max-width:100%;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+  line-height:1.6}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--card);
+  padding:1px 4px;border-radius:3px;pointer-events:none;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.kw{color:var(--kw)} .ty{color:var(--ty)} .ad{color:var(--add)} .rm{color:var(--blocked)}
+.cm{color:var(--faint)}
+.loc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+  color:var(--muted);margin:0 0 .2rem;overflow-wrap:anywhere;max-width:100%}
+.desc{margin:0 0 .5rem;color:var(--muted);font-size:14px}
+
+/* ---- callout ---- */
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+  padding:13px 17px;margin:0 0 1.25rem;max-width:68ch}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;margin:0 0 5px}
+.note p:last-child{margin-bottom:0}
+
+/* ---- provenance line ---- */
+.prov{border-left:2px solid var(--border-strong);padding:2px 0 2px 12px;
+  color:var(--faint);font-size:13px;margin:0 0 1.2rem;max-width:68ch}
+
+/* ---- reply card ---- */
+.reply{border:1px solid var(--border-strong);background:var(--card);
+  border-radius:10px;padding:16px 19px;margin:0 0 1.25rem;max-width:72ch}
+.reply p{margin:0 0 .75rem}
+.reply p:last-child{margin-bottom:0}
+
+/* ---- status pill, held colours only ---- */
+.pill{display:inline-block;border-radius:10px;padding:1px 8px;font-size:.66em;
+  letter-spacing:.06em;white-space:nowrap;text-transform:uppercase;font-weight:700}
+.pill.ok{background:#2E8B6222;color:#2E8B62;border:1px solid #2E8B6266}
+.pill.blocked{background:#C24A4A22;color:#C24A4A;border:1px solid #C24A4A66}
+.pill.active{background:#B06A1E22;color:#B06A1E;border:1px solid #B06A1E66}
+</style>
+</head>
+<body>
+
+<input class="st" type="radio" name="pg" id="r-p-key" checked>
+<input class="st" type="radio" name="pg" id="r-p-tap">
+<input class="st" type="radio" name="pg" id="r-p-con">
+<input class="st" type="radio" name="tk" id="r-t-k1" checked>
+<input class="st" type="radio" name="tk" id="r-t-k2">
+<input class="st" type="radio" name="tk" id="r-t-k3">
+<input class="st" type="radio" name="tp" id="r-t-p1" checked>
+<input class="st" type="radio" name="tp" id="r-t-p2">
+<input class="st" type="radio" name="tp" id="r-t-p3">
+<input class="st" type="radio" name="tp" id="r-t-p4">
+<input class="st" type="radio" name="tc" id="r-t-c1" checked>
+<input class="st" type="radio" name="tc" id="r-t-c2">
+<input class="st" type="radio" name="tc" id="r-t-c3">
+<input class="st" type="checkbox" id="navtoggle">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-key">Primary key</label>
+    <label for="r-p-tap">Touch target</label>
+    <label for="r-p-con">Consolidation</label>
+  </div>
+</nav>
+
+<main>
+
+<div class="head">
+  <h1>Primary key and touch target · open</h1>
+  <p class="lede">Copilot's review of PR 2187 left two findings needing a decision. One
+  answer given earlier cited a ticket that covers something else.</p>
+</div>
+
+<!-- ============================= PAGE 1 ============================= -->
+<section class="page" id="p-key">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-k1">What breaks</label>
+    <label class="tab" for="r-t-k2">Why it waits</label>
+    <label class="tab" for="r-t-k3">Reply draft</label>
+  </div>
+
+  <div class="tabpanel" id="t-k1">
+    <h2><span class="g1">│</span> The collision <code>REPLACE</code> makes silent</h2>
+
+    <p class="loc">database/calendar/…/entities/event/CalendarEventRsvp.kt</p>
+    <p class="loc">database/calendar/…/event/CalendarEventRsvpDao.kt</p>
+    <p class="desc">the key and the conflict strategy that acts on it</p>
+    <div class="code"><span class="lang">kotlin</span>
+<pre>
+<span class="kw">@Entity</span>(tableName = "EventRsvp", primaryKeys = ["eventId", "name"])
+
+<span class="kw">@Insert</span>(onConflict = <span class="ty">OnConflictStrategy</span>.REPLACE)
+<span class="kw">suspend fun</span> insertAll(rsvps: List&lt;CalendarEventRsvp&gt;)</pre></div>
+
+    <p>SQLite's <code>REPLACE</code> deletes the conflicting row before inserting the new
+    one. Two people on event 42 who both display as <code>"Smith, John"</code> cannot
+    coexist: the second insert destroys the first.</p>
+
+    <h2><span class="g1">│</span> Why the consequence is worse than a missing row</h2>
+
+    <p><code>totalAttendees</code> is derived — <code>rsvpResponses.sumOf { it.headcount }</code>
+    — which is the property argued for earlier so the badge could not disagree with its rows.
+    A collision therefore does not just drop a name, it undercounts the people coming.</p>
+
+    <p>That number is what an organizer orders food against, and a father and son sharing a
+    display name in one ward is not an exotic case. Copilot's <b>Critical</b> rating is
+    defensible on impact.</p>
+
+    <p class="prov">Cut — the walkthrough of how <code>REPLACE</code> differs from
+    <code>IGNORE</code> and <code>ABORT</code>. The mechanism needed one line.</p>
+  </div>
+
+  <div class="tabpanel" id="t-k2">
+    <h2><span class="g1">│</span> Unreachable today</h2>
+
+    <p><code>insertAll</code> has no production caller anywhere in the repository. Nothing in
+    the app writes <code>EventRsvp</code>, so every event reads an empty list and no user on
+    any build can reach the collision.</p>
+
+    <p>That is the difference between a live defect and a latent one. It also sets the real
+    deadline: before the first writer, not before this merge.</p>
+
+    <h2><span class="g1">│</span> Three reasons to fix it with the writer</h2>
+
+    <div class="tw"><table>
+      <tr><th>Reason</th><th>Consequence for this PR</th></tr>
+      <tr>
+        <td>The right key depends on a payload nobody has seen</td>
+        <td>If MTMS-151 carries a respondent identifier, keying on it removes the problem
+        entirely. A surrogate key invented now may be discarded</td>
+      </tr>
+      <tr>
+        <td>A surrogate key changes the refresh contract</td>
+        <td><code>REPLACE</code> currently makes a whole-list re-insert idempotent for free.
+        An autogenerated id would need delete-then-insert in one transaction, which belongs
+        in the repository method that writes</td>
+      </tr>
+      <tr>
+        <td>The table is empty in every install</td>
+        <td>Room cannot alter a primary key in place, but with zero rows part 2's migration
+        can drop and recreate. No backfill, no data preservation, no risk</td>
+      </tr>
+    </table></div>
+
+    <p>The third reason is the strongest and the one Copilot cannot know from the diff.</p>
+
+    <h2><span class="g1">│</span> What Copilot is right about</h2>
+
+    <p>Read the comment's last clause: <i>"…before treating this table as the complete read
+    path."</i> That is a hit on the wording, not only the schema.</p>
+
+    <p>The PR body and the entity KDoc both call the read path "complete". It is complete in
+    shape and not collision-safe, so softening the claim is a real concession that costs
+    nothing.</p>
+  </div>
+
+  <div class="tabpanel" id="t-k3">
+    <h2><span class="g1">│</span> Reply draft</h2>
+
+    <div class="reply">
+      <p>Agreed on the mechanism — <code>REPLACE</code> on <code>(eventId, name)</code> would
+      overwrite one of two respondents sharing a display name, and because the attendee total
+      is derived from the rows, that shows up as a silent undercount.</p>
+      <p>Not fixing it in this PR, for two reasons. Nothing writes <code>EventRsvp</code> in
+      this branch — <code>insertAll</code> has no production caller — so the collision is
+      unreachable on any build today. And the correct key depends on the MTMS-151 payload: if
+      it carries a respondent identifier we key on that, and if it does not we need a
+      surrogate key plus a delete-then-insert refresh inside a transaction, which belongs with
+      the writer rather than ahead of it.</p>
+      <p>Deferring is near-free here: the table is empty in every install, so part 2's
+      migration can drop and recreate it rather than migrate data. The entity KDoc already
+      records the key as provisional, and this is going on the part-2 ticket.</p>
+      <p>Fair hit on the wording though — dropping the claim that this is "the complete read
+      path".</p>
+    </div>
+
+    <div class="note">
+      <b>Undefined · interim</b>
+      <p>The spec is silent on how a paste-ready prose block is rendered in HTML. A
+      <code>&lt;pre&gt;</code> would trip the monochrome-code check, since there is no syntax
+      to highlight. Interim: a bordered card, as above. Not in the register — the next free
+      identifier is UB-440.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= PAGE 2 ============================= -->
+<section class="page" id="p-tap">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-p1">What the code does</label>
+    <label class="tab" for="r-t-p2">The citation error</label>
+    <label class="tab" for="r-t-p3">Standards and precedent</label>
+    <label class="tab" for="r-t-p4">Options</label>
+  </div>
+
+  <div class="tabpanel" id="t-p1">
+    <h2><span class="g2">│</span> The modifier that collapses the target</h2>
+
+    <p class="loc">feature/calendar/…/detail/ManageRsvpsTab.kt:271</p>
+    <p class="desc">the info button beside the RSVP Notification Recipients header</p>
+    <div class="code"><span class="lang">kotlin</span>
+<pre>
+<span class="ty">IconButton</span>(onClick = onClick, modifier = Modifier.size(24.dp)) {
+    <span class="ty">Icon</span>(
+        imageVector = Icons.Outlined.Info,
+        contentDescription = stringResource(CoreR.string.information),
+    )
+}</pre></div>
+
+    <p>Material 3's <code>IconButton</code> is 48dp by default, and that is the whole point of
+    the component: the glyph is 24dp and the surrounding 12dp of empty space is the tap
+    target. Forcing <code>.size(24.dp)</code> collapses the clickable box down to the glyph.</p>
+
+    <p>The reason is real. The design frame's title block is 24dp tall, and a 48dp button
+    makes the row 48dp, doubling the height the design gives it.</p>
+  </div>
+
+  <div class="tabpanel" id="t-p2">
+    <h2><span class="g2">│</span> The comment cites two tickets about something else</h2>
+
+    <p>The code comment above the modifier reads <i>"Under-guideline target, same as the chips
+    — MMA-6076/6077."</i> Both tickets were pulled from Jira rather than trusted from the
+    comment.</p>
+
+    <div class="tw"><table>
+      <tr><th>Ticket</th><th>Summary</th><th>Check</th><th>Status</th></tr>
+      <tr>
+        <td>MMA-6076</td>
+        <td>Directory search's clear button exposes no accessible name</td>
+        <td><code>SpeakableTextPresentCheck</code></td>
+        <td><span class="pill ok">Resolved</span></td>
+      </tr>
+      <tr>
+        <td>MMA-6077</td>
+        <td>Calendar row trailing icons expose no accessible name</td>
+        <td><code>SpeakableTextPresentCheck</code></td>
+        <td><span class="pill ok">Resolved</span></td>
+      </tr>
+    </table></div>
+
+    <p>Both are about missing accessible <b>names</b> — a missing
+    <code>contentDescription</code> — and neither says anything about target size. Both are
+    also closed.</p>
+
+    <p>So the comment points a future reader at two resolved tickets that do not cover the
+    problem, which is worse than citing nothing. Two places carry the same wrong claim.</p>
+
+    <div class="tw"><table>
+      <tr><th>Where</th><th>State</th></tr>
+      <tr><td>The code comment at <code>ManageRsvpsTab.kt:269</code></td>
+        <td>On the branch, editable</td></tr>
+      <tr><td>The commit message of <code>287e37ee8e</code></td>
+        <td>Unpushed, so the message is still editable</td></tr>
+    </table></div>
+
+    <p class="prov">Added after the first answer — the Jira pull. The first version of this
+    analysis repeated the ticket numbers out of the code comment without reading either
+    ticket, and recommended deferring to them.</p>
+  </div>
+
+  <div class="tabpanel" id="t-p3">
+    <h2><span class="g2">│</span> Where 24dp actually stands</h2>
+
+    <p>"Fails accessibility" is too blunt. The three thresholds disagree with each other.</p>
+
+    <div class="tw"><table>
+      <tr><th>Standard</th><th>Requires</th><th>24dp</th></tr>
+      <tr><td>WCAG 2.2 SC 2.5.8, level AA</td><td>24 × 24 minimum</td>
+        <td>Passes, exactly at the floor</td></tr>
+      <tr><td>WCAG 2.1 SC 2.5.5, level AAA</td><td>44 × 44</td><td>Fails</td></tr>
+      <tr><td>Android and Material guidance</td><td>48dp</td><td>Fails</td></tr>
+    </table></div>
+
+    <p>Copilot's phrase "the platform's 48dp touch target" is the third row. This is not a
+    WCAG AA violation.</p>
+
+    <h2><span class="g2">│</span> Half the precedent argument holds</h2>
+
+    <p>The earlier answer said this was "the same trade the chips make". The repository was
+    counted rather than asserted.</p>
+
+    <div class="tw"><table>
+      <tr><th>Control</th><th>Call sites</th><th>Sub-48dp</th><th>Verdict on the claim</th></tr>
+      <tr><td>Chips — <code>InputChip</code>, <code>FilterChip</code>, others</td>
+        <td>70</td>
+        <td>All, on Material 3's 32dp default. Nothing in the repository uses
+          <code>minimumInteractiveComponentSize</code></td>
+        <td>Holds. Sub-48dp targets genuinely are pervasive</td></tr>
+      <tr><td><code>IconButton</code></td>
+        <td>139</td>
+        <td>One — <code>ManageRsvpsTab.kt</code></td>
+        <td>Does not hold. This PR introduces the deviation</td></tr>
+    </table></div>
+
+    <p>That asymmetry is why this button cannot ride on the chips. A reviewer asking why this
+    one button does something no other button in the app does has a point.</p>
+
+    <p class="prov">Added — the 139 and 70 counts. The first version of this analysis called
+    the trade "app-wide" with no number behind it.</p>
+  </div>
+
+  <div class="tabpanel" id="t-p4">
+    <h2><span class="g2">│</span> Three options, preference order</h2>
+
+    <p>Ordered by preference, not by cost. The ordering is the message.</p>
+
+    <div class="tw"><table>
+      <tr><th>#</th><th>Option</th><th>What it costs</th></tr>
+      <tr><td>1</td>
+        <td>Fix it here — let the <code>IconButton</code> keep its 48dp bounds and stop the row
+        growing, either by giving the title <code>Row</code> a fixed height and letting the
+        button overflow it, or by moving the info affordance into a row that already has
+        vertical space</td>
+        <td>A visual pass against the frame. That is the real expense, not the code</td></tr>
+      <tr><td>2</td>
+        <td>File a ticket for app-wide sub-48dp targets, covering the chips and this button,
+        then cite that ticket in the comment and the reply</td>
+        <td>Honest, and it creates the thing that is currently missing. Leaves the deviation
+        shipped in the meantime</td></tr>
+      <tr><td>3</td>
+        <td>Keep 24dp and argue it meets WCAG 2.2 AA</td>
+        <td>Defensible on the standard. Still the only <code>IconButton</code> in the app doing
+        it, which is what gets re-flagged</td></tr>
+    </table></div>
+
+    <p>Whichever is chosen, the comment and the commit message need correcting — the wrong
+    ticket reference is independent of the design decision.</p>
+
+    <div class="note">
+      <b>Not applied</b>
+      <p>Copilot's severities are left in its own words. Mapping "Critical" and "Moderate"
+      onto the glossary's five priority levels would give a held vocabulary a second meaning,
+      and the two scales do not correspond.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= PAGE 3 ============================= -->
+<section class="page" id="p-con">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-c1">Where the sources disagree</label>
+    <label class="tab" for="r-t-c2">What nothing settles</label>
+    <label class="tab" for="r-t-c3">Sources</label>
+  </div>
+
+  <div class="tabpanel" id="t-c1">
+    <h2><span class="g3">│</span> Disagreements</h2>
+
+    <div class="tw"><table>
+      <tr><th>Question</th><th>Copilot</th><th>Repository and Jira</th><th>Resolution</th></tr>
+      <tr>
+        <td>Can two respondents share a display name today</td>
+        <td>Yes, and one silently overwrites the other</td>
+        <td><code>insertAll</code> has no production caller, so no rows exist</td>
+        <td>Both true. The defect is latent, not live</td>
+      </tr>
+      <tr>
+        <td>Should the key be fixed before this merge</td>
+        <td>Yes — "before treating this table as the complete read path"</td>
+        <td>An empty table can be dropped and recreated in part 2's migration</td>
+        <td>Defer the schema, concede the wording</td>
+      </tr>
+      <tr>
+        <td>Is the 24dp button an existing app pattern</td>
+        <td>Does not say — flags it on the platform's 48dp guidance</td>
+        <td>One of 139 <code>IconButton</code> call sites. The 70 chip sites are a separate
+        control</td>
+        <td>Copilot is right that it stands alone</td>
+      </tr>
+      <tr>
+        <td>Is there a ticket holding the touch-target work</td>
+        <td>Does not say</td>
+        <td>MMA-6076 and MMA-6077 are missing-name tickets, both Resolved</td>
+        <td>No such ticket exists. The comment's citation is wrong</td>
+      </tr>
+    </table></div>
+
+    <p class="prov">Cut — the three findings already fixed in commit
+    <code>287e37ee8e</code>: the typography leak, the wrapped-chip spacing, and
+    <code>deleteOrphanedRsvps</code>. This document covers only what is still open.</p>
+  </div>
+
+  <div class="tabpanel" id="t-c2">
+    <h2><span class="g3">│</span> Gaps, stated rather than filled</h2>
+
+    <p>Each of these is a question none of the sources answers. None is answered by inference
+    here.</p>
+
+    <div class="tw"><table>
+      <tr><th>Gap</th><th>Who can settle it</th></tr>
+      <tr><td>Which of the three touch-target options to take</td>
+        <td>Will. It is a design and scope call, not a correctness one</td></tr>
+      <tr><td>Whether MTMS-151's payload carries a respondent identifier, which decides the
+        real primary key</td>
+        <td>The shared library contract, once published</td></tr>
+      <tr><td>Whether conceding the "complete read path" wording satisfies Copilot, or whether
+        it re-raises the schema</td>
+        <td>Only a re-review answers this</td></tr>
+      <tr><td>Whether an app-wide sub-48dp target ticket should exist, given that nothing in
+        the repository uses <code>minimumInteractiveComponentSize</code></td>
+        <td>Will, with whoever owns the accessibility backlog</td></tr>
+    </table></div>
+  </div>
+
+  <div class="tabpanel" id="t-c3">
+    <h2><span class="g3">│</span> Sources</h2>
+
+    <p>Ordered alphabetically by identifier.</p>
+
+    <div class="tw"><table>
+      <tr><th>Source</th><th>What it establishes</th></tr>
+      <tr><td><code>CalendarEventRsvp.kt</code></td>
+        <td>The primary key is <code>(eventId, name)</code>, and the KDoc already records it as
+        provisional</td></tr>
+      <tr><td><code>CalendarEventRsvpDao.kt</code></td>
+        <td><code>insertAll</code> carries <code>OnConflictStrategy.REPLACE</code>, and has no
+        caller outside its own test</td></tr>
+      <tr><td><code>EventDetailsUiState.kt</code></td>
+        <td><code>totalAttendees</code> is derived by summing headcounts, which turns a
+        collision into an undercount</td></tr>
+      <tr><td><code>ManageRsvpsTab.kt:269-271</code></td>
+        <td>The <code>.size(24.dp)</code> modifier and the comment citing MMA-6076/6077</td></tr>
+      <tr><td>MMA-6076</td>
+        <td>Directory search clear button, missing accessible name, Resolved. Not about target
+        size</td></tr>
+      <tr><td>MMA-6077</td>
+        <td>Calendar row trailing icons, missing accessible name, Resolved. Not about target
+        size</td></tr>
+      <tr><td>PR 2187 comment 4038673155</td>
+        <td>The primary-key finding, rated Critical, including the "complete read path"
+        clause</td></tr>
+      <tr><td>PR 2187 comment 4038673334</td>
+        <td>The touch-target finding, rated Moderate, asking for the default interactive
+        bounds</td></tr>
+      <tr><td>Repository grep — chips</td>
+        <td>70 chip call sites, none using
+        <code>minimumInteractiveComponentSize</code></td></tr>
+      <tr><td>Repository grep — <code>IconButton</code></td>
+        <td>139 call sites, exactly one forcing a sub-48dp size</td></tr>
+      <tr><td>WCAG 2.2 SC 2.5.8 and 2.1 SC 2.5.5</td>
+        <td>The 24 × 24 and 44 × 44 thresholds. Recalled, not fetched — the specification text
+        was not read for this document</td></tr>
+    </table></div>
+
+    <div class="note">
+      <b>Built as -research</b>
+      <p>The call named <code>-report</code>, which requires a Changelog half of code edits.
+      This document reports no edits — it consolidates Copilot's comments, two Jira tickets and
+      the repository against each other, which is <code>-research</code>. Format
+      <code>-html</code>; no method flag, so no questioning pass ran.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

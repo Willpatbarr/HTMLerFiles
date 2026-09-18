@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6005 — Public Event Additions (Preliminary) — Overview</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+}
+main { max-width: 880px; margin-inline: auto; padding: 72px clamp(16px, 4vw, 40px) 80px; }
+h1 { font-size: clamp(24px, 5vw, 34px); line-height: 1.2; margin: 0 0 6px; }
+h2 { font-size: clamp(19px, 3.5vw, 24px); margin: 0 0 14px; }
+h3 { font-size: clamp(16px, 3vw, 18px); margin: 0 0 8px; }
+p { max-width: 68ch; }
+code, a { overflow-wrap: anywhere; }
+code {
+  background: #23282e; border: 1px solid var(--border); border-radius: 6px;
+  padding: 1px 6px; font-size: .88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+a { color: var(--accent); }
+pre { overflow-x: auto; max-width: 100%; }
+.kicker { color: var(--faint); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 10px; }
+.subtitle { color: var(--muted); margin: 0 0 34px; }
+section { margin-bottom: 42px; scroll-margin-top: 20px; }
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow);
+}
+.card + .card { margin-top: 14px; }
+.onesentence { border-left: 4px solid var(--accent); font-size: clamp(16px, 3vw, 19px); }
+.onesentence p { margin: 0; max-width: none; }
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; border-radius: 999px; padding: 3px 10px; margin-bottom: 10px;
+}
+.badge.must { background: var(--accent-soft); color: var(--accent); border: 1px solid #2c5a41; }
+.badge.important { background: var(--warn-soft); color: var(--warn); border: 1px solid #5a4620; }
+.badge.optional { background: #22262b; color: var(--faint); border: 1px solid var(--border-strong); }
+ul { padding-left: 20px; margin: 8px 0; }
+li { margin: 5px 0; }
+li::marker { color: var(--faint); }
+.decision { display: grid; gap: 10px; }
+.decision .card { padding: 14px 18px; }
+.decision .card p { margin: 4px 0 0; color: var(--muted); font-size: 14.5px; }
+.decision .card strong { color: var(--ink); }
+.three { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 14px; counter-reset: three; }
+.three .card { position: relative; padding-top: 40px; }
+.three .card::before {
+  counter-increment: three; content: counter(three);
+  position: absolute; top: 12px; left: 18px;
+  color: var(--accent); font-weight: 800; font-size: 20px;
+}
+.todo li { margin: 8px 0; }
+.commitlinks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 14px; }
+.commitlinks a.card {
+  display: block; text-decoration: none; color: var(--ink); transition: .15s;
+}
+.commitlinks a.card:hover { border-color: var(--accent); }
+.commitlinks .commit-num {
+  display: inline-block; background: var(--accent-soft); color: var(--accent);
+  border: 1px solid #2c5a41; border-radius: 8px; padding: 2px 10px;
+  font-weight: 700; font-size: 13px; margin-bottom: 8px;
+}
+.commitlinks p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.navlabel { color: var(--faint); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 10px 4px; }
+.skipto {
+  position: fixed; top: 50%; left: 18px; transform: translateY(-50%);
+  z-index: 60; display: flex; flex-direction: column; gap: 5px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 12px 13px; box-shadow: var(--shadow);
+  width: 172px;
+}
+.skipto a {
+  text-decoration: none; color: var(--muted); font-size: 13px;
+  padding: 6px 10px; border-radius: 8px; transition: .15s;
+}
+.skipto a:hover { background: var(--bg); color: var(--accent); }
+.skipto a.current { color: var(--accent); }
+.skipto-toggle {
+  display: none; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0; background: none; border: 0;
+  color: var(--muted); cursor: pointer; border-radius: 9px;
+}
+.skipto-toggle:hover { color: var(--accent); background: var(--bg); }
+.skipto-toggle svg { transition: .15s; }
+.skipto-menu { display: flex; flex-direction: column; gap: 5px; }
+@media (max-width: 1180px) {
+  .skipto { top:10px; left:10px; transform:none; width:auto; padding:5px; border-radius:12px; }
+  .skipto-toggle { display:flex; }
+  .skipto-menu { display:none; padding:4px 6px 8px; min-width:172px; }
+  .skipto:hover .skipto-menu, .skipto:focus-within .skipto-menu,
+  .skipto.open .skipto-menu { display:flex; }
+  .skipto:hover .skipto-toggle svg, .skipto:focus-within .skipto-toggle svg,
+  .skipto.open .skipto-toggle svg { transform:rotate(180deg); }
+  section { scroll-margin-top: 80px; }
+}
+@media (max-width: 720px) {
+  .card { padding: 14px 16px; }
+  .three, .commitlinks { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <button class="skipto-toggle" aria-label="Skip to section menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">This page</div>
+    <a href="#onesentence">One-Sentence Version</a>
+    <a href="#context">Context</a>
+    <a href="#decisions">Locked Decisions</a>
+    <a href="#gotchas">Agent Gotchas</a>
+    <a href="#paths">Full File Paths</a>
+    <a href="#three">Remember 3 Things</a>
+    <a href="#next">What To Do Next</a>
+    <div class="navlabel">Pages</div>
+    <a href="MMA-6005-preliminary-plan.html" class="current">Overview</a>
+    <a href="MMA-6005-commit-1.html">Commit 1 — State</a>
+    <a href="MMA-6005-commit-2.html">Commit 2 — UI</a>
+    <a href="MMA-6005-commit-3.html">Commit 3 — Samples</a>
+  </div>
+</nav>
+
+<main>
+
+<p class="kicker">Implementation Plan · Preliminary Version · Page 1 of 4</p>
+<h1>MMA-6005 — Event Details: Public Event Additions</h1>
+<p class="subtitle">Branch <code>MMA-6005-Preliminary</code> · builds on the MMA-6004 unstyled viewer core · data enabled by MMA-6007</p>
+
+<section id="onesentence">
+  <h2>One-Sentence Version</h2>
+  <div class="card onesentence">
+    <p>Surface the public-event data the screen already receives — hero image, audience, web-share row, QR / Duplicate / RSVP entry points — as deliberately plain rows gated on <code>isPublic</code>, with "under construction" placeholders where the target screens don't exist yet.</p>
+  </div>
+</section>
+
+<section id="context">
+  <h2>Context</h2>
+  <span class="badge must">Must Know</span>
+  <div class="card">
+    <p>The designer hasn't finished the screen. This is an <strong>ugly-on-purpose</strong> version: same data as the final design, plain <code>ListItem</code> rows, matching the existing <code>TODO(MMA-6004): unstyled viewer core</code> approach. The styling pass later swaps presentation only.</p>
+    <p>Everything data-side already exists from MMA-6007 — <code>EventDetails</code> carries <code>isPublic</code>, <code>photoPath</code> (absolute URL), <code>audience</code>, <code>link</code>. <strong>No database, repo, or Koin changes.</strong> The use case just stops ignoring those fields.</p>
+    <p>QR (MMA-5951), member RSVP (MMA-5953), and Duplicate (MMA-5944) don't exist yet — this ticket only adds their entry points.</p>
+  </div>
+</section>
+
+<section id="decisions">
+  <h2>Locked Decisions <span class="badge must" style="vertical-align:middle; margin-left:8px;">Must Know</span></h2>
+  <div class="decision">
+    <div class="card">
+      <strong>Everything gates on <code>isPublic</code></strong>
+      <p>Content rows (hero, audience, web row) and chrome (QR, Duplicate, FAB) alike. Web row = <code>isPublic && link != null</code>, computed as <code>webLinkUrl</code> in ONE line in the use case — flipping the gate (open question Q4) stays a one-liner. The app-bar share icon is MMA-6004 scope: untouched, still any-event-with-link.</p>
+    </div>
+    <div class="card">
+      <strong>Audiences render as "Group - Audience"</strong>
+      <p>e.g. <code>Adults - Women • Adults - Men • Youth - Young Women</code>, using <code>AudienceGroup.labelRes</code> as prefix and <code>EventAudience.labelRes</code> as suffix. <strong><code>EVERYONE</code> renders bare</strong> ("Everyone") — its group label is its own label. Unknown server values are dropped, per the repo's "unreadable server value degrades to null" doctrine.</p>
+    </div>
+    <div class="card">
+      <strong>Placeholders = one shared "under construction" dialog</strong>
+      <p>QR / RSVP / Duplicate taps all call one ViewModel helper that pushes a <code>MessageDialogUiState</code> onto the existing <code>dialogFlow</code>, reusing the <code>feature_under_construction</code> core string. No UiState field, no dismiss event, no composable — see <a href="#gotchas">Agent Gotchas</a>.</p>
+    </div>
+    <div class="card">
+      <strong>Add-to-device-calendar survives</strong>
+      <p>Public editor overflow reads Edit / Duplicate Event / Remove / Add to device calendar. Tracker question Q2 stays open — this ticket deletes no live feature.</p>
+    </div>
+    <div class="card">
+      <strong>Sample hero photo = real church CDN URL</strong>
+      <p>Production-shaped absolute URL, zero special-case code. Screenshot tests deferred to the styling pass; Robolectric + unit tests lock behavior now.</p>
+    </div>
+  </div>
+</section>
+
+<section id="gotchas">
+  <h2>Agent Gotchas <span class="badge must" style="vertical-align:middle; margin-left:8px;">Read First</span></h2>
+  <div class="card" style="border-left:4px solid var(--warn);">
+    <h3>Dialogs use <code>dialogFlow</code> — no boolean, no composable</h3>
+    <p style="color:var(--muted); font-size:14px; margin-top:0;">The MMA-6004 review commits replaced the old pattern. <code>showRemoveConfirmation: Boolean</code>, the <code>RemoveConfirmed</code>/<code>RemoveDismissed</code> events, and the <code>AlertDialog</code> composable are all <strong>gone</strong>.</p>
+    <ul>
+      <li>Dialogs live on <code>EventDetailsUiState.dialogFlow: StateFlow&lt;DialogUiState&lt;*&gt;?&gt;</code></li>
+      <li>The ViewModel owns them; the screen already renders them via one existing <code>HandleDialogUiState(uiState.dialogFlow)</code> call</li>
+      <li>So the under-construction placeholder needs <strong>no UiState field, no dismiss event, and no composable</strong> — just a VM helper</li>
+    </ul>
+    <p style="color:var(--muted); font-size:14px;">Mirror the existing <code>showRemoveConfirmationDialog()</code>:</p>
+    <pre style="background:#23282e; border:1px solid var(--border); border-radius:8px; padding:12px; font-size:12.5px; color:var(--ink);">private fun showUnderConstructionDialog() {
+    dialogUiStateFlow.value = MessageDialogUiState(
+        text = { stringResource(CoreR.string.feature_under_construction) },
+        confirmButtonText = { stringResource(CoreR.string.ok) },
+        onConfirm = { dismissDialog() },
+        onDismissRequest = { dismissDialog() },
+    )
+}</pre>
+    <p style="color:var(--muted); font-size:14px; margin-bottom:0;"><code>dismissDialog()</code> already exists. No title, no dismiss button — it is informational, not a confirmation.</p>
+  </div>
+  <div class="card" style="border-left:4px solid var(--warn);">
+    <h3>There is no <code>loading</code> flag any more</h3>
+    <p style="color:var(--muted); font-size:14px; margin-top:0;">A later MMA-6004 commit (<code>de7b880bb3</code>, "Share Event Details state with <code>stateInDefault</code>") <strong>deleted <code>EventDetailsUiState.loading</code></strong>. The state is now nullable end to end:</p>
+    <ul>
+      <li><code>uiStateFlow: StateFlow&lt;EventDetailsUiState?&gt;</code>, seeded <code>null</code> via <code>stateInDefault</code></li>
+      <li><strong><code>null</code> = not loaded yet.</strong> <code>notFound</code> still means the event genuinely does not exist locally</li>
+      <li>The screen composable and <code>menuItems()</code> both take <code>EventDetailsUiState?</code></li>
+    </ul>
+    <p style="color:var(--muted); font-size:14px; margin-bottom:0;">Anywhere this guide or your muscle memory says <code>loading = true</code> — in a preview state, a screen test, or a UiState copy — write <code>uiState = null</code> instead. <code>loading = false</code> just disappears; it is not replaced by anything.</p>
+  </div>
+  <div class="card">
+    <h3><code>menuItems()</code> changed shape</h3>
+    <p style="margin:0; color:var(--muted); font-size:14px;">It is no longer an expression-bodied <code>buildList</code> — it takes a nullable <code>EventDetailsUiState?</code> and early-returns <code>emptyList()</code> when <code>uiState == null || uiState.notFound</code>, with the <code>buildList</code> inside. Add the QR icon and Duplicate item <strong>inside that <code>buildList</code></strong>. Two screen tests pin the null/not-found empty behavior; don't break them.</p>
+  </div>
+  <div class="card" style="border-left:4px solid var(--warn);">
+    <h3>Two similarly-named booleans — pick the right one</h3>
+    <ul>
+      <li><code>EventDetails.isPublic</code> — is <strong>this event</strong> public. <strong>This is the one every gate in this ticket wants.</strong></li>
+      <li><code>EventDetailsCalendar.isPublicEventsEnabled</code> — whether <strong>this calendar</strong> is allowed to create public events. A capability flag, unused by the details screen. <strong>Never use it for these gates.</strong></li>
+    </ul>
+    <p style="color:var(--muted); font-size:14px;">Grepping for "public" hits both. Wiring the calendar flag compiles, and on sample data where public events sit on public-capable calendars the tests can still pass — so this mistake hides. Both live in <code>repo/calendar/…/EventDetails.kt</code>.</p>
+  </div>
+  <div class="card">
+    <h3>String keys — feature-local, not core</h3>
+    <p style="color:var(--muted); font-size:14px; margin-top:0;">Add these to <code>feature/calendar/src/main/res/values/strings.xml</code> alongside the existing <code>calendar_event_*</code> family (with <code>comment</code> attributes, matching siblings):</p>
+    <ul>
+      <li><code>calendar_event_duplicate</code> — "Duplicate Event" (overflow item)</li>
+      <li><code>calendar_event_qr_code</code> — QR app-bar action content description</li>
+      <li><code>calendar_event_rsvp</code> — RSVP FAB content description</li>
+      <li><code>calendar_event_photo</code> — hero image content description</li>
+    </ul>
+    <p style="color:var(--muted); font-size:14px;">Reuse, do not re-declare: <code>calendar_event_audience</code> ("Audience", feature-local) and <code>view_calendar_event_link</code> / <code>view_calendar_event_caption</code> / <code>feature_under_construction</code> (all core:strings).</p>
+  </div>
+  <div class="card">
+    <h3>Verified assumptions — no substitution needed</h3>
+    <ul>
+      <li><code>Icons.Rounded.QrCode</code> and <code>Icons.Rounded.Rsvp</code> both exist in material-icons-extended 1.7.8, already a <code>:feature:calendar</code> dependency</li>
+      <li><code>AudienceGroup</code> and <code>EventAudience.labelRes</code> both live in the <strong>edit</strong> package, same module — import across packages is fine</li>
+      <li><code>ok</code> and <code>feature_under_construction</code> both exist in core:strings</li>
+      <li>No new constructor params in <em>your</em> changes, so Koin wiring is untouched — but note a <code>CalendarIntents</code> class now exists in a new <code>intent/</code> package and is registered in the feature module; the ViewModel injects it alongside <code>calendarExternalIntents</code></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Status</h3>
+    <p style="margin:0; color:var(--muted);">The branch has been fast-forwarded onto <code>MMA-6004-preliminary</code> a second time, now at <code>de7b880bb3</code> (the <code>stateInDefault</code> refactor above), and still carries no commits of its own. Expect to rebase again — MMA-6004 is still moving. If you pick this up mid-stream, check <code>git log</code> first; this page does not track progress.</p>
+  </div>
+</section>
+
+<section id="paths">
+  <h2>Full File Paths</h2>
+  <div class="card">
+    <p style="color:var(--muted); font-size:14px; margin-top:0;">The step pages abbreviate paths to their last three segments for readability. Full repo-relative paths:</p>
+    <h3>Edited</h3>
+    <ul>
+      <li><code>feature/calendar/src/main/kotlin/org/lds/ldstools/feature/calendar/detail/EventDetailsUiState.kt</code></li>
+      <li><code>feature/calendar/src/main/kotlin/org/lds/ldstools/feature/calendar/detail/GetEventDetailsUiStateUseCase.kt</code></li>
+      <li><code>feature/calendar/src/main/kotlin/org/lds/ldstools/feature/calendar/detail/EventDetailsViewModel.kt</code></li>
+      <li><code>feature/calendar/src/main/kotlin/org/lds/ldstools/feature/calendar/detail/EventDetailsScreen.kt</code></li>
+      <li><code>feature/calendar/src/main/kotlin/org/lds/ldstools/feature/calendar/detail/EventDetailsUiStatePreviewParameterProvider.kt</code></li>
+      <li><code>feature/calendar/src/test/kotlin/org/lds/ldstools/feature/calendar/detail/GetEventDetailsUiStateUseCaseTest.kt</code></li>
+      <li><code>feature/calendar/src/test/kotlin/org/lds/ldstools/feature/calendar/detail/EventDetailsViewModelTest.kt</code></li>
+      <li><code>feature/calendar/src/test/kotlin/org/lds/ldstools/feature/calendar/detail/EventDetailsScreenTest.kt</code></li>
+      <li><code>feature/calendar/src/main/res/values/strings.xml</code></li>
+      <li><code>feature/calendar/build.gradle.kts</code></li>
+      <li><code>app/src/main/java/org/lds/ldstools/ux/calendar/sample/CalendarSampleData.kt</code></li>
+    </ul>
+    <h3>Read-only references</h3>
+    <ul>
+      <li><code>feature/calendar/src/main/kotlin/org/lds/ldstools/feature/calendar/edit/EventAudienceLabels.kt</code> — <code>EventAudience.labelRes</code> + <code>AudienceGroup</code></li>
+      <li><code>repo/calendar/src/main/kotlin/org/lds/ldstools/repo/calendar/EventDetails.kt</code> — the read model (and both public booleans)</li>
+      <li><code>core/ui/src/main/java/org/lds/ldstools/core/ui/nav/ScreenScaffold.kt</code> — <code>floatingActionButton</code> slot</li>
+      <li><code>app/src/main/java/org/lds/ldstools/ux/calendar/CalendarScreen.kt</code> — FAB precedent</li>
+      <li><code>app/src/main/java/org/lds/ldstools/ux/temple/detail/composables/TemplePhoto.kt</code> — <code>AsyncImage</code> hero precedent</li>
+    </ul>
+  </div>
+</section>
+
+<section id="commits">
+  <h2>The Commits</h2>
+  <div class="commitlinks">
+    <a class="card" href="MMA-6005-commit-1.html">
+      <span class="commit-num">Commit 1</span>
+      <h3>Surface public-event data in state</h3>
+      <p>UiState fields, use-case mapping, placeholder events, unit tests. Pure logic — no UI.</p>
+    </a>
+    <a class="card" href="MMA-6005-commit-2.html">
+      <span class="commit-num">Commit 2</span>
+      <h3>Public rows, chrome, and FAB</h3>
+      <p>Coil dependency, strings, hero/audience/web rows, QR + Duplicate + FAB, screen tests.</p>
+    </a>
+    <a class="card" href="MMA-6005-commit-3.html">
+      <span class="commit-num">Commit 3</span>
+      <h3>Sample data and verification</h3>
+      <p>Public sample events for dev builds, then all three Gradle gates.</p>
+    </a>
+  </div>
+</section>
+
+<section id="three">
+  <h2>Remember Only 3 Things</h2>
+  <div class="three">
+    <div class="card">
+      <h3>No data work</h3>
+      <p style="margin:0; color:var(--muted);">MMA-6007 already delivered every field. This ticket is UiState + rendering only — no DB, repo, or Koin changes.</p>
+    </div>
+    <div class="card">
+      <h3><code>isPublic</code> gates everything</h3>
+      <p style="margin:0; color:var(--muted);">Rows and chrome alike. Each gate is computed once in the use case, so any of them flips in one line.</p>
+    </div>
+    <div class="card">
+      <h3>Ugly on purpose</h3>
+      <p style="margin:0; color:var(--muted);">Plain ListItems until design lands. Behavior is locked by Robolectric tests; screenshots wait for the styling pass.</p>
+    </div>
+  </div>
+</section>
+
+<section id="next">
+  <h2>What To Do Next</h2>
+  <div class="card">
+    <ol class="todo">
+      <li>Read <a href="MMA-6005-commit-1.html">Commit 1</a> and implement state + mapping; get <code>:feature:calendar:testDebugUnitTest</code> green</li>
+      <li>Implement <a href="MMA-6005-commit-2.html">Commit 2</a> — check the previews render all public branches, then green the screen tests</li>
+      <li>Implement <a href="MMA-6005-commit-3.html">Commit 3</a>, run all three gates, and eyeball the public sample events on a device</li>
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<script>
+var nav=document.querySelector('.skipto');
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){nav.classList.toggle('open')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',function(){
+  nav.classList.remove('open');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});})});
+</script>
+
+</body>
+</html>

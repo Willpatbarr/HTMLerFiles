@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAM-39 — Gaps Found Auditing E-LAM-0001</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  /* code palette */
+  --code-bg:#12151a; --code-ink:#c8d3dc;
+  --c-cm:#6a9955; --c-st:#ce9178; --c-kw:#569cd6; --c-ty:#4ec9b0;
+  --c-fn:#dcdcaa; --c-nu:#b5cea8; --c-va:#9cdcfe;
+  --c-add:#7ec699; --c-del:#e08a8a;
+  --c-add-bg:rgba(108,195,148,.09); --c-del-bg:rgba(224,138,138,.09);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+main{max-width:900px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:56px 96px}
+h1{font-size:clamp(24px,5vw,34px);line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:clamp(18px,3.4vw,22px);margin:32px 0 12px;letter-spacing:-.01em}
+h3{font-size:clamp(15px,2.6vw,17px);margin:0 0 12px}
+p{margin:0 0 14px;max-width:70ch}
+.sub{color:var(--faint);font-size:14px;margin:0 0 28px}
+a{color:var(--accent);overflow-wrap:anywhere}
+code{overflow-wrap:anywhere}
+p code,li code,td code{background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:1.5px 5px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#c8d3dc}
+
+/* code blocks */
+pre{overflow-x:auto;max-width:100%;background:var(--code-bg);border:1px solid var(--border);
+  border-radius:10px;padding:14px 0;font-size:12.8px;line-height:1.65;margin:0 0 16px}
+pre code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--code-ink);
+  background:none;border:0;padding:0}
+.ln{display:block;padding:0 16px}
+.ln.add{background:var(--c-add-bg);box-shadow:inset 2px 0 0 var(--c-add)}
+.ln.del{background:var(--c-del-bg);box-shadow:inset 2px 0 0 var(--c-del)}
+.ln.add .mk{color:var(--c-add);font-weight:700}
+.ln.del .mk{color:var(--c-del);font-weight:700}
+.cm{color:var(--c-cm);font-style:italic}
+.st{color:var(--c-st)}
+.kw{color:var(--c-kw)}
+.ty{color:var(--c-ty)}
+.fn{color:var(--c-fn)}
+.nu{color:var(--c-nu)}
+.va{color:var(--c-va)}
+.langtag{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 6px}
+
+/* nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto a{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto a:hover{background:var(--bg);color:var(--accent)}
+.skipto a.active{background:var(--accent-soft);color:var(--accent)}
+.navlabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding:0 10px 5px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media(max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,.skipto.open .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  .skipto.open .skipto-toggle svg{transform:rotate(180deg)}
+  .skipto.closed .skipto-menu{display:none}
+  .skipto.closed .skipto-toggle svg{transform:none}
+  main{padding-top:72px}
+}
+
+/* pages + tabs */
+.page{display:none}.page.active{display:block}
+.tabpanel{display:none}.tabpanel.active{display:block}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;border-bottom:1px solid var(--border)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;transition:.15s;font-family:inherit}
+.tab:hover{color:var(--ink);background:var(--card)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* cards + change blocks */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 22px;margin:0 0 18px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));margin:0 0 18px}
+.one-sentence{background:var(--accent-soft);border:1px solid #2b5540;border-radius:var(--radius);
+  padding:18px 22px;margin:0 0 28px}
+.one-sentence .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin:0 0 7px}
+.one-sentence p{margin:0;font-size:16.5px;line-height:1.55;max-width:none}
+.chg{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
+  padding:20px 22px;margin:0 0 20px;box-shadow:var(--shadow)}
+.chg.flag{border-color:#5a4520;background:linear-gradient(var(--warn-soft),var(--card) 60px)}
+.chg-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:0 0 3px}
+.chg-n{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.chg.flag .chg-n{color:var(--warn)}
+.file{display:block;font-size:12.4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#9fb3c4;overflow-wrap:anywhere;max-width:100%;margin:0 0 3px}
+.lines{display:inline-block;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:var(--faint);margin:0 0 12px}
+.mini{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);
+  margin:16px 0 7px;font-weight:700}
+ul{margin:0 0 12px;padding-left:20px}
+li{margin:0 0 6px}
+li::marker{color:var(--faint)}
+.why b{color:var(--accent);font-weight:700}
+.pri{display:inline-block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;border:1px solid var(--border-strong);color:var(--muted);
+  margin:0 0 10px;overflow-wrap:anywhere;max-width:100%}
+.pri.must{background:var(--accent-soft);border-color:#2b5540;color:var(--accent)}
+.pri.imp{background:var(--warn-soft);border-color:#5a4520;color:var(--warn)}
+.pri.opt{background:#1a1d21}
+.newfile{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);
+  background:var(--warn-soft);border:1px solid #5a4520;border-radius:5px;padding:2px 7px;margin-left:6px}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tablewrap{overflow-x:auto;margin:0 0 18px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700}
+td code{white-space:nowrap}
+
+.todo{list-style:none;padding:0;margin:0}
+.todo li{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border);margin:0}
+.todo li:last-child{border-bottom:0}
+.todo input{margin-top:4px;width:15px;height:15px;accent-color:var(--accent);flex-shrink:0}
+.todo label{cursor:pointer}
+.todo input:checked+label{color:var(--faint);text-decoration:line-through}
+.warn-box{background:var(--warn-soft);border:1px solid #5a4520;border-left-width:3px;
+  border-radius:var(--radius);padding:16px 20px;margin:0 0 18px}
+.warn-box .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--warn);
+  margin:0 0 7px;font-weight:700}
+.warn-box p:last-child{margin-bottom:0}
+.dec{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
+  padding:18px 20px;margin:0 0 16px;box-shadow:var(--shadow)}
+.dec h3{margin:0 0 10px;font-size:16px;color:var(--accent)}
+.dec .alt{border-top:1px solid var(--border);margin-top:14px;padding-top:12px}
+.dec .alt .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--warn);margin:0 0 5px;font-weight:700}
+.dec .alt p{margin:0;color:var(--muted);font-size:14.2px}
+@media(max-width:720px){.card,.chg{padding:15px 16px}main{padding-block:36px 72px}.ln{padding:0 12px}}
+</style>
+</head>
+<body>
+<nav class="skipto" aria-label="Pages">
+  <button class="skipto-toggle" aria-label="Page menu"><svg width="18" height="18"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <a data-page="p-overview" class="active">Overview</a>
+    <a data-page="p-backend">Backend</a>
+    <a data-page="p-frontend">Frontend</a>
+    <a data-page="p-verify">Verify &amp; TODO</a>
+  </div>
+</nav>
+<main>
+<section class="page active" id="p-overview">
+  <h1>LAM-39 — Gaps Found Auditing E-LAM-0001</h1>
+  <p class="sub">Backend <code>LAM-39-B</code> → PR #9 · Frontend <code>LAM-39-F</code> → PR #3 · ticket LAM-39<br>
+    Backend: 7 files, +511 / −39 &nbsp;·&nbsp; Frontend: 2 files</p>
+
+  <div class="one-sentence">
+    <div class="lbl">One-Sentence Version</div>
+    <p>Four gaps found auditing the epic — and writing the fix for the first one uncovered a
+      fifth: every non-GET request to any unrouted path was returning the app shell with status
+      200, so a POST looked like it had succeeded.</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="r-warn">Read First</button>
+    <button class="tab" data-tab="r-gaps">The Five Gaps</button>
+    <button class="tab" data-tab="r-clean">What Was Clean</button>
+    <button class="tab" data-tab="r-pri">Priority Levels</button>
+  </div>
+
+  <div class="tabpanel active" id="r-warn">
+    <div class="warn-box">
+      <div class="lbl">The merges still have not landed</div>
+      <p>You said you merged all three. GitHub reports backend #7, backend #8, and frontend #2 as
+        <code>state=OPEN, merged=null</code>, and both epic branches are unchanged at
+        <code>4cc7cb7</code> and <code>e00db35</code>. The last successful merges were backend #6
+        at 00:49 and frontend #1 at 00:58.</p>
+      <p>That is twice in a row. Worth checking for a branch protection rule or an unsaved merge
+        dialog. This branch stacks on <code>LAM-29-B</code> because that is the only branch
+        holding the full state.</p>
+    </div>
+
+    <div class="card">
+      <div class="mini">What the audit covered</div>
+      <p style="margin-bottom:0">Every ticket in E-LAM-0001 — LAM-1, 2, 3, 4, 5, 28, 29, 38 —
+        step by step against the code, plus the Architecture &amp; Tech Stack, Testing Strategy,
+        and Master Spec notes.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-gaps">
+    <span class="pri must">Must Know</span>
+    <h2>Four found by audit, one found by the fix</h2>
+
+    <div class="dec">
+      <h3>1 · <code>main.go</code> had no tests at all</h3>
+      <p><code>/healthz</code>, <code>/healthz/db</code>, the <code>/api/</code> reservation and
+        the frontend catch-all were exercised only by LAM-29's container smoke test in CI.</p>
+      <p style="margin-bottom:0">A local <code>./scripts/test.sh</code> passed with the routing
+        completely broken — the exact failure LAM-38 exists to remove.</p>
+    </div>
+
+    <div class="dec" style="border-color:#5a4520">
+      <h3 style="color:var(--warn)">2 · Every non-GET request returned the app shell, 200</h3>
+      <p><b>Found by writing gap 1's tests, not by inspection.</b>
+        <code>GET /healthz</code> only matches GET, so every other method fell through to the
+        catch-all.</p>
+      <pre><code data-lang="txt">main_test.go:193: POST /healthz fell through to the frontend handler
+main_test.go:196: status = 200, want 405</code></pre>
+      <p style="margin-bottom:0"><code>POST /healthz</code>, and any write to any unrouted path,
+        looked like it had succeeded.</p>
+    </div>
+
+    <div class="dec">
+      <h3>3 · <code>internal/config</code> had no tests</h3>
+      <p style="margin-bottom:0"><code>Load()</code> has real branching:
+        <code>ErrMissingDatabaseURL</code>, the <code>PORT</code> default, and the
+        <code>MIGRATE_ON_STARTUP</code> parse. Testing Strategy §1 names exactly this — pure
+        logic, no database — as the unit-test case.</p>
+    </div>
+
+    <div class="dec">
+      <h3>4 · LAM-29's decisions had no ADR</h3>
+      <p style="margin-bottom:0"><code>docs/adr/README.md</code> says records hold decisions still
+        in force, and that change documents are <b>not maintained</b>. Leaving the distroless
+        base, the named build context and the embedded bundle only in
+        <code>docs/changes/</code> contradicted our own convention.</p>
+    </div>
+
+    <div class="dec">
+      <h3>5 · LAM-2 step 4 was a one-time confirmation</h3>
+      <p style="margin-bottom:0"><em>"Confirm the frontend has no Postgres driver or connection
+        string."</em> Confirmed once, by reading. Nothing has stopped <code>npm install pg</code>
+        since — the same shape as the write-path problem LAM-5 solved.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-clean">
+    <h2>What the audit found clean</h2>
+    <p>Reported so the negative result is on the record, not just the findings.</p>
+    <ul>
+      <li>Every <b>LAM-3</b> step — blob, index, single write path, rebuild, drift test</li>
+      <li>Every <b>LAM-4</b> step — workspace table, no single-workspace assumptions, cross-workspace test</li>
+      <li><b>LAM-29's portability audit</b> — no host-specific values in the image or config</li>
+      <li><code>.env.example</code> covers every variable the code actually reads</li>
+      <li>The frontend genuinely has <b>no</b> database driver or connection string today</li>
+    </ul>
+    <div class="card">
+      <div class="mini">Deliberately still deferred</div>
+      <p style="margin-bottom:0"><b>Playwright.</b> Testing Strategy §4 asks for early
+        scaffolding, and LAM-38 deferred it because the frontend is the unmodified Vite template
+        with no user flow to drive. That reasoning still holds — it needs its own ticket once
+        there is a real screen.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-pri">
+    <h2>Priority Levels</h2>
+    <div class="card">
+      <span class="pri must">Must Know</span>
+      <ul style="margin-bottom:0">
+        <li>The method bug (#0003) is a behaviour change — writes now get 405, not 200</li>
+        <li>Three PRs you believe are merged are still open</li>
+        <li>The <code>/api/</code> reservation now has a test that fails if it is removed</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="pri imp">Important</span>
+      <ul style="margin-bottom:0">
+        <li>Merge order: backend #7 → #8 → #9, frontend #2 → #3</li>
+        <li>The frontend guard runs inside <code>npm run lint</code>, so CI needs no change</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="pri opt">Optional</span>
+      <ul style="margin-bottom:0">
+        <li>ADR 0002 — documentation catch-up, no behaviour change</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="page" id="p-backend">
+  <h1>Backend Changes</h1>
+  <p class="sub">11 changes across 7 files</p>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="r-mux">Testable Mux</button>
+    <button class="tab" data-tab="r-bug">The Method Bug</button>
+    <button class="tab" data-tab="r-routetests">Route Tests</button>
+    <button class="tab" data-tab="r-cfg">Config Tests</button>
+    <button class="tab" data-tab="r-adr">ADR 0002</button>
+  </div>
+
+  <div class="tabpanel active" id="r-mux">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0001</span></div>
+      <span class="file">main.go</span><span class="lines">:56-60</span>
+      <pre><code data-lang="go">+ bundle, err := frontendFS(cfg.FrontendDir)
++ if err != nil {
++ 	log.Fatalf("frontend: %v", err)
++ }
++
++ mux := newMux(pool, bundle)</code></pre>
+      <div class="mini">What</div>
+      <ul><li>replace ~40 lines of inline mux construction with one call</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the routing had no test coverage at all; only LAM-29's container smoke test in CI touched it</li>
+        <li><b>C</b> — <code>main()</code> needs a real database URL and a listening socket, so nothing in it was reachable from a test</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0002</span></div>
+      <span class="file">main.go</span><span class="lines">:153-194</span>
+      <pre><code data-lang="go">+ // Deleting the /api/ registration below breaks every unknown API endpoint
++ // and, before this function existed, broke no test.
++ func newMux(pool *pgxpool.Pool, bundle fs.FS) *http.ServeMux {
++ 	mux := http.NewServeMux()
++ 	...
++ 	return mux
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>move every route registration into a testable function, comments unchanged</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — a local <code>./scripts/test.sh</code> passed with the routing completely broken, the exact failure LAM-38 exists to remove</li>
+        <li><b>C</b> — returning the mux rather than a <code>*http.Server</code> keeps the test free of ports and lets <code>httptest</code> drive it directly</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-bug">
+    <div class="chg flag">
+      <div class="chg-head"><span class="chg-n">Change #0003</span><span class="pri imp" style="margin:0">a real bug</span></div>
+      <span class="file">internal/frontend/frontend.go</span><span class="lines">:57-65</span>
+      <pre><code data-lang="go">+ if r.Method != http.MethodGet && r.Method != http.MethodHead {
++ 	w.Header().Set("Allow", "GET, HEAD")
++ 	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
++ 	return
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>answer GET and HEAD only; 405 with an <code>Allow</code> header otherwise</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — <code>GET /healthz</code> only matches GET, so <b>every other method fell through to the catch-all and got the app shell with status 200</b>. <code>POST /healthz</code>, and any write to any unrouted path, looked like it had succeeded</li>
+        <li><b>C</b> — the guard belongs on the static handler, not each route: it is a property of serving files, not of any one path</li>
+        <li><b>C</b> — HEAD stays allowed; it is how a client checks an asset without fetching it</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="mini">Why registering every method on each route was rejected</div>
+      <p style="margin-bottom:0">Making <code>POST /healthz</code> return
+        <code>{"status":"ok"}</code> would imply POST is supported. 405 with an
+        <code>Allow</code> header says what is actually true.</p>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0009</span></div>
+      <span class="file">internal/frontend/frontend_test.go</span><span class="lines">:143-176</span>
+      <pre><code data-lang="go">+ func TestRejectsNonReadMethods(t *testing.T) {
++ 	for _, method := range []string{POST, PUT, PATCH, DELETE} { ... }
++ }
++ func TestHeadIsAllowed(t *testing.T) { ... }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>cover the new method guard in both directions</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — a guard that rejected HEAD too would break asset probing without any test noticing</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-routetests">
+    <div class="chg flag">
+      <div class="chg-head"><span class="chg-n">Change #0004</span><span class="pri imp" style="margin:0">found #0003</span></div>
+      <span class="file">main_test.go</span><span class="lines">:186-199</span>
+      <pre><code data-lang="go">+ func TestHealthzIsNotShadowedByTheCatchAll(t *testing.T) {
++ 	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/healthz", nil))
++ 	if strings.Contains(rec.Body.String(), "&lt;div id=root&gt;") {
++ 		t.Error("POST /healthz fell through to the frontend handler")
++ 	}</code></pre>
+      <div class="mini">What</div>
+      <ul><li>assert a non-GET request to a health path is not swallowed by the catch-all</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — this failed on first run with <code>status = 200, want 405</code>, which is how the method bug was found</li>
+        <li><b>C</b> — Go's method-scoped patterns do not exclude a broader pattern from matching other methods</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0005</span></div>
+      <span class="file">main_test.go</span><span class="lines">:139-160</span>
+      <pre><code data-lang="go">+ func TestUnknownAPIRouteReturnsJSONNotTheAppShell(t *testing.T) {
++ 	for _, path := range []string{"/api/", "/api/nope", "/api/documents/42"} {
++ 		if strings.Contains(rec.Body.String(), "&lt;div id=root&gt;") {
++ 			t.Error("an unknown API route returned the app shell")</code></pre>
+      <div class="mini">What</div>
+      <ul><li>lock the <code>/api/</code> reservation LAM-28 added</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — delete that handler and, before this test, every Go test still passed while every unknown endpoint silently returned HTML with status 200</li>
+        <li><b>C</b> — <code>fetch()</code> reports that as a JSON parse error, three layers from the cause</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0006</span></div>
+      <span class="file">main_test.go</span><span class="lines">:62-91, :106-137</span>
+      <pre><code data-lang="go">+ // Close the pool out from under the mux, then ask for liveness anyway.
++ pool.Close()
++ rec := get(t, mux, "/healthz")
++ if rec.Code != http.StatusOK { ... }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>prove liveness survives a dead database, and readiness does not</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the comment in <code>newMux</code> claims <code>/healthz</code> deliberately avoids Postgres; nothing checked it</li>
+        <li><b>C</b> — closing the pool is the cheapest honest way to simulate the outage</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-cfg">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0007</span><span class="newfile">new file</span></div>
+      <span class="file">internal/config/config_test.go</span><span class="lines">:80-98</span>
+      <pre><code data-lang="go">+ for _, value := range []string{"", "false", "1", "yes", "TRUE", "True", "on"} {
++ 	if cfg.MigrateOnStartup {
++ 		t.Errorf("MIGRATE_ON_STARTUP=%q enabled migrations", value)
++ 	}
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>assert only exactly <code>"true"</code> enables startup migrations</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — Testing Strategy §1 names this exact case: pure logic, no database, unit test it</li>
+        <li><b>C</b> — <code>TRUE</code> and <code>yes</code> reading as false is the safe direction, worth pinning so nobody "fixes" it into a loose parse</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0008</span></div>
+      <span class="file">internal/config/config_test.go</span><span class="lines">:117-130</span>
+      <pre><code data-lang="go">+ func TestFailedLoadReturnsZeroConfig(t *testing.T) {
++ 	if cfg != (Config{}) {
++ 		t.Errorf("Load returned %+v on error, want the zero Config", cfg)
++ 	}
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>assert a failed <code>Load</code> hands back nothing usable</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — a half-populated Config alongside an error is the kind of thing a caller ignores the error for</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-adr">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0010</span><span class="newfile">new file</span></div>
+      <span class="file">docs/adr/0002-deployment-packaging.md</span><span class="lines">:1-84</span>
+      <pre><code data-lang="txt">+ # 2. Deployment packaging: one image, no shell, frontend embedded
++ Status: Accepted — 2026-09-04 (LAM-29, recorded by LAM-39)</code></pre>
+      <div class="mini">What</div>
+      <ul><li>record LAM-29's still-in-force decisions as an ADR</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — <code>docs/adr/README.md</code> says records hold decisions still in force, and that change documents describe a ticket and are <b>not maintained</b></li>
+        <li><b>C</b> — leaving the distroless base, the named build context, and the embedded bundle only in <code>docs/changes/LAM-29-changes.md</code> contradicted our own stated convention</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0011</span></div>
+      <span class="file">docs/adr/README.md</span><span class="lines">records table</span>
+      <pre><code data-lang="txt">+ | [2](0002-deployment-packaging.md) | Deployment packaging: one image, no shell, frontend embedded | Accepted |</code></pre>
+      <div class="mini">What</div>
+      <ul><li>add the row</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — the table is the index; an ADR missing from it is an ADR nobody finds</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="p-frontend">
+  <h1>Frontend Changes</h1>
+  <p class="sub">2 changes · enforcing LAM-2 step 4</p>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="r-guard">The Guard</button>
+    <button class="tab" data-tab="r-guardproof">Proof It Bites</button>
+  </div>
+
+  <div class="tabpanel active" id="r-guard">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0012</span><span class="newfile">new file</span></div>
+      <span class="file">scripts/check-no-db-driver.mjs</span><span class="lines">:20-30</span>
+      <pre><code data-lang="js">+ const BANNED_DEPS = ['pg', 'postgres', 'prisma', 'drizzle', 'knex', ...]
++ const BANNED_SOURCE = /postgres(?:ql)?:\/\/|mysql:\/\/|DATABASE_URL/</code></pre>
+      <div class="mini">What</div>
+      <ul><li>fail if a database driver or a connection string appears</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — LAM-2 step 4 said <em>"Confirm the frontend has no Postgres driver or connection string."</em> Confirmed once, by reading; nothing has stopped <code>npm install pg</code> since</li>
+        <li><b>C</b> — same shape as LAM-5: structure makes the right path easy, not the wrong path impossible</li>
+        <li><b>C</b> — substring matching catches <code>pg-promise</code> and <code>@prisma/client</code></li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0013</span></div>
+      <span class="file">package.json</span><span class="lines">scripts</span>
+      <pre><code data-lang="json">+ "check:boundary": "node scripts/check-no-db-driver.mjs",
++ "lint": "oxlint && npm run check:boundary"</code></pre>
+      <div class="mini">What</div>
+      <ul><li>wire the check into <code>npm run lint</code></li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — CI already runs <code>npm run lint</code>, so no workflow change is needed and the check cannot be forgotten</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-guardproof">
+    <span class="pri must">Must Know</span>
+    <h2>Confirmed to fail, not just to pass</h2>
+    <p>Same discipline as LAM-5's boundary test. A guard that has never failed proves nothing.</p>
+    <div class="tablewrap">
+      <table>
+        <tr><th>Injected</th><th>Exit</th><th>Message</th></tr>
+        <tr><td><code>"pg": "^8.0.0"</code> in dependencies</td><td><b>1</b></td><td><code>package.json dependencies: pg</code></td></tr>
+        <tr><td><code>postgres://u:p@h:5432/db</code> in <code>src/scratch.ts</code></td><td><b>1</b></td><td><code>src/scratch.ts:1</code></td></tr>
+        <tr><td>Clean tree</td><td>0</td><td>✓</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <p style="margin-bottom:0">Exit codes were checked <b>directly</b>, not through a pipe — a
+        guard that prints a complaint but exits 0 would let CI pass, which is the failure mode
+        worth being paranoid about.</p>
+    </div>
+  </div>
+</section>
+<section class="page" id="p-verify">
+  <h1>Decisions, Verify &amp; TODO</h1>
+  <p class="sub">Seven judgement calls, each with what I rejected</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="r-dec">Decisions</button>
+    <button class="tab" data-tab="r-ver">Verification</button>
+    <button class="tab" data-tab="r-todo">TODO</button>
+  </div>
+
+  <div class="tabpanel active" id="r-dec">
+    <div class="dec">
+      <h3>1 · Fixed the method bug rather than asserting the old behaviour</h3>
+      <p>The test failed. Returning HTML 200 for <code>POST /anything</code> is wrong, not merely
+        surprising.</p>
+      <div class="alt"><div class="lbl">Rejected</div>
+        <p>Change the test to document current behaviour. A write that appears to succeed is the
+          worst kind of harmless — nothing errors, and nothing happened.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>2 · Put the guard on the static handler, not per-route</h3>
+      <p>It is a property of serving files, so it lives with the file server.</p>
+      <div class="alt"><div class="lbl">Rejected</div>
+        <p>Register every route for all methods. <code>POST /healthz</code> returning
+          <code>{"status":"ok"}</code> would imply POST is supported.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>3 · Created LAM-39 rather than folding fixes into an existing ticket</h3>
+      <div class="alt"><div class="lbl">Rejected</div>
+        <p>Amend LAM-29. Those tickets are Done, and an audit finding deserves its own record so
+          the history stays readable.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>4 · Branched off <code>LAM-29-B</code></h3>
+      <div class="alt"><div class="lbl">Why not the epic branch</div>
+        <p>It lacks LAM-28 and LAM-29 entirely, because those PRs never merged.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>5 · Substring-matched the banned dependencies</h3>
+      <div class="alt"><div class="lbl">Rejected</div>
+        <p>Exact names only — <code>pg-promise</code> would slip straight through.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>6 · One ADR covering all of LAM-29's decisions</h3>
+      <div class="alt"><div class="lbl">Rejected</div>
+        <p>One ADR per decision. They are one coherent packaging choice; splitting them would
+          obscure that the shell-less base is <em>why</em> the operator binaries ship.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>7 · Playwright still deferred</h3>
+      <p>Testing Strategy §4 asks for early scaffolding.</p>
+      <div class="alt"><div class="lbl">Why not now</div>
+        <p>The frontend remains the unmodified Vite template — there is no flow to drive.
+          LAM-38's reasoning still holds, and it needs its own ticket once there is a real
+          screen.</p></div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-ver">
+    <h2>Verification</h2>
+    <div class="card">
+      <div class="mini">Backend gate</div>
+      <p style="margin-bottom:0"><code>./scripts/test.sh</code> green. Every package now has tests
+        except <code>cmd/*</code>, <code>internal/db</code>, <code>internal/dbtest</code>,
+        <code>migrations</code> and <code>web</code> — thin wrappers and embed declarations.</p>
+    </div>
+
+    <div class="card">
+      <div class="mini">The method bug was found by a failing test, not by inspection</div>
+      <pre><code data-lang="txt">main_test.go:193: POST /healthz fell through to the frontend handler
+main_test.go:196: status = 200, want 405
+--- FAIL: TestHealthzIsNotShadowedByTheCatchAll</code></pre>
+      <p style="margin-bottom:0">That is the whole argument for gap 1 in one line: the routing was
+        broken in a way nothing local could see.</p>
+    </div>
+
+    <div class="card">
+      <div class="mini">The frontend guard was confirmed to fail</div>
+      <p style="margin-bottom:0">Both failure modes injected and caught, exit code 1 each time,
+        checked directly rather than through a pipe. Details on the Frontend page.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="r-todo">
+    <h2>TODO</h2>
+    <ul class="todo">
+      <li><input type="checkbox" id="e1"><label for="e1"><b>Work out why the merges are not landing</b> — three PRs are open that you believe are merged</label></li>
+      <li><input type="checkbox" id="e2"><label for="e2">Merge backend in order: #7 → #8 → #9</label></li>
+      <li><input type="checkbox" id="e3"><label for="e3">Merge frontend in order: #2 → #3</label></li>
+      <li><input type="checkbox" id="e4"><label for="e4">Set LAM-29 → Done and LAM-39 → Done</label></li>
+      <li><input type="checkbox" id="e5"><label for="e5">Build the image once yourself — still never run outside CI, never on Apple Silicon</label></li>
+      <li><input type="checkbox" id="e6"><label for="e6">Adopt the dev database — <code>migrate baseline &amp;&amp; migrate up</code>, outstanding since LAM-10</label></li>
+      <li><input type="checkbox" id="e7"><label for="e7">Deploy to the Pi and confirm the arm64 image runs</label></li>
+      <li><input type="checkbox" id="e8"><label for="e8"><code>gh auth switch --user willbarr_church</code></label></li>
+    </ul>
+    <div class="card" style="margin-top:20px">
+      <div class="mini">After that</div>
+      <p style="margin-bottom:0">E-LAM-0001 is complete. Next is E-LAM-0002 (repo structure and
+        the generated API contract) or E-LAM-0003 — fourteen schema tickets, unblocked by
+        LAM-10's migration runner.</p>
+    </div>
+  </div>
+</section>
+</main>
+<script>
+// Syntax highlighter: escape first, then one master regex pass per language so
+// nothing is ever re-tokenized inside an existing span.
+(function () {
+  var esc = function (s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  };
+
+  var GO_KW = 'func|package|import|type|struct|interface|map|chan|const|var|return|if|else|for|range|switch|case|default|break|continue|defer|go|select|fallthrough';
+  var GO_TYPE = 'string|bool|error|byte|rune|int|int64|float64|any|nil|true|false';
+  var TS_KW = 'import|from|export|default|const|let|var|function|return|if|else|for|while|class|extends|new|async|await|type|interface|as|of|in';
+
+  var GRAMMARS = {
+    go: [
+      ['cm', /\/\/[^\n]*/],
+      ['st', /`[^`]*`|"(?:\\.|[^"\\\n])*"/],
+      ['kw', new RegExp('\\b(?:' + GO_KW + ')\\b')],
+      ['ty', new RegExp('\\b(?:' + GO_TYPE + ')\\b')],
+      ['fn', /\b[A-Za-z_]\w*(?=\()/],
+      ['nu', /\b\d[\d_.]*\b/]
+    ],
+    ts: [
+      ['cm', /\/\/[^\n]*/],
+      ['st', /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`[^`]*`/],
+      ['kw', new RegExp('\\b(?:' + TS_KW + ')\\b')],
+      ['ty', /\b(?:true|false|null|undefined)\b/],
+      ['fn', /\b[A-Za-z_]\w*(?=\()/],
+      ['nu', /\b\d[\d_.]*\b/]
+    ],
+    sh: [
+      ['cm', /#[^\n]*/],
+      ['st', /'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/],
+      ['kw', /\b(?:if|then|else|elif|fi|for|in|do|done|set|exit|echo|cd|mkdir|rm|cp|touch|npm|go)\b/],
+      ['va', /\$\{?[A-Za-z_]\w*\}?/],
+      ['nu', /\b\d+\b/]
+    ],
+    dockerfile: [
+      ['cm', /#[^\n]*/],
+      ['kw', /^\s*(?:FROM|RUN|COPY|ADD|ARG|ENV|USER|WORKDIR|HEALTHCHECK|ENTRYPOINT|CMD|EXPOSE|LABEL|VOLUME|AS)\b/m],
+      ['ty', /\b(?:AS|as)\b/],
+      ['va', /\$\{?[A-Za-z_][\w]*\}?/],
+      ['st', /"(?:\\.|[^"\\\n])*"/],
+      ['nu', /\b\d[\d.]*\b/]
+    ],
+    yaml: [
+      ['cm', /#[^\n]*/],
+      ['va', /\$\{[^}]*\}/],
+      ['kw', /^\s*-?\s*[A-Za-z_][\w.-]*(?=\s*:)/m],
+      ['st', /'(?:[^']|'')*'|"(?:\\.|[^"\\\n])*"/],
+      ['ty', /\b(?:true|false|null)\b/],
+      ['nu', /\b\d[\d.]*\b/]
+    ],
+    json: [
+      ['kw', /"(?:\\.|[^"\\\n])*"(?=\s*:)/],
+      ['st', /"(?:\\.|[^"\\\n])*"/],
+      ['ty', /\b(?:true|false|null)\b/],
+      ['nu', /\b\d[\d.]*\b/]
+    ],
+    js: [
+      ['cm', /\/\/[^\n]*/],
+      ['st', /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`[^`]*`|\/(?:\\.|\[[^\]]*\]|[^/\\\n])+\/[gimsuy]*/],
+      ['kw', /\b(?:const|let|var|function|return|if|else|for|of|in|import|from|export|new|await|async)\b/],
+      ['ty', /\b(?:true|false|null|undefined)\b/],
+      ['fn', /\b[A-Za-z_]\w*(?=\()/],
+      ['nu', /\b\d[\d.]*\b/]
+    ],
+    txt: [['cm', /#[^\n]*/]]
+  };
+
+  function tokenize(src, grammar) {
+    var parts = grammar.map(function (g) { return '(' + g[1].source + ')'; });
+    var master = new RegExp(parts.join('|'), 'g');
+    var out = '', last = 0, m;
+    while ((m = master.exec(src)) !== null) {
+      out += esc(src.slice(last, m.index));
+      for (var i = 1; i < m.length; i++) {
+        if (m[i] !== undefined) { out += '<span class="' + grammar[i - 1][0] + '">' + esc(m[i]) + '</span>'; break; }
+      }
+      last = m.index + m[0].length;
+      if (m[0] === '') master.lastIndex++;
+    }
+    return out + esc(src.slice(last));
+  }
+
+  function render(code, lang) {
+    var grammar = GRAMMARS[lang] || GRAMMARS.txt;
+    return code.split('\n').map(function (line) {
+      var cls = '', body = line;
+      // Lines the change blocks mark as added or removed.
+      if (/^\+( |$)/.test(line)) { cls = 'add'; }
+      else if (/^-( |$)/.test(line) && !/^--/.test(line)) { cls = 'del'; }
+      if (cls) {
+        var mark = line.slice(0, 1);
+        body = line.slice(1);
+        return '<span class="ln ' + cls + '"><span class="mk">' + mark + '</span>' + tokenize(body, grammar) + '</span>';
+      }
+      return '<span class="ln">' + tokenize(body, grammar) + '</span>';
+    }).join('\n');
+  }
+
+  document.querySelectorAll('pre code[data-lang]').forEach(function (el) {
+    el.innerHTML = render(el.textContent, el.getAttribute('data-lang'));
+  });
+})();
+document.querySelectorAll('.tabs .tab').forEach(function(b){
+  b.addEventListener('click',function(){
+    var page=b.closest('.page');
+    page.querySelectorAll('.tab, .tabpanel').forEach(function(el){el.classList.remove('active')});
+    b.classList.add('active');
+    page.querySelector('#'+b.dataset.tab).classList.add('active');
+  });
+});
+document.querySelectorAll('.skipto a[data-page]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.page, .skipto a').forEach(function(el){el.classList.remove('active')});
+    a.classList.add('active');
+    document.getElementById(a.dataset.page).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+var nav=document.querySelector('.skipto');
+var menu=nav.querySelector('.skipto-menu');
+function closeMenu(){nav.classList.remove('open');nav.classList.add('closed');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});}
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){
+  if(getComputedStyle(menu).display!=='none'){closeMenu();}
+  else{nav.classList.remove('closed');nav.classList.add('open');}
+});
+nav.addEventListener('mouseleave',function(){nav.classList.remove('closed')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',closeMenu)});
+</script>
+</body>
+</html>

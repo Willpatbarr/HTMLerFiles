@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jordan's Open PRs — Review Guide (5 PRs)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="navlabel">Pages</span>
+  <a href="index.html" class="current">Overview</a>
+  <a href="pr-1915.html">1915 · Location <span class="tkt">MMA-5939</span></a>
+  <a href="pr-1913.html">1913 · Reminder <span class="tkt">MMA-5941</span></a>
+  <a href="pr-1912.html">1912 · Recurrence <span class="tkt">MMA-5938</span></a>
+  <a href="pr-1914.html">1914 · Public Evt <span class="tkt">MMA-5946</span></a>
+  <a href="pr-1820.html">1820 · CodeQL</a>
+  <span class="navlabel">Skip to</span>
+  <a href="#prs">The 5 PRs</a>
+  <a href="#order">Suggested order</a>
+  <a href="#themes">Recurring themes</a>
+  <a href="#three">Remember 3 things</a>
+  <a href="#todo">What to do next</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="kicker">PR Review Guide · ICS-Eng/MemberTools-Android · 2026-07-27</div>
+  <h1>Jordan Hansen's Open PRs</h1>
+  <p class="sub">5 open PRs by <b>HansenJI_church</b> — four calendar event-form features plus one draft CI workflow.</p>
+
+  <div class="card accent">
+    <h2>One-Sentence Version</h2>
+    <p class="onesent">Jordan has <b>4 active calendar-form PRs</b> (3 with changes already requested, 1 approved) and <b>1 stale draft CI PR</b> — review the three flagged ones first, and watch for the two recurring reviewer themes: <b>Core.Strings duplicates</b> and <b>values that belong in MaltSync</b>.</p>
+  </div>
+
+  <div class="card" id="prs">
+    <h2>The 5 PRs</h2>
+    <table>
+      <tr><th>PR</th><th>Title</th><th>Size</th><th>Status</th><th>Priority</th></tr>
+      <tr>
+        <td><a href="pr-1915.html">#1915</a></td>
+        <td>MMA-5939 Location — None / Address / Other</td>
+        <td class="num">+1,732 / 56 files</td>
+        <td><span class="badge warn">Changes requested</span></td>
+        <td><span class="prio must">Must review</span></td>
+      </tr>
+      <tr>
+        <td><a href="pr-1913.html">#1913</a></td>
+        <td>MMA-5941 Contact &amp; email reminder</td>
+        <td class="num">+1,223 / 40 files</td>
+        <td><span class="badge warn">Changes requested</span></td>
+        <td><span class="prio must">Must review</span></td>
+      </tr>
+      <tr>
+        <td><a href="pr-1912.html">#1912</a></td>
+        <td>MMA-5938 Recurrence picker</td>
+        <td class="num">+1,834 / 51 files</td>
+        <td><span class="badge warn">Changes requested</span></td>
+        <td><span class="prio must">Must review</span></td>
+      </tr>
+      <tr>
+        <td><a href="pr-1914.html">#1914</a></td>
+        <td>MMA-5946 Public event toggle + details shell</td>
+        <td class="num">+405 / 29 files</td>
+        <td><span class="badge green">Approved · checks green</span></td>
+        <td><span class="prio imp">Quick pass</span></td>
+      </tr>
+      <tr>
+        <td><a href="pr-1820.html">#1820</a></td>
+        <td>ci: CodeQL analysis workflow</td>
+        <td class="num">+103 / 3 files</td>
+        <td><span class="badge red">Draft · check failing</span></td>
+        <td><span class="prio opt">Optional</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card" id="order">
+    <h2>Suggested Review Order</h2>
+    <ol>
+      <li><b><a href="pr-1914.html">#1914 Public event</a></b> — smallest, already approved by sbrewerclan; a 10-minute sanity pass unblocks a merge.</li>
+      <li><b><a href="pr-1912.html">#1912 Recurrence</a></b> — biggest and most self-contained (new <code>recurrence/</code> package); MaltSync question decides its fate.</li>
+      <li><b><a href="pr-1913.html">#1913 Contact reminder</a></b> — adds new repo surface (<code>IndividualDetailsRepository</code>); shares the MaltSync question with 1912.</li>
+      <li><b><a href="pr-1915.html">#1915 Location</a></b> — newest, only PR without green checks yet; new screen + Nav3 route + map picker.</li>
+      <li><b><a href="pr-1820.html">#1820 CodeQL</a></b> — draft from June with a failing Analyze check; skip unless Jordan asks.</li>
+    </ol>
+  </div>
+
+  <div class="card warncard" id="themes">
+    <h2>Recurring Themes (check these on every page)</h2>
+    <ul>
+      <li><b>Core.Strings duplicates</b> — sbrewerclan flagged already-translated strings in <b>1915, 1913, and 1912</b>. Scan every new <code>strings.xml</code> block.</li>
+      <li><b>Server enums belong in MaltSync</b> — flagged in <b>1912</b> (RecurrenceModel) and <b>1913</b> (EventEditUiState). Note: MaltSync changes need a shared-lib PR + toml version bump, so these fixes may stage across repos.</li>
+      <li><b>All four calendar PRs touch the same files</b> — <code>EventEditViewModel</code>, <code>EventFormModel</code>, <code>EventFormValidator</code>, <code>strings.xml</code>. Expect rebase conflicts; merge order matters.</li>
+      <li><b>AI-assisted code</b> — 1915 is co-authored by Claude Opus 4.8. Review strictly, don't rubber-stamp.</li>
+    </ul>
+  </div>
+
+  <div class="card accent" id="three">
+    <h2>Remember Only 3 Things</h2>
+    <ol>
+      <li><b>Three PRs already have changes requested</b> — your review adds to sbrewerclan's; check whether his comments are addressed before piling on.</li>
+      <li><b>Strings + MaltSync placement</b> are the two systemic issues — look for them everywhere.</li>
+      <li><b>#1914 is approved and green</b> — reviewing it first gets a merge out the door and shrinks everyone else's rebase.</li>
+    </ol>
+  </div>
+
+  <div class="card" id="todo">
+    <h2>What To Do Next</h2>
+    <ul class="check">
+      <li><input type="checkbox"> <span>Quick pass on <a href="pr-1914.html">#1914</a> — confirm nothing objectionable, let it merge.</span></li>
+      <li><input type="checkbox"> <span>Review <a href="pr-1912.html">#1912</a> and take a position on the MaltSync-enum question (it also decides 1913).</span></li>
+      <li><input type="checkbox"> <span>Review <a href="pr-1913.html">#1913</a>, then <a href="pr-1915.html">#1915</a> (verify its CI status first — it was blank at fetch time).</span></li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kobalte picked, board library open</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33; --g4:#C24A4A;
+  --ok:#2E8B62; --no:#C24A4A; --mid:#B06A1E;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.55;
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+@media (max-width:1180px){main{padding-top:72px}}
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+h2{font-size:1.3rem;margin:0 0 .7rem;font-weight:600;letter-spacing:-.01em}
+h3{font-size:1.05rem;margin:1.8rem 0 .5rem;font-weight:600;color:var(--ink)}
+p{margin:0 0 1rem;max-width:66ch}
+a{color:var(--accent)} code,a{overflow-wrap:anywhere}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:var(--card);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
+
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.6rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media (max-width:900px){.head{grid-template-columns:1fr}
+  .head .lede{margin-top:1.1rem}}
+
+.outs{margin:0 0 2rem}
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+  padding:13px 17px;margin:0 0 1.4rem}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;margin:0 0 5px}
+.note p{margin:0;max-width:none}
+.dele{border:1px solid var(--border-strong);background:var(--card);border-radius:10px;
+  padding:13px 17px;margin:0 0 1.4rem}
+.dele b{display:block;color:var(--muted);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;margin:0 0 5px}
+.dele p{margin:0;max-width:none}
+
+.tw{overflow-x:auto;max-width:100%;margin:0 0 1.5rem;border:1px solid var(--border);
+  border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12.5px;letter-spacing:.05em;
+  text-transform:uppercase;background:#191d22}
+tr:last-child td{border-bottom:0}
+td code{background:#171b20}
+.ok{color:var(--ok)} .no{color:var(--no)} .mid{color:var(--mid)}
+
+.g1{color:var(--g1)} .g2{color:var(--g2)} .g3{color:var(--g3)} .g4{color:var(--g4)}
+.rail{margin-right:.5rem}
+q{quotes:"\201C" "\201D"} blockquote{margin:0 0 1.2rem;padding:0 0 0 14px;
+  border-left:2px solid var(--border-strong);color:var(--ink);max-width:66ch}
+
+.code{position:relative;margin:0 0 1.3rem}
+.code pre{margin:0;background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;overflow-x:auto;max-width:100%;font-size:13.5px;line-height:1.5;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--card);
+  padding:1px 4px;border-radius:3px;pointer-events:none;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.desc{margin:0 0 .45rem;color:var(--muted);font-size:14px}
+.kw{color:#A25494} .ty{color:#4368A8} .add{color:#2E8B62} .cm{color:var(--faint)}
+
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.page{display:none} .tabpanel{display:none}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px}
+.tab:hover{color:var(--ink)}
+
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 10px 4px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+}
+@media (max-width:720px){.tabs{flex-wrap:wrap}}
+
+#r-p-find:checked ~ main #p-find,
+#r-p-board:checked ~ main #p-board,
+#r-p-lab:checked ~ main #p-lab,
+#r-p-open:checked ~ main #p-open{display:block}
+#r-p-find:checked ~ .skipto label[for="r-p-find"],
+#r-p-board:checked ~ .skipto label[for="r-p-board"],
+#r-p-lab:checked ~ .skipto label[for="r-p-lab"],
+#r-p-open:checked ~ .skipto label[for="r-p-open"]{background:var(--bg);color:var(--accent)}
+#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+
+#r-t1a:checked ~ main #t1a,#r-t1b:checked ~ main #t1b,#r-t1c:checked ~ main #t1c,
+#r-t2a:checked ~ main #t2a,#r-t2b:checked ~ main #t2b,
+#r-t3a:checked ~ main #t3a,#r-t3b:checked ~ main #t3b,#r-t3c:checked ~ main #t3c,
+#r-t4a:checked ~ main #t4a,#r-t4b:checked ~ main #t4b,#r-t4c:checked ~ main #t4c
+{display:block}
+#r-t1a:checked ~ main .tab[for="r-t1a"],#r-t1b:checked ~ main .tab[for="r-t1b"],
+#r-t1c:checked ~ main .tab[for="r-t1c"]
+{color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t2a:checked ~ main .tab[for="r-t2a"],#r-t2b:checked ~ main .tab[for="r-t2b"]
+{color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t3a:checked ~ main .tab[for="r-t3a"],#r-t3b:checked ~ main .tab[for="r-t3b"],
+#r-t3c:checked ~ main .tab[for="r-t3c"]
+{color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+#r-t4a:checked ~ main .tab[for="r-t4a"],#r-t4b:checked ~ main .tab[for="r-t4b"],
+#r-t4c:checked ~ main .tab[for="r-t4c"]
+{color:var(--g4);border-bottom-color:var(--g4);font-weight:600}
+</style>
+</head>
+<body>
+<input class="st" type="radio" name="pg" id="r-p-find" checked>
+<input class="st" type="radio" name="pg" id="r-p-board">
+<input class="st" type="radio" name="pg" id="r-p-lab">
+<input class="st" type="radio" name="pg" id="r-p-open">
+<input class="st" type="checkbox" id="navtoggle">
+<input class="st" type="radio" name="t1" id="r-t1a" checked>
+<input class="st" type="radio" name="t1" id="r-t1b">
+<input class="st" type="radio" name="t1" id="r-t1c">
+<input class="st" type="radio" name="t2" id="r-t2a" checked>
+<input class="st" type="radio" name="t2" id="r-t2b">
+<input class="st" type="radio" name="t3" id="r-t3a" checked>
+<input class="st" type="radio" name="t3" id="r-t3b">
+<input class="st" type="radio" name="t3" id="r-t3c">
+<input class="st" type="radio" name="t4" id="r-t4a" checked>
+<input class="st" type="radio" name="t4" id="r-t4b">
+<input class="st" type="radio" name="t4" id="r-t4c">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-find">Finding</label>
+    <label for="r-p-board">Board</label>
+    <label for="r-p-lab">Component Lab</label>
+    <label for="r-p-open">Open</label>
+  </div>
+</nav>
+
+<main>
+<div class="head">
+  <h1>Kobalte picked, board library open</h1>
+  <p class="lede">Which UI library LaminarFlow can install on Solid 2 rc.7 today, why Kobalte
+  is the pick, and what the Component Lab must change to preview Kobalte.</p>
+</div>
+
+<div class="outs">
+<div class="tw"><table>
+<thead><tr><th>Out of scope</th><th>Will's reason, quoted</th></tr></thead>
+<tbody>
+<tr><td><code>@ark-ui/solid</code>, and any library needing a Solid 1 shim</td>
+    <td><q>I need to start working on the frontend … I need one that works rn</q></td></tr>
+<tr><td>Hand-rolling Dropdown, Tooltip, Modal or Segmented</td>
+    <td><q>I wouldn't trust myself to handroll any of them</q></td></tr>
+<tr><td>Interactive previews in the Component Lab</td>
+    <td><q>I'm not worried about testing their functionality in the lab … it aint a
+    priority though</q></td></tr>
+<tr><td>Any build coupling between the lab and <code>src/components/ui</code></td>
+    <td><q>once a component is done I'd just copy and paste it into the codebase</q></td></tr>
+</tbody></table></div>
+<div class="note"><b>Undefined — badgering §7.2 against the persistent-slot check</b>
+<p>The outs belong in the title block, which is always on screen, and the verify checklist
+fails anything persistent that every section does not reference. This table is kept where
+§7.2 puts it, unreferenced by the Component Lab page. No rule was invented for the
+conflict.</p></div>
+</div>
+
+<section class="page" id="p-find">
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t1a">Runs on rc.7</label>
+  <label class="tab" for="r-t1b">Kobalte's cost</label>
+  <label class="tab" for="r-t1c">Where sources disagree</label>
+</div>
+
+<div class="tabpanel" id="t1a">
+<h2><span class="g1 rail">&#9474;</span>What runs on Solid 2 rc.7 today</h2>
+<p>One library ships a Solid 2 build and covers all four interactive specimens:
+<code>@kobalte/core@2.0.0-alpha.2</code>, published 2026-09-07. Terracotta's Solid 2 line is
+the only other clean install, and it carries no tooltip. Every other candidate needs shims
+that no source has tested on rc.7.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Library</th><th>Line</th><th>Runs on rc.7</th><th>What decides it</th></tr>
+</thead>
+<tbody>
+<tr><td><code>@kobalte/core</code></td><td>2.0.0-alpha.2</td>
+    <td class="mid">with a peer override</td>
+    <td>Manifest pins rc.3; no name it imports is missing from rc.7</td></tr>
+<tr><td><code>terracotta</code></td><td>2.0.0-next.9</td><td class="ok">clean install</td>
+    <td>Peers <code>^2.0.0-rc.0</code>; ships no tooltip, no segmented control</td></tr>
+<tr><td><code>@zag-js/solid</code></td><td>2.0.0-next.2</td><td class="mid">with two shims</td>
+    <td><code>mergeProps</code> and <code>onMount</code> are absent from rc.7</td></tr>
+<tr><td><code>@ark-ui/solid</code></td><td>5.39.1</td><td class="no">no</td>
+    <td>67 of 485 files import <code>solid-js/web</code>, plus <code>on</code> and
+    <code>splitProps</code></td></tr>
+<tr><td><code>@kobalte/core</code></td><td>0.13.14</td><td class="no">no</td>
+    <td>123 of 903 files import <code>solid-js/web</code>; peers <code>^1.9.8</code></td></tr>
+<tr><td><code>corvu</code></td><td>0.7.2</td><td class="no">no</td>
+    <td>Peers <code>solid-js@^1.8</code>; last published 2025-01-24</td></tr>
+</tbody></table></div>
+
+<h3>Coverage of the four specimens</h3>
+<div class="tw"><table>
+<thead><tr><th>Component Lab specimen</th><th>Kobalte 2.0.0-alpha.2</th>
+  <th>Terracotta 2.0.0-next.9</th></tr></thead>
+<tbody>
+<tr><td>Dropdown</td><td class="ok"><code>dropdown-menu</code></td>
+    <td class="ok"><code>menu</code></td></tr>
+<tr><td>Tooltip</td><td class="ok"><code>tooltip</code></td><td class="no">absent</td></tr>
+<tr><td>Modal</td><td class="ok"><code>dialog</code></td>
+    <td class="ok"><code>dialog</code></td></tr>
+<tr><td>Segmented</td><td class="ok"><code>segmented-control</code></td>
+    <td class="mid"><code>radio-group</code> only</td></tr>
+</tbody></table></div>
+<p>Kobalte's alpha carries 93 component entries against 0.13.14's own set, and adds
+<code>drawer</code>, <code>resizable</code> and <code>steps</code> — so the port is not a
+reduced subset of the stable line.</p>
+</div>
+
+<div class="tabpanel" id="t1b">
+<h2><span class="g1 rail">&#9474;</span>What the Kobalte alpha costs</h2>
+<blockquote>Kobalte seems more dependable from looking around the solid community and their
+own page, so I'd rather risk that and not have to worry about handrolling the
+tooltip.</blockquote>
+<p>The cost is one install-time lie and one prerelease risk. The alpha's manifest pins
+<code>solid-js</code> and <code>@solidjs/web</code> to <code>2.0.0-rc.3</code> exactly, four
+releases behind the repo, and npm enforces the manifest rather than the code.</p>
+
+<p class="desc">strict install, refused on the pin rather than on anything measured</p>
+<div class="code"><span class="lang">text</span><pre><span class="kw">npm error</span> code ERESOLVE
+<span class="kw">npm error</span> Found: <span class="ty">@solidjs/web@2.0.0-rc.7</span>
+<span class="kw">npm error</span> Could not resolve dependency:
+<span class="kw">npm error</span> peer <span class="ty">@solidjs/web@"2.0.0-rc.3"</span> from <span class="ty">@kobalte/core@2.0.0-alpha.2</span></pre></div>
+
+<p class="desc">the pin overridden in package.json, so the install is reproducible</p>
+<div class="code"><span class="lang">json</span><pre>{
+  <span class="ty">"overrides"</span>: {
+    <span class="ty">"@kobalte/core"</span>: {
+      <span class="ty">"solid-js"</span>: <span class="kw">"$solid-js"</span>,
+      <span class="ty">"@solidjs/web"</span>: <span class="kw">"$@solidjs/web"</span>
+    }
+  }
+}</pre></div>
+<div class="dele"><b>Delegated — not answered in the run</b>
+<p>Choosing <code>overrides</code> over <code>--legacy-peer-deps</code> was the method's call.
+Both installs succeed; only the <code>overrides</code> block is committed, so a fresh clone
+resolves the same way without anyone remembering a flag. Read this paragraph cold.</p></div>
+
+<h3>What was measured, and what was not</h3>
+<div class="tw"><table>
+<thead><tr><th>Check</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Every name <code>@kobalte/core@2.0.0-alpha.2</code> imports from
+    <code>solid-js</code></td><td class="ok">present in rc.7 — none missing</td></tr>
+<tr><td>Every name it imports from <code>@solidjs/web</code></td>
+    <td class="ok">present in rc.7 — none missing</td></tr>
+<tr><td><code>npm install</code>, strict</td><td class="no">ERESOLVE on the rc.3 pin</td></tr>
+<tr><td><code>npm install</code>, pin overridden</td><td class="ok">exit 0</td></tr>
+<tr><td><code>@kobalte/core/tooltip</code> under the <code>browser</code> condition</td>
+    <td class="ok">resolves, 7 exports</td></tr>
+<tr><td>Kobalte Tooltip rendered once in jsdom</td>
+    <td class="ok">markup carries <code>aria-describedby</code></td></tr>
+<tr><td>Kobalte's reactive behaviour under updates on rc.7</td>
+    <td class="no">not measured — see Open</td></tr>
+</tbody></table></div>
+<p>The vocabulary the alpha uses is the new one — <code>flush</code>,
+<code>onSettled</code>, <code>createTrackedEffect</code>, <code>merge</code>,
+<code>omit</code>, <code>snapshot</code> — none of which exist in Solid 1. The rc.3 pin is
+therefore a version pin, not a compatibility statement.</p>
+</div>
+
+<div class="tabpanel" id="t1c">
+<h2><span class="g1 rail">&#9474;</span>Where the sources disagree</h2>
+<div class="tw"><table>
+<thead><tr><th>Question</th><th>laminarflow-solid2-handoff-ref.md</th>
+  <th>npm registry, measured 2026-09-09</th><th>Which holds</th></tr></thead>
+<tbody>
+<tr><td>Can any headless Solid library run on Solid 2</td>
+    <td><q>every styled or headless Solid library imports <code>solid-js/web</code>, which
+    Solid 2 removed</q></td>
+    <td><code>@kobalte/core@2.0.0-alpha.2</code>: 0 of 398 files</td>
+    <td>The registry. The handoff-ref measured 0.13.x, and the alpha landed 2026-09-07</td></tr>
+<tr><td>Can Kobalte be bridged onto Solid 2</td>
+    <td><q>It cannot be bridged with an alias: it imports <code>batch</code>,
+    <code>onMount</code>, <code>splitProps</code> …</q></td>
+    <td>The alpha imports none of those names</td>
+    <td>Both, for different versions. The handoff-ref still describes 0.13.14 exactly</td></tr>
+<tr><td>What <code>@zag-js/solid</code> needs</td>
+    <td><q>needs only <code>mergeProps</code> repointed at <code>@solidjs/web</code> and an
+    <code>onMount</code> replacement</q></td>
+    <td><code>2.0.0-next.2</code> imports exactly those two</td>
+    <td>Both agree, and the claim survives the 2.x line</td></tr>
+<tr><td>Is the Kobalte alpha compatible with rc.7</td>
+    <td>silent — the alpha postdates the document</td>
+    <td>Manifest says rc.3 only; the export check finds nothing missing</td>
+    <td>Neither. Kobalte's manifest and Kobalte's code disagree, and npm obeys the
+    manifest</td></tr>
+</tbody></table></div>
+<p>One disagreement is a date rather than a fact: the handoff-ref's <em>UI behaviour
+library</em> unit was blocked on a measurement taken before Kobalte's Solid 2 line existed.
+The handoff-ref's own reassessment trigger — <q>Kobalte is the one to reassess when 2.0
+ships</q> — fired two days ago rather than at 2.0 stable.</p>
+</div>
+</section>
+
+<section class="page" id="p-board">
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t2a">Candidates</label>
+  <label class="tab" for="r-t2b">What refresh settles</label>
+</div>
+
+<div class="tabpanel" id="t2a">
+<h2><span class="g2 rail">&#9474;</span>Drag-and-drop candidates for the board</h2>
+<p>Kobalte ships no drag-and-drop, so the board is a second pick whatever the UI library is.
+Solid's version barely constrains it: three of the five candidates carry no framework binding
+at all, which is why the board question survives the Kobalte decision intact.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Library</th><th>Line</th><th>Framework binding</th>
+  <th>Who moves the card</th></tr></thead>
+<tbody>
+<tr><td><code>@atlaskit/pragmatic-drag-and-drop</code></td><td>3.1.0, stable</td>
+    <td class="ok">none — zero peers, zero framework imports</td>
+    <td>Your code, on the library's events</td></tr>
+<tr><td><code>sortablejs</code></td><td>1.15.7, stable</td>
+    <td class="ok">none — zero peers</td>
+    <td>The library, by reordering DOM nodes itself</td></tr>
+<tr><td><code>@zag-js/dnd</code></td><td>2.0.0-next.2, prerelease only</td>
+    <td class="mid"><code>@zag-js/solid</code>, which needs two shims</td>
+    <td>Your code, on machine events</td></tr>
+<tr><td><code>@formkit/drag-and-drop</code></td><td>0.6.1</td>
+    <td class="no">its <code>./solid</code> adapter imports <code>on</code></td>
+    <td>Ruled out — rc.7 removed <code>on</code></td></tr>
+<tr><td><code>@thisbeyond/solid-dnd</code></td><td>0.7.5</td>
+    <td class="no">peers <code>solid-js@^1.5</code></td>
+    <td>Ruled out — last published 2023-11-17</td></tr>
+</tbody></table></div>
+<p>The handoff-ref named <code>@zag-js/dnd</code> the candidate on the grounds that it has no
+peer dependencies. That still measures true, and <code>@atlaskit/pragmatic-drag-and-drop</code>
+matches it on the same terms while having a stable published line.</p>
+</div>
+
+<div class="tabpanel" id="t2b">
+<h2><span class="g2 rail">&#9474;</span>What the refresh test settles</h2>
+<blockquote>local optimistic write and the worker queued to update the backend
+database.</blockquote>
+<p>That answer decides one thing on its own: the drop has to produce a data change, so a
+library whose job is moving the DOM node is doing work the signal will immediately redo.
+<code>sortablejs</code> is the one candidate that works that way, and this is the ground it
+loses on rather than its age or its API.</p>
+<p>It leaves <code>@atlaskit/pragmatic-drag-and-drop</code> and <code>@zag-js/dnd</code>
+undecided, because both are event-only and both hand the move back to your code. That pick is
+the document's open question.</p>
+
+<div class="tw"><table>
+<thead><tr><th>What the answer requires</th><th>State of the code today</th></tr></thead>
+<tbody>
+<tr><td>A local optimistic write on drop</td>
+    <td>No board state exists yet — <code>Kanban Board Columns.md</code> is a specimen with
+    <code>status: open</code></td></tr>
+<tr><td>A worker queueing the backend update</td>
+    <td class="no">No queue or outbox exists in LaminarFlow-Backend — see Open</td></tr>
+<tr><td>An event carrying source column, target column and slot</td>
+    <td>Supplied by both remaining candidates</td></tr>
+</tbody></table></div>
+</div>
+</section>
+
+<section class="page" id="p-lab">
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t3a">What breaks</label>
+  <label class="tab" for="r-t3b">Pipeline change</label>
+  <label class="tab" for="r-t3c">The paste rule</label>
+</div>
+
+<div class="tabpanel" id="t3a">
+<h2><span class="g3 rail">&#9474;</span>What breaks in the preview builder</h2>
+<blockquote>i'd like the component lab to work with kobalte as that is how I will be working on
+the ui elements before I put them in the actual code.</blockquote>
+<p>Three of the four components throw when imported into Solid 2's server build, which is the
+build <code>build-previews.mjs</code> uses. The throw comes from Kobalte's
+<code>popper</code> module at module scope, so it happens on import and no
+<code>&lt;Show&gt;</code> guard inside a component avoids it.</p>
+
+<p class="desc">thrown by @solidjs/web's server build while loading @kobalte/core/tooltip</p>
+<div class="code"><span class="lang">text</span><pre><span class="kw">Client-only API called on the server side.</span>
+    at notSup (<span class="ty">@solidjs/web/dist/server.js</span>:3377:9)
+    at <span class="ty">@kobalte/core/dist/popper/BTyI8BKK.js</span>:16:28
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)</pre></div>
+
+<div class="tw"><table>
+<thead><tr><th>Kobalte module</th><th>Server build</th><th>Browser condition</th></tr></thead>
+<tbody>
+<tr><td><code>@kobalte/core/tooltip</code></td><td class="no">throws on import</td>
+    <td class="ok">resolves, 7 exports</td></tr>
+<tr><td><code>@kobalte/core/dropdown-menu</code></td><td class="no">throws on import</td>
+    <td class="ok">resolves</td></tr>
+<tr><td><code>@kobalte/core/dialog</code></td><td class="no">throws on import</td>
+    <td class="ok">resolves</td></tr>
+<tr><td><code>@kobalte/core/segmented-control</code></td><td class="ok">13 exports</td>
+    <td class="ok">resolves</td></tr>
+</tbody></table></div>
+<p>The app is unaffected: Vite resolves the <code>browser</code> condition, so
+<code>npm run dev</code> and <code>npm run build</code> never load the server build of these
+modules. Only the lab's build-time renderer does.</p>
+</div>
+
+<div class="tabpanel" id="t3b">
+<h2><span class="g3 rail">&#9474;</span>The pipeline change</h2>
+<div class="tw"><table>
+<thead><tr><th>Today</th><th>After</th></tr></thead>
+<tbody>
+<tr><td><code>renderToString</code> from <code>@solidjs/web</code>, the server build</td>
+    <td><code>render</code> into a jsdom document, then read
+    <code>document.body.innerHTML</code></td></tr>
+<tr><td><code>node build-previews.mjs</code></td>
+    <td><code>node --conditions browser build-previews.mjs</code></td></tr>
+<tr><td>Markup captured from the render root</td>
+    <td>Captured from the whole body — Kobalte portals content outside the mount node</td></tr>
+<tr><td>Nothing supplies open state</td>
+    <td>Each specimen passes <code>open</code> itself, since nothing hovers at build
+    time</td></tr>
+</tbody></table></div>
+
+<p class="desc">the browser build rendered into jsdom, then serialised</p>
+<div class="code"><span class="lang">javascript</span><pre><span class="kw">const</span> dom = <span class="kw">new</span> <span class="ty">JSDOM</span>(<span class="ty">'&lt;!doctype html&gt;&lt;body&gt;&lt;div id=app&gt;&lt;/div&gt;'</span>,
+  { <span class="ty">pretendToBeVisual</span>: <span class="kw">true</span>, <span class="ty">url</span>: <span class="ty">'http://localhost/'</span> })
+<span class="cm">// globals defined with defineProperty — navigator is getter-only in Node 26</span>
+<span class="kw">const</span> web = <span class="kw">await</span> <span class="ty">import</span>(<span class="ty">'@solidjs/web'</span>)
+web.<span class="ty">render</span>(app, dom.window.document.getElementById(<span class="ty">'app'</span>))
+<span class="add">+ html = dom.window.document.body.innerHTML</span></pre></div>
+
+<p>Two facts make this cheap rather than a rewrite. <code>jsdom@^30</code> is already a
+devDependency of LaminarFlow-Frontend, and the builder's throwaway package already lives under
+<code>LaminarFlow-Frontend/node_modules/.cache/component-lab/</code>, so
+<code>@kobalte/core</code> resolves by ordinary Node lookup with no path work.</p>
+
+<p class="desc">measured output of that render, Kobalte Tooltip with open forced</p>
+<div class="code"><span class="lang">html</span><pre>&lt;div id="app"&gt;&lt;button <span class="ty">data-expanded</span>=""
+  <span class="ty">aria-describedby</span>="tooltip-cl-0-content"&gt;hover me&lt;/button&gt;&lt;/div&gt;
+&lt;div <span class="ty">data-popper-positioner</span>=""&gt;&lt;div
+  <span class="ty">role</span>="tooltip"&gt;the tip&lt;/div&gt;&lt;/div&gt;</pre></div>
+
+<div class="dele"><b>Delegated — not answered in the run</b>
+<p>The run asked whether the lab must render Kobalte, and Will answered that it must. jsdom
+plus the <code>browser</code> condition is the method's choice of mechanism, including the
+decision to serialise the whole body rather than the mount node. Read this tab cold.</p></div>
+</div>
+
+<div class="tabpanel" id="t3c">
+<h2><span class="g3 rail">&#9474;</span>The paste rule, and what it forbids</h2>
+<blockquote>they don't have to actually update or anything but I do want the code that is
+previewed to be the code I use in production … am focused on the look of them in the
+CL.</blockquote>
+<p>Promotion stays manual — <q>once a component is done I'd just copy and paste it into the
+codebase</q> — so nothing generates or imports across the boundary. What the rule costs is
+that a fence may not contain anything the paste would have to strip.</p>
+
+<div class="tw"><table>
+<thead><tr><th>Rule</th><th>What it forbids inside a fence</th></tr></thead>
+<tbody>
+<tr><td>Previewed code is production code</td>
+    <td>A lab-only shim, a lab-only prop, a stub standing in for a real import</td></tr>
+<tr><td>Promotion is copy-paste</td>
+    <td>Any generated file under <code>src/components/ui</code>, in either
+    direction</td></tr>
+<tr><td><code>./lib/&lt;Name&gt;</code> is a builder path, not a folder</td>
+    <td>Pasting a note's component unedited when it imports a sibling specimen</td></tr>
+<tr><td>Kobalte imports resolve from the frontend's <code>node_modules</code></td>
+    <td>Nothing — <code>@kobalte/core/tooltip</code> is the same import in both places</td></tr>
+</tbody></table></div>
+
+<p>Interactivity in the previews is not merely deprioritised, it is unavailable: Style HTML
+Viewer runs pages under a strict local-only Content Security Policy that blocks inline
+scripts, which is the same constraint that forbids JavaScript in these guides. A preview that
+needed a click handler would render and then sit dead.</p>
+<p>So <q>if I can easily then why not</q> resolves to <em>not in this viewer</em>, and the
+static jsdom render is the whole of what the lab can show — the look, with states forced by
+props.</p>
+</div>
+</section>
+
+<section class="page" id="p-open">
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t4a">Unanswered</label>
+  <label class="tab" for="r-t4b">No source settles</label>
+  <label class="tab" for="r-t4c">Sources</label>
+</div>
+
+<div class="tabpanel" id="t4a">
+<h2><span class="g4 rail">&#9474;</span>Open — unanswered</h2>
+<div class="tw"><table>
+<thead><tr><th>Question</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td><q>You picked Kobalte's alpha but on the grounds that Kobalte itself looked
+    dependable — does that same standard rule out a drag-and-drop library whose only
+    published line is a prerelease?</q></td>
+    <td>Not decided. Will's answer was <q>idk i'd probably have to look into it?</q>, and the
+    method called the stop there rather than narrowing a third time. Nothing in the Board page
+    picks either candidate</td></tr>
+</tbody></table></div>
+<p>The three decisions the run did settle are Kobalte over Terracotta, no hand-rolling, and
+the Component Lab rendering Kobalte rather than staying a hand-rolled reference. Each is
+quoted in Will's wording on the page that turns on it.</p>
+</div>
+
+<div class="tabpanel" id="t4b">
+<h2><span class="g4 rail">&#9474;</span>What no source settles</h2>
+<div class="tw"><table>
+<thead><tr><th>Gap</th><th>What is actually known</th></tr></thead>
+<tbody>
+<tr><td>Whether the Kobalte alpha's API changes before 2.0 stable</td>
+    <td>Two alpha versions exist, first published 2026-09-01. No stability statement was
+    read, and none is claimed here</td></tr>
+<tr><td>Whether Kobalte's reactive semantics hold on rc.7</td>
+    <td>Module loading and one static render were measured. Behaviour under signal updates
+    was not</td></tr>
+<tr><td>Whether Kobalte 2.0 stable keeps an exact peer pin</td>
+    <td>The alpha pins <code>2.0.0-rc.3</code>. No published policy covers the stable
+    line</td></tr>
+<tr><td>Whether <code>@atlaskit/pragmatic-drag-and-drop</code> or <code>@zag-js/dnd</code>
+    suits a kanban board better</td>
+    <td>Both are event-only and peer-free. No source consulted compares their board
+    behaviour, and neither was run</td></tr>
+<tr><td>Whether the optimistic-write worker exists</td>
+    <td>A grep of LaminarFlow-Backend and <code>db</code> for outbox, queue and worker
+    matched only <code>internal/migrate/runner.go</code></td></tr>
+<tr><td>Whether <code>terracotta</code> would have covered the tooltip another way</td>
+    <td>Terracotta's export list has no tooltip entry. Whether Terracotta's
+    <code>popover</code> substitutes was not tested</td></tr>
+</tbody></table></div>
+</div>
+
+<div class="tabpanel" id="t4c">
+<h2><span class="g4 rail">&#9474;</span>Sources</h2>
+<div class="note"><b>Undefined — UB-144</b>
+<p><code>-research</code> consolidates only sources Will provided, and going beyond them is
+<q>a new call</q>. Will's call here was <q>on the topic of that jon not the contents of the md
+itself</q>, so the npm registry, the package tarballs and the two local repositories were
+consulted. Every one of them is listed below.</p></div>
+<p>Ordering is alphabetical by identifier. The sources form no chain — each was queried
+independently on 2026-09-09.</p>
+<div class="tw"><table>
+<thead><tr><th>Source</th><th>What it establishes</th></tr></thead>
+<tbody>
+<tr><td><code>@ark-ui/solid@5.39.1</code></td>
+    <td>Ark UI imports <code>solid-js/web</code> in 67 of 485 files and needs four core names
+    rc.7 removed</td></tr>
+<tr><td><code>@atlaskit/pragmatic-drag-and-drop@3.1.0</code></td>
+    <td>A stable drag-and-drop line with no peer dependencies and no framework imports</td></tr>
+<tr><td><code>@formkit/drag-and-drop@0.6.1</code></td>
+    <td>A <code>./solid</code> adapter exists, and it imports <code>on</code>, which rc.7
+    removed</td></tr>
+<tr><td><code>@kobalte/core@0.13.14</code></td>
+    <td>The measurement laminarflow-solid2-handoff-ref.md recorded: 123 files importing
+    <code>solid-js/web</code></td></tr>
+<tr><td><code>@kobalte/core@2.0.0-alpha.2</code></td>
+    <td>A full Solid 2 port — 0 <code>solid-js/web</code> imports, 149
+    <code>@solidjs/web</code>, 93 component entries including tooltip and
+    segmented-control</td></tr>
+<tr><td><code>@thisbeyond/solid-dnd@0.7.5</code></td>
+    <td>Establishes nothing new. Last published 2023-11-17, peers
+    <code>solid-js@^1.5</code></td></tr>
+<tr><td><code>@zag-js/dnd@2.0.0-next.2</code></td>
+    <td>A peer-free drag-and-drop machine whose only published line is prerelease, three
+    versions since 2026-06-04</td></tr>
+<tr><td><code>@zag-js/solid@2.0.0-next.2</code></td>
+    <td>Still imports <code>mergeProps</code> and <code>onMount</code>, so the handoff-ref's
+    two-shim claim survives</td></tr>
+<tr><td><code>corvu@0.7.2</code></td>
+    <td>Peers <code>solid-js@^1.8</code>, last published 2025-01-24</td></tr>
+<tr><td><code>laminarflow-solid2-handoff-ref.md</code></td>
+    <td>The repo's own state and the <em>blocked</em> verdict this document
+    overturns</td></tr>
+<tr><td><code>LaminarFlow-Backend</code> grep</td>
+    <td>No queue, outbox or worker implementation exists for the optimistic write</td></tr>
+<tr><td><code>LaminarFlow-Frontend/package.json</code></td>
+    <td>The installed lines that every compatibility check is measured against, and
+    <code>jsdom@^30</code> already present</td></tr>
+<tr><td><code>node --conditions browser</code> import plus jsdom render</td>
+    <td>Kobalte's Tooltip renders with <code>aria-describedby</code>, and portals its content
+    outside the mount node</td></tr>
+<tr><td><code>npm install</code>, strict and overridden</td>
+    <td>ERESOLVE against the rc.3 pin, and exit 0 once the pin is overridden</td></tr>
+<tr><td><code>OMLR/skills/v1/omlr/formats/html.md</code></td>
+    <td>Style HTML Viewer runs pages under a strict CSP that blocks inline scripts</td></tr>
+<tr><td><code>solid-js@2.0.0-rc.7</code> export check</td>
+    <td><code>mergeProps</code>, <code>onMount</code>, <code>splitProps</code>,
+    <code>batch</code>, <code>createResource</code> and <code>on</code> are all absent</td></tr>
+<tr><td><code>sortablejs@1.15.7</code></td>
+    <td>A stable, peer-free library that reorders DOM nodes itself</td></tr>
+<tr><td><code>terracotta@2.0.0-next.9</code></td>
+    <td>Peers <code>^2.0.0-rc.0</code> so it installs clean on rc.7, with 25 exports and no
+    tooltip</td></tr>
+</tbody></table></div>
+</div>
+</section>
+</main>
+</body>
+</html>

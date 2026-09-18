@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Monograms Implementation — Guide</title>
+<style>
+:root{
+  --bg:#0a0c12;
+  --surface:rgba(255,255,255,0.04);
+  --surface-2:rgba(255,255,255,0.028);
+  --surface-3:rgba(0,0,0,0.16);
+  --surface-strong:rgba(124,156,255,0.12);
+  --border:rgba(255,255,255,0.08);
+  --border-soft:rgba(255,255,255,0.05);
+  --border-accent:rgba(137,165,255,0.26);
+  --text:#f6f7fb;
+  --muted:#a6adba;
+  --dim:#727b8b;
+  --accent:#89a5ff;
+  --accent2:#7af0ff;
+  --green:#81f2aa;
+  --yellow:#ffdd7a;
+  --red:#ff9292;
+  --shadow:0 18px 55px rgba(0,0,0,0.40);
+  --radius:24px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 12% 4%, rgba(137,165,255,0.16), transparent 32%),
+    radial-gradient(circle at 90% 0%, rgba(122,240,255,0.09), transparent 30%),
+    var(--bg);
+  min-height:100vh;
+  line-height:1.6;
+  font-size:16px;
+}
+a{color:var(--accent);}
+.app{display:flex;min-height:100vh;}
+
+/* Sidebar */
+.sidebar{
+  width:296px;flex:0 0 296px;
+  position:sticky;top:0;height:100vh;
+  padding:30px 22px;
+  border-right:1px solid var(--border-soft);
+  background:linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+  display:flex;flex-direction:column;gap:22px;
+  overflow-y:auto;
+}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--accent2);
+  border:1px solid var(--border-accent);
+  background:var(--surface-strong);
+  padding:7px 13px;border-radius:999px;width:max-content;
+}
+.side-title{font-size:1.4rem;font-weight:700;letter-spacing:-.02em;margin:0;line-height:1.2;}
+.side-sub{font-size:.82rem;color:var(--dim);margin:-10px 0 0;}
+.progress-wrap{margin-top:2px;}
+.progress-label{font-size:.7rem;color:var(--muted);margin-bottom:7px;display:flex;justify-content:space-between;letter-spacing:.04em;}
+.progress-track{height:7px;border-radius:999px;background:var(--surface-3);border:1px solid var(--border-soft);overflow:hidden;}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
+.nav{display:flex;flex-direction:column;gap:9px;margin-top:4px;}
+.nav button{
+  text-align:left;cursor:pointer;
+  border:1px solid var(--border-soft);
+  background:var(--surface-2);
+  color:var(--muted);
+  padding:13px 15px;border-radius:15px;
+  font-size:.93rem;font-weight:600;
+  display:flex;align-items:center;gap:11px;
+  transition:.18s;
+}
+.nav button .idx{font-size:.7rem;color:var(--dim);border:1px solid var(--border-soft);border-radius:7px;padding:2px 7px;}
+.nav button:hover{border-color:var(--border-accent);color:var(--text);}
+.nav button.active{
+  color:var(--text);
+  border-color:var(--border-accent);
+  background:linear-gradient(180deg,var(--surface-strong),rgba(255,255,255,0.025));
+  box-shadow:var(--shadow);
+}
+.side-foot{margin-top:auto;font-size:.72rem;color:var(--dim);border-top:1px solid var(--border-soft);padding-top:16px;line-height:1.5;}
+
+/* Main */
+.main{flex:1;padding:40px 48px 90px;max-width:1000px;margin:0 auto;width:100%;}
+.page{display:none;animation:fade .35s ease;}
+.page.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+.hero{
+  border:1px solid var(--border-accent);
+  background:linear-gradient(180deg, var(--surface-strong), rgba(255,255,255,0.03));
+  border-radius:30px;padding:40px;box-shadow:var(--shadow);margin-bottom:26px;
+}
+.hero h1{font-size:clamp(2.4rem,5.5vw,3.8rem);line-height:1;letter-spacing:-.045em;margin:0 0 16px;}
+.hero .sub{font-size:1.02rem;color:var(--muted);max-width:66ch;margin:0;}
+
+/* One-sentence version */
+.one-sentence{
+  border:1px solid var(--border-accent);
+  background:var(--surface-3);
+  border-radius:18px;padding:18px 22px;margin:0 0 26px;
+  display:flex;gap:16px;align-items:flex-start;
+}
+.one-sentence .tag{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);border:1px solid var(--border-accent);border-radius:8px;padding:4px 9px;white-space:nowrap;margin-top:3px;}
+.one-sentence p{margin:0;font-size:1rem;color:var(--text);}
+
+/* Skip-to */
+.skipto{
+  border:1px solid var(--border-soft);
+  background:var(--surface-2);
+  border-radius:18px;padding:18px 22px;margin:0 0 26px;
+}
+.skipto h4{margin:0 0 12px;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);}
+.skipto-row{display:flex;flex-wrap:wrap;gap:9px;}
+.skipto-row a{
+  text-decoration:none;color:var(--text);
+  border:1px solid var(--border-soft);background:var(--surface-3);
+  border-radius:11px;padding:9px 14px;font-size:.88rem;font-weight:600;
+  transition:.16s;display:inline-flex;align-items:center;gap:8px;
+}
+.skipto-row a:hover{border-color:var(--border-accent);color:var(--accent2);}
+.skipto-row a .mini{font-size:.68rem;color:var(--dim);}
+
+.grid{display:grid;gap:18px;margin:22px 0;}
+.grid.c3{grid-template-columns:repeat(3,1fr);}
+.grid.c2{grid-template-columns:repeat(2,1fr);}
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+  border:1px solid var(--border);border-radius:26px;padding:26px;box-shadow:var(--shadow);
+}
+.card h3{margin:0 0 12px;font-size:1.04rem;letter-spacing:-.01em;}
+.card p{margin:0;color:var(--muted);font-size:.92rem;}
+
+.section-title{font-size:1.45rem;letter-spacing:-.02em;margin:40px 0 6px;display:flex;align-items:center;gap:12px;}
+.section-note{color:var(--dim);font-size:.9rem;margin:0 0 18px;max-width:70ch;}
+
+/* Priority badges */
+.prio{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;border-radius:7px;padding:4px 9px;font-weight:700;white-space:nowrap;}
+.prio.must{color:var(--red);border:1px solid rgba(255,146,146,.4);background:rgba(255,146,146,.08);}
+.prio.imp{color:var(--yellow);border:1px solid rgba(255,221,122,.4);background:rgba(255,221,122,.08);}
+.prio.opt{color:var(--green);border:1px solid rgba(129,242,170,.4);background:rgba(129,242,170,.08);}
+
+.stat{font-size:2.5rem;font-weight:700;letter-spacing:-.03em;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.stat-label{font-size:.8rem;color:var(--muted);margin-top:4px;}
+
+/* Step rows */
+.step{
+  display:flex;gap:20px;align-items:flex-start;
+  border:1px solid var(--border);border-radius:22px;
+  background:var(--surface-3);padding:24px;margin-bottom:16px;
+}
+.step .num{
+  flex:0 0 44px;height:44px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:1.15rem;
+  color:#0a0d14;background:linear-gradient(180deg,var(--accent2),var(--accent));
+}
+.step h4{margin:0 0 8px;font-size:1.05rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.step p{margin:0 0 10px;color:var(--muted);font-size:.92rem;}
+.step .body{flex:1;}
+code,.mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;}
+code{background:var(--surface-3);border:1px solid var(--border-soft);border-radius:7px;padding:1px 6px;font-size:.84em;color:var(--accent2);}
+pre{
+  background:var(--surface-3);border:1px solid var(--border-soft);
+  border-radius:16px;padding:16px 18px;overflow:auto;font-size:.84rem;margin:8px 0 0;
+}
+pre code{background:none;border:none;padding:0;color:#dce3f5;}
+
+.two-pattern{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:10px;}
+.patt{border:1px solid var(--border);border-radius:18px;padding:18px;background:var(--surface-2);}
+.patt h5{margin:0 0 10px;font-size:.95rem;display:flex;align-items:center;gap:8px;}
+.tagok{font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--green);border:1px solid rgba(129,242,170,.4);border-radius:7px;padding:3px 8px;}
+.tagalt{font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--yellow);border:1px solid rgba(255,221,122,.4);border-radius:7px;padding:3px 8px;}
+
+/* Diagram */
+.diagram{border:1px solid var(--border);border-radius:24px;background:var(--surface-3);padding:20px;margin:16px 0;}
+.diagram svg{width:100%;height:auto;display:block;}
+details.puml{margin-top:12px;border:1px solid var(--border-soft);border-radius:14px;background:var(--surface-2);padding:10px 16px;}
+details.puml summary{cursor:pointer;font-size:.85rem;color:var(--muted);}
+
+/* Groups */
+.group{border:1px solid var(--border);border-radius:22px;background:var(--surface-2);padding:20px 22px;margin-bottom:16px;}
+.group-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+.group-head h4{margin:0;font-size:1.06rem;letter-spacing:-.01em;}
+.group-head .src{font-size:.74rem;color:var(--accent2);font-family:"SF Mono",ui-monospace,Menlo,monospace;}
+.group ul{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:9px;}
+.group li{
+  border:1px solid var(--border-soft);background:var(--surface-3);
+  border-radius:11px;padding:8px 13px;font-size:.87rem;color:var(--text);
+}
+.done-row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 6px;}
+.done-chip{border:1px solid rgba(129,242,170,.4);background:rgba(129,242,170,.08);color:var(--green);border-radius:11px;padding:8px 13px;font-size:.87rem;display:flex;gap:8px;align-items:center;}
+
+/* Remember 3 things */
+.remember{
+  border:1px solid var(--border-accent);
+  background:linear-gradient(180deg, var(--surface-strong), rgba(255,255,255,0.025));
+  border-radius:26px;padding:28px;margin:30px 0;box-shadow:var(--shadow);
+}
+.remember h2{margin:0 0 4px;font-size:1.35rem;letter-spacing:-.02em;}
+.remember .rsub{color:var(--dim);font-size:.86rem;margin:0 0 18px;}
+.remember-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.rthing{border:1px solid var(--border-soft);background:var(--surface-3);border-radius:18px;padding:20px;}
+.rthing .rn{font-size:1.6rem;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.rthing p{margin:8px 0 0;color:var(--muted);font-size:.9rem;}
+
+/* What to do next / TODO */
+.todo{
+  border:1px solid var(--border);border-radius:26px;background:var(--surface-2);
+  padding:28px;margin-top:30px;
+}
+.todo h2{margin:0 0 16px;font-size:1.35rem;letter-spacing:-.02em;}
+.todo ol{margin:0;padding-left:0;list-style:none;counter-reset:todo;}
+.todo li{
+  counter-increment:todo;position:relative;
+  padding:14px 14px 14px 56px;margin-bottom:10px;
+  border:1px solid var(--border-soft);border-radius:14px;background:var(--surface-3);
+  font-size:.94rem;color:var(--text);
+}
+.todo li::before{
+  content:counter(todo);
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  width:28px;height:28px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:.85rem;color:#0a0d14;
+  background:linear-gradient(180deg,var(--accent2),var(--accent));
+}
+
+.linkbtn{
+  display:inline-flex;align-items:center;gap:10px;margin-top:10px;
+  border:1px solid var(--border-accent);background:var(--surface-strong);
+  color:var(--text);text-decoration:none;font-weight:600;font-size:.95rem;
+  padding:14px 20px;border-radius:14px;transition:.18s;
+}
+.linkbtn:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
+.linkbtn .arr{color:var(--accent2);}
+
+/* footer nav */
+.pager{display:flex;justify-content:space-between;margin-top:40px;gap:12px;}
+.pager button{
+  cursor:pointer;border:1px solid var(--border);background:var(--surface-2);color:var(--text);
+  padding:13px 22px;border-radius:14px;font-size:.9rem;font-weight:600;transition:.18s;
+}
+.pager button:hover:not(:disabled){border-color:var(--border-accent);}
+.pager button:disabled{opacity:.32;cursor:default;}
+
+@media(max-width:900px){
+  .app{flex-direction:column;}
+  .sidebar{width:100%;height:auto;position:static;flex:none;border-right:none;border-bottom:1px solid var(--border-soft);overflow:visible;}
+  .nav{flex-direction:row;flex-wrap:wrap;}
+  .nav button{flex:1 1 auto;}
+  .side-foot{display:none;}
+  .main{padding:28px 18px 60px;}
+  .grid.c3,.grid.c2,.two-pattern,.remember-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <span class="pill">MemberTools Android</span>
+    <h2 class="side-title">Monograms Implementation</h2>
+    <p class="side-sub">Rollout plan &amp; screen tracker</p>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Guide progress</span><span id="progText">1 / 3</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-page="0" class="active"><span class="idx">01</span> Overview</button>
+      <button data-page="1"><span class="idx">02</span> General Steps</button>
+      <button data-page="2"><span class="idx">03</span> Screens to Update</button>
+    </nav>
+    <div class="side-foot">2 of 62 photo surfaces wired. 60 screens remaining across 16 data-source groups.</div>
+  </aside>
+
+  <main class="main">
+    <!-- PAGE 1 -->
+    <section class="page active" id="page0">
+      <div class="hero">
+        <h1>Monograms Implementation</h1>
+        <p class="sub">When a member has no photo, we show their initials in a circle (a "monogram") instead of the generic silhouette. The first two screens are live &mdash; this plan finishes wiring it into every remaining screen that renders a person photo.</p>
+      </div>
+
+      <div class="one-sentence">
+        <span class="tag">One sentence</span>
+        <p>The <code>monogram</code> field already exists end-to-end in the data layer; finishing the feature is mostly threading that one field from each screen's DAO query through to its <code>PersonPhoto</code> call.</p>
+      </div>
+
+      <div class="skipto">
+        <h4>Skip to</h4>
+        <div class="skipto-row">
+          <a href="#whats-done"><span class="mini">01</span> What's already done</a>
+          <a href="#why-groups"><span class="mini">01</span> Why work by group</a>
+          <a href="#recipe" onclick="go(1)"><span class="mini">02</span> The 6-step recipe</a>
+          <a href="#patterns" onclick="go(1)"><span class="mini">02</span> Render patterns</a>
+          <a href="#screens" onclick="go(2)"><span class="mini">03</span> Screens to update</a>
+        </div>
+      </div>
+
+      <div class="grid c3">
+        <div class="card"><div class="stat">2</div><div class="stat-label">Reference screens already shipped</div></div>
+        <div class="card"><div class="stat">60</div><div class="stat-label">Screens remaining to wire</div></div>
+        <div class="card"><div class="stat">16</div><div class="stat-label">Shared data-source groups</div></div>
+      </div>
+
+      <h2 class="section-title" id="whats-done">What's already done <span class="prio opt">Context</span></h2>
+      <p class="section-note">Two reference implementations exist &mdash; each demonstrates a valid rendering pattern.</p>
+      <div class="done-row">
+        <span class="done-chip">&#10003; Ministering Organization</span>
+        <span class="done-chip">&#10003; Organization</span>
+      </div>
+      <div class="grid c2">
+        <div class="card">
+          <h3>Foundation is in place</h3>
+          <p>The shared <code>monogram: String?</code> field lives on the <code>Individual</code> interface, <code>IndividualEntity</code>, DB Migration 47, the network DTO mapper, and the reusable <code>MonogramPhoto</code> + monogram-aware <code>PersonPhoto</code> composables. Per-screen work never touches this layer again.</p>
+        </div>
+        <div class="card" id="why-groups">
+          <h3>Work one screen at a time</h3>
+          <p>Screens are grouped by the data model / ViewModel / DAO query that feeds their photos. Doing a whole group together means editing each shared model once instead of repeatedly.</p>
+        </div>
+      </div>
+
+      <h2 class="section-title">Progress tracker <span class="prio imp">Use this</span></h2>
+      <p class="section-note">Live checklist of every screen, grouped the same way as the "Screens to Update" tab. Check items off there as they ship.</p>
+      <a class="linkbtn" href="https://www.notion.so/Monograms-Implementation-Screens-to-Update-36f06813092281cc8055d279174a1f17" target="_blank" rel="noopener">
+        Open the Notion tracker <span class="arr">&#8594;</span>
+      </a>
+
+      <div class="pager">
+        <button disabled>&#8592; Previous</button>
+        <button onclick="go(1)">Next: General Steps &#8594;</button>
+      </div>
+    </section>
+
+    <!-- PAGE 2 -->
+    <section class="page" id="page1">
+      <div class="hero">
+        <h1>General Steps</h1>
+        <p class="sub">The repeatable recipe for wiring a monogram into one screen. Every screen follows the same path: select the column, add the field to each model in the chain, then render it.</p>
+      </div>
+
+      <div class="one-sentence">
+        <span class="tag">Goal</span>
+        <p>Thread <code>monogram</code> from the database column &rarr; DAO query &rarr; repo/domain model &rarr; UI state model &rarr; the screen's <code>PersonPhoto</code> call.</p>
+      </div>
+
+      <h2 class="section-title" id="recipe">The 6-step recipe <span class="prio must">Must know</span></h2>
+      <p class="section-note">Steps 1&ndash;5 are the threading work; step 6 is verification. Most screens are a handful of one-line edits.</p>
+
+      <div class="step">
+        <div class="num">1</div>
+        <div class="body">
+          <h4>Select the column in the DAO query</h4>
+          <p>The <code>monogram</code> column already exists on the <code>Individual</code> table (Migration 47). Add it to the query's SELECT columns for that screen.</p>
+          <pre><code>// e.g. MinisteringDistrictDao / IndividualDao column list
+i.monogram          // raw query
+individual.monogram // column-constant style (DISPLAY_CALLING_INDIVIDUAL_COLUMNS)</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">2</div>
+        <div class="body">
+          <h4>Add <code>monogram</code> to the repo / domain model</h4>
+          <p>Add <code>val monogram: String?</code> to the data class that carries the person's display info (e.g. <code>MinisteringSupervisor</code>, <code>DisplayCallingIndividual</code>). Models that map directly from <code>Individual</code>/<code>IndividualEntity</code> already expose it for free.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">3</div>
+        <div class="body">
+          <h4>Add <code>monogram</code> to the UI state model</h4>
+          <p>Add <code>val monogram: String?</code> to the screen's UI model (e.g. <code>DistrictSupervisor</code>) so the composable can read it.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">4</div>
+        <div class="body">
+          <h4>Thread it through the UseCase / mapper</h4>
+          <p>In the <code>Get*UiStateUseCase</code> (or mapper) that builds the UI model, pass <code>monogram = source.monogram</code>.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">5</div>
+        <div class="body">
+          <h4 id="patterns">Render it in the composable</h4>
+          <p>Two valid patterns exist &mdash; both shipped as references. Prefer passing the param into <code>PersonPhoto</code> unless you specifically want to skip the photo load.</p>
+          <div class="two-pattern">
+            <div class="patt">
+              <h5>Pattern A <span class="tagok">Preferred</span></h5>
+              <p style="color:var(--muted);font-size:.86rem;margin:0 0 8px;">Pass <code>monogram</code> into the existing <code>PersonPhoto</code>; it falls back to the monogram when the photo is unavailable. Used by <strong>Organization</strong>.</p>
+              <pre><code>PersonPhoto(
+    photoUriFlow = item.photoUriFlow,
+    contentDescription = null,
+    modifier = Modifier.size(40.dp),
+    monogram = item.monogram,
+)</code></pre>
+            </div>
+            <div class="patt">
+              <h5>Pattern B <span class="tagalt">Explicit</span></h5>
+              <p style="color:var(--muted);font-size:.86rem;margin:0 0 8px;">Show the monogram immediately without attempting a photo load. Used by <strong>Ministering Organization</strong>.</p>
+              <pre><code>if (!item.monogram.isNullOrBlank()) {
+    MonogramPhoto(monogram = item.monogram, ...)
+} else {
+    PersonPhoto(photoUriFlow = ..., ...)
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="num">6</div>
+        <div class="body">
+          <h4>Build &amp; verify</h4>
+          <p>Run the screen and confirm members without a photo show their initials. Add the DB column to the DAO test fixtures if that query is covered. Then check the screen off in the Notion tracker.</p>
+        </div>
+      </div>
+
+      <h2 class="section-title">Data flow <span class="prio imp">Mental model</span></h2>
+      <div class="diagram">
+        <svg viewBox="0 0 920 200" role="img" aria-label="Monogram data flow from database to composable">
+          <defs>
+            <linearGradient id="node" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="rgba(124,156,255,0.20)"/>
+              <stop offset="1" stop-color="rgba(124,156,255,0.06)"/>
+            </linearGradient>
+            <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="#7af0ff"/>
+            </marker>
+          </defs>
+          <rect x="0" y="0" width="920" height="200" rx="18" fill="rgba(0,0,0,0.15)"/>
+          <!-- nodes -->
+          <g font-family="SF Mono,monospace" font-size="12" fill="#f7f8fb" text-anchor="middle">
+            <g><rect x="14" y="74" width="120" height="52" rx="12" fill="url(#node)" stroke="rgba(137,165,255,0.4)"/><text x="74" y="96">Individual</text><text x="74" y="112" fill="#a9b0bd">DB column</text></g>
+            <g><rect x="172" y="74" width="120" height="52" rx="12" fill="url(#node)" stroke="rgba(137,165,255,0.4)"/><text x="232" y="96">DAO query</text><text x="232" y="112" fill="#a9b0bd">SELECT monogram</text></g>
+            <g><rect x="330" y="74" width="120" height="52" rx="12" fill="url(#node)" stroke="rgba(137,165,255,0.4)"/><text x="390" y="96">Repo model</text><text x="390" y="112" fill="#a9b0bd">monogram:String?</text></g>
+            <g><rect x="488" y="74" width="120" height="52" rx="12" fill="url(#node)" stroke="rgba(137,165,255,0.4)"/><text x="548" y="96">UseCase</text><text x="548" y="112" fill="#a9b0bd">maps field</text></g>
+            <g><rect x="646" y="74" width="120" height="52" rx="12" fill="url(#node)" stroke="rgba(137,165,255,0.4)"/><text x="706" y="96">UI state</text><text x="706" y="112" fill="#a9b0bd">monogram:String?</text></g>
+            <g><rect x="804" y="74" width="104" height="52" rx="12" fill="rgba(122,240,255,0.14)" stroke="rgba(122,240,255,0.5)"/><text x="856" y="96">PersonPhoto</text><text x="856" y="112" fill="#a9b0bd">/ Monogram</text></g>
+          </g>
+          <!-- arrows -->
+          <g stroke="#7af0ff" stroke-width="2" fill="none" marker-end="url(#arr)" opacity="0.85">
+            <line x1="134" y1="100" x2="170" y2="100"/>
+            <line x1="292" y1="100" x2="328" y2="100"/>
+            <line x1="450" y1="100" x2="486" y2="100"/>
+            <line x1="608" y1="100" x2="644" y2="100"/>
+            <line x1="766" y1="100" x2="802" y2="100"/>
+          </g>
+        </svg>
+        <details class="puml">
+          <summary>PlantUML source</summary>
+          <pre><code>@startuml
+left to right direction
+skinparam monochrome false
+rectangle "Individual\n(DB column)" as DB
+rectangle "DAO query\nSELECT monogram" as DAO
+rectangle "Repo model\nmonogram: String?" as REPO
+rectangle "UseCase\nmaps field" as UC
+rectangle "UI state\nmonogram: String?" as UI
+rectangle "PersonPhoto /\nMonogramPhoto" as VIEW
+DB --> DAO
+DAO --> REPO
+REPO --> UC
+UC --> UI
+UI --> VIEW
+@enduml</code></pre>
+        </details>
+      </div>
+
+      <div class="pager">
+        <button onclick="go(0)">&#8592; Overview</button>
+        <button onclick="go(2)">Next: Screens to Update &#8594;</button>
+      </div>
+    </section>
+
+    <!-- PAGE 3 -->
+    <section class="page" id="page2">
+      <div class="hero">
+        <h1>Screens to Update</h1>
+        <p class="sub">Every screen that renders a person photo, grouped by the data model / ViewModel / DAO query it pulls from. Do a whole group at once &mdash; you edit each shared model only once.</p>
+      </div>
+
+      <div class="one-sentence">
+        <span class="tag">Note</span>
+        <p>The monospace label on each group is the shared data source. Shared composables are folded into the screen they belong to. Generic placeholders (<code>ListItemPlaceholder</code>) need no work.</p>
+      </div>
+
+      <div class="done-row" id="screens">
+        <span class="done-chip">&#10003; Ministering Organization (done)</span>
+        <span class="done-chip">&#10003; Organization (done)</span>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group A &middot; Callings &amp; Org members</h4><span class="src">DisplayCallingIndividual / MemberWithCalling</span></div>
+        <ul><li>Members with Callings</li><li>Members without Callings</li><li>Edit Callings</li><li>Available Callings</li><li>Custom Callings</li><li>Release Presidency</li><li>Select Individual</li><li>Search &mdash; Calling List</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group B &middot; Directory &amp; Profile</h4><span class="src">DisplayIndividualPhoto / DirectoryUiModel / ProfileInfo</span></div>
+        <ul><li>Directory List</li><li>Household Members</li><li>Search &mdash; Directory List</li><li>Clerk Card</li><li>Pin Profile</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group C &middot; Move Records</h4><span class="src">DisplayHouseholdWithMembers / DisplayIndividualPhoto</span></div>
+        <ul><li>Move Ins</li><li>Move In &mdash; Select Household</li><li>Move Out &mdash; Households</li><li>Move Out &mdash; Individual Selection</li><li>Meetinghouse Map bottom sheets</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group D &middot; Ministering assignments</h4><span class="src">DisplayMinisteringHousehold / MinisteringCompanion / DisplayProfileMinister</span></div>
+        <ul><li>Ministering &mdash; Assigned</li><li>Ministering &mdash; Unassigned</li><li>Ministering District</li><li>Without Assignment</li><li>Ministering Profile</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group E &middot; Covenant Path</h4><span class="src">CovenantPathPerson</span></div>
+        <ul><li>Covenant Path Detail</li><li>Add Friend</li><li>Friend Bottom Sheet</li><li>Add Returning Member</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group F &middot; Finance &amp; Payments</h4><span class="src">ExpenseParticipant / AddPayeeUiModel</span></div>
+        <ul><li>Expenses (cards + detail)</li><li>Payment Request List</li><li>Payee Directory</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group G &middot; Temple Recommend</h4><span class="src">RecommendUiModel / ActivateEntryUiModel</span></div>
+        <ul><li>Temple Recommend Status</li><li>Recommend Action</li><li>Recommend / Ward Activation List</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group H &middot; Tithing Declarations</h4><span class="src">DisplayDeclarationMemberEntry</span></div>
+        <ul><li>Tithing Declaration List</li><li>Tithing Declaration Household Detail</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group I &middot; Missionary</h4><span class="src">Missionary / ReferralWithMissionaries</span></div>
+        <ul><li>Missionary List</li><li>Referral List</li><li>Missionary Referral Details</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group J &middot; Reports (individual lists)</h4><span class="src">per-report individual UI models</span></div>
+        <ul><li>Birthday List</li><li>Class &amp; Quorum Attendance (+ Detail)</li><li>Protecting Children &amp; Youth</li><li>Quarterly Report (+ Review Detail)</li><li>Unit Statistics Detail</li><li>Action &amp; Interview List</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group K &middot; Record Ordinances</h4><span class="src">ordinance candidate models</span></div>
+        <ul><li>Record Ordinances (+ Candidate List)</li><li>Record Ordination</li><li>Submit Melchizedek Recommendation</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group L &middot; Custom Lists &amp; Groups</h4><span class="src">custom-list / group member models</span></div>
+        <ul><li>Custom List Edit</li><li>Custom List View</li><li>Groups &mdash; Members</li><li>Groups &mdash; Membership selection</li><li>Groups &mdash; Leader list item</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group M &middot; Government Certifications</h4><span class="src">government certification Person models</span></div>
+        <ul><li>Certificate Details</li><li>Certification &amp; Training Detail</li><li>Government Certification Report List</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group N &middot; Military Service</h4><span class="src">MilitaryServiceListItemUiModel / IndividualMilitaryEditStatus</span></div>
+        <ul><li>Military Service Report</li><li>Edit Military Service</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group O &middot; Create Record</h4><span class="src">SelectHouseUiModel / CreateRecordListItem</span></div>
+        <ul><li>Select Household (create record)</li><li>Create Record List</li></ul>
+      </div>
+
+      <div class="group">
+        <div class="group-head"><h4>Group P &middot; Proxy</h4><span class="src">proxy search results</span></div>
+        <ul><li>Search Proxy</li></ul>
+      </div>
+
+      <!-- Remember only 3 things -->
+      <div class="remember">
+        <h2>Remember only 3 things</h2>
+        <p class="rsub">If you forget everything else on this page, keep these.</p>
+        <div class="remember-grid">
+          <div class="rthing">
+            <div class="rn">1</div>
+            <p>The data layer is done. You only thread <code>monogram</code> from the DAO query out to the <code>PersonPhoto</code> call.</p>
+          </div>
+          <div class="rthing">
+            <div class="rn">2</div>
+            <p>Work a whole group at once &mdash; each shared model gets edited a single time.</p>
+          </div>
+          <div class="rthing">
+            <div class="rn">3</div>
+            <p>Prefer Pattern A (pass <code>monogram</code> into <code>PersonPhoto</code>); use Pattern B only to skip the photo load.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- What to do next -->
+      <div class="todo">
+        <h2>What To Do Next</h2>
+        <ol>
+          <li>Pick a group from the list above (Group A is the largest, highest-impact starting point).</li>
+          <li>Run the 6-step recipe on each screen in that group, editing the shared model once.</li>
+          <li>Build, verify members without a photo show initials, then check each screen off in the Notion tracker.</li>
+        </ol>
+      </div>
+
+      <div class="pager">
+        <button onclick="go(1)">&#8592; General Steps</button>
+        <button disabled>End &#8594;</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+var pages = document.querySelectorAll('.page');
+var navBtns = document.querySelectorAll('#nav button');
+var total = pages.length;
+var current = 0;
+function go(i){
+  if(i<0||i>=total) return;
+  current = i;
+  pages.forEach(function(p,idx){p.classList.toggle('active', idx===i);});
+  navBtns.forEach(function(b,idx){b.classList.toggle('active', idx===i);});
+  document.getElementById('progText').textContent = (i+1)+' / '+total;
+  document.getElementById('progFill').style.width = ((i+1)/total*100)+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+navBtns.forEach(function(b){b.addEventListener('click',function(){go(parseInt(b.dataset.page));});});
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='ArrowRight') go(current+1);
+  if(e.key==='ArrowLeft') go(current-1);
+});
+go(0);
+</script>
+</body>
+</html>

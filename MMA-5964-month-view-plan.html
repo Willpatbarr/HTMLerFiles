@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-5964 — Calendar: Month View — Plan</title>
+<style>
+  :root{
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:dark; scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:48px 24px 96px;
+  }
+  .wrap{max-width:880px; margin:0 auto}
+  header.top{margin:0 0 34px}
+  .eyebrow{color:var(--accent); font-size:13px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; margin:0 0 6px}
+  h1{font-size:30px; line-height:1.2; margin:0 0 10px}
+  .sub{color:var(--muted); font-size:15px; margin:0}
+  .meta{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0}
+  .pill{font-size:12px; color:var(--muted); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:4px 11px}
+  .pill b{color:var(--ink); font-weight:600}
+
+  section{margin:0 0 26px}
+  h2{font-size:20px; margin:34px 0 12px; padding-top:8px; scroll-margin-top:80px}
+  h3{font-size:16px; margin:20px 0 8px}
+  p{margin:0 0 12px}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin:0 0 14px}
+  .card.tight{padding:14px 16px}
+  .onesent{border-left:3px solid var(--accent); background:var(--accent-soft)}
+  .onesent p{margin:0; font-size:17px}
+
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+  @media(max-width:720px){.grid3{grid-template-columns:1fr}}
+  .r3{background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px}
+  .r3 .n{color:var(--accent); font-weight:700; font-size:13px}
+  .r3 p{margin:6px 0 0; font-size:14px; color:var(--muted)}
+
+  ul,ol{margin:0 0 12px; padding-left:22px}
+  li{margin:0 0 7px}
+  .clean{list-style:none; padding-left:0}
+  .clean li{padding-left:20px; position:relative}
+  .clean li::before{content:"›"; position:absolute; left:2px; color:var(--accent)}
+
+  .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:2px 8px; border-radius:6px; vertical-align:middle}
+  .must{background:#3a1f22; color:#f0929b; border:1px solid #5a2c31}
+  .imp{background:var(--warn-soft); color:var(--warn); border:1px solid #574012}
+  .opt{background:#1a2833; color:#7fb6d6; border:1px solid #274056}
+  .done{background:var(--accent-soft); color:var(--accent); border:1px solid #2c5340}
+  .gap{background:#3a1f22; color:#f0929b; border:1px solid #5a2c31}
+  .verify{background:var(--warn-soft); color:var(--warn); border:1px solid #574012}
+
+  .ws{border:1px solid var(--border); border-radius:var(--radius); padding:0; margin:0 0 14px; overflow:hidden; background:var(--card); scroll-margin-top:80px}
+  .ws > .head{display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid var(--border); background:#20252b}
+  .ws > .head .num{width:26px; height:26px; flex:0 0 26px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center}
+  .ws > .head .t{font-weight:600; font-size:16px; flex:1}
+  .ws > .body{padding:14px 18px}
+  .ws .fr{font-size:12px; color:var(--faint); margin:2px 0 10px}
+  .frlink,.acref,.secref,.wsref{display:inline-block; text-decoration:none; border:1px solid; border-radius:6px; padding:0 6px; margin:0 3px 2px 0; font-size:11px; font-weight:700; letter-spacing:.02em; line-height:1.7; white-space:nowrap; transition:.15s}
+  .frlink{color:var(--accent); background:var(--accent-soft); border-color:#2c5340}
+  .frlink:hover{background:var(--accent); color:#0f1512; border-color:var(--accent)}
+  .acref{color:#7fb0e6; background:#1a2a40; border-color:#2f4a66}
+  .acref:hover{background:#7fb0e6; color:#0f1512; border-color:#7fb0e6}
+  .secref{color:var(--warn); background:var(--warn-soft); border-color:#574012}
+  .secref:hover{background:var(--warn); color:#241a08; border-color:var(--warn)}
+  .wsref{color:#c9a7e8; background:#291f38; border-color:#443060}
+  .wsref:hover{background:#c9a7e8; color:#17101f; border-color:#c9a7e8}
+  .frlink::after,.acref::after,.secref::after{content:" \2197"; font-size:9px; opacity:.7}
+  .wsref::after{content:" \2193"; font-size:9px; opacity:.7}
+  .frkey{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--muted); align-items:center}
+  .frkey span{display:inline-flex; align-items:center; gap:5px}
+  .frkey i{width:22px; height:14px; border-radius:4px; border:1px solid; display:inline-block}
+  .frkey .kfr{background:var(--accent-soft); border-color:#2c5340}
+  .frkey .kac{background:#1a2a40; border-color:#2f4a66}
+  .frkey .kws{background:#291f38; border-color:#443060}
+  code{background:#11151a; border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:13px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; color:#cbd3dc}
+  .path{color:#8fd0ac}
+
+  table{width:100%; border-collapse:collapse; font-size:14px; margin:0 0 12px; display:block; overflow-x:auto}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--faint); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap}
+  td code{white-space:nowrap}
+
+  .warnbox{border-left:3px solid var(--warn); background:var(--warn-soft)}
+  .warnbox strong{color:var(--warn)}
+
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; color:var(--muted)}
+  .flow .box{background:var(--bg); border:1px solid var(--border-strong); border-radius:8px; padding:6px 10px; color:var(--ink)}
+  .flow .arw{color:var(--accent)}
+
+  .check li{list-style:none; margin-left:-22px; padding-left:26px; position:relative}
+  .check li::before{content:"☐"; position:absolute; left:0; color:var(--faint)}
+
+  .skipto{position:fixed; top:50%; left:18px; transform:translateY(-50%); z-index:60; display:flex; flex-direction:column; gap:5px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 12px 13px; box-shadow:var(--shadow); width:172px}
+  .skipto .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--faint); padding:0 10px 4px}
+  .skipto a{text-decoration:none; color:var(--muted); font-size:13px; padding:6px 10px; border-radius:8px; transition:.15s}
+  .skipto a:hover{background:var(--bg); color:var(--accent)}
+  @media(max-width:1180px){
+    body{padding-top:64px}
+    .skipto{top:0; left:0; right:0; transform:none; width:auto; flex-direction:row; overflow-x:auto; border-radius:0; border-width:0 0 1px; padding:8px 10px}
+    .skipto .lbl{display:none}
+  }
+  .foot{color:var(--faint); font-size:12px; text-align:center; margin-top:40px; border-top:1px solid var(--border); padding-top:18px}
+
+  .ac{border:1px solid var(--border); border-radius:12px; background:var(--bg); padding:12px 16px; margin:0 0 10px}
+  .ac .ach{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin:0 0 7px}
+  .ac .ach .num{color:#7fb0e6; font-weight:700; font-size:13px; white-space:nowrap}
+  .ac .ach .t{font-weight:600; font-size:15px}
+  .ac .ach .frs{margin-left:auto; font-size:11px; color:var(--faint); white-space:nowrap}
+  .ac ul{margin:0; padding-left:18px; font-size:14px; color:var(--muted)}
+  .ac li{margin:0 0 5px}
+  .ac li::marker{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <span class="lbl">Jump to</span>
+  <a href="#tldr">One-sentence</a>
+  <a href="#three">Remember 3</a>
+  <a href="#context">Context</a>
+  <a href="#scope">Scope in/out</a>
+  <a href="#work">Workstreams</a>
+  <a href="#files">Done vs gap map</a>
+  <a href="#order">Build order</a>
+  <a href="#risks">Risks</a>
+  <a href="#next">What to do next</a>
+  <a href="#acs">Spec ACs</a>
+</nav>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">Implementation Plan</p>
+    <h1>MMA-5964 — Calendar: Month View</h1>
+    <p class="sub">The Month overview grid — the last of the five calendar views. A <code>CalendarMonthView</code> already renders on the branch and is wired into the switcher; drill-down and the "N more" overflow are done. This ticket finishes three spec behaviors (dynamic 4–6 week grid, locale week-start, multi-day-first ordering) and resolves one ticket-vs-spec conflict about pull-to-refresh.</p>
+    <div class="meta">
+      <span class="pill"><b>Type:</b> New Feature</span>
+      <span class="pill"><b>Status:</b> New</span>
+      <span class="pill"><b>Spec:</b> MMA-5960 (calendar-spec.html)</span>
+      <span class="pill"><b>Depends on:</b> MMA-5961 (data), MMA-5962 (Day drill-down)</span>
+      <span class="pill"><b>Sibling:</b> MMA-5963 (Week/3-Day)</span>
+    </div>
+  </header>
+
+  <!-- ONE SENTENCE -->
+  <section id="tldr">
+    <div class="card onesent">
+      <p><b>The Month grid already renders — finish the three spec behaviors and settle one conflict:</b> size the grid to the actual month (4–6 weeks, no padding — today it's hardcoded to 6), start the week on the device locale (today it's hardcoded Sunday — the helper 5963 added is ready to adopt), order each cell's chips multi-day-first then by start time (today they're unsorted), and add pull-to-refresh (the ticket's "no PTR" text is stale — spec AC-17 puts the gesture in every grid view incl. Month) — drill-down and the "+N more" cap are already done, so the rest is verification.</p>
+    </div>
+  </section>
+
+  <!-- REMEMBER 3 -->
+  <section id="three">
+    <h2>Remember Only 3 Things</h2>
+    <div class="grid3">
+      <div class="r3"><div class="n">1 — Gap-closing again, not greenfield</div><p><span class="path">month/CalendarMonthView.kt</span> already renders: month pager, weekday header, day cells, today pill, date picker, <code>+N more</code> overflow. It's routed in <code>CalendarScreen</code> and <code>CalendarViewMode.MONTH</code>. Drill-down (FR-11) is wired. Don't rebuild — fix three behaviors.</p></div>
+      <div class="r3"><div class="n">2 — Three hardcoded behaviors to fix</div><p><b>FR-27:</b> grid is fixed at <code>WEEKS_SHOWN = 6</code> → size to 4–6 weeks. <b>FR-13:</b> week anchored via <code>getLastSunday</code> → adopt <code>DateUtil.startOfWeek(date, locale)</code> (already exists — the <code>TODO(MMA-5964)</code> is right there in the file). <b>FR-12:</b> cells show an unsorted, fixed cap → sort multi-day-first then by start time, and show as many chips as fit the cell (not a fixed 3).</p></div>
+      <div class="r3"><div class="n">3 — Month DOES get pull-to-refresh</div><p><b>Resolved:</b> the Jira ticket's "no pull-to-refresh" text is <b>stale</b>. Spec <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-17">AC-17</a> (per PR #1884) and the 5963 plan are authoritative — the gesture is in <b>all grid views incl. Month</b>, so add it. Now-line is still correctly <b>none</b> in Month (both agree).</p></div>
+    </div>
+  </section>
+
+  <!-- CONTEXT -->
+  <section id="context">
+    <h2>Context <span class="tag opt">Optional</span></h2>
+    <div class="card">
+      <p>MMA-5961 imported the PMG engine and moved the calendar view layer into <span class="path">:feature:calendar</span> (host + ViewModel stay in <span class="path">app/…/ux/calendar/</span>). MMA-5962 hardened the Day rendering engine and wired <code>onDayFocused</code> so any view can drill into Day. MMA-5963 built Week/3-Day on that engine <em>and</em> added the locale-aware <code>DateUtil.startOfWeek</code> helper — explicitly leaving Month's Sunday anchor for this ticket to adopt.</p>
+      <p>Month is different from the other four views: it is <b>not</b> a time-grid. It doesn't reuse <code>CalendarDayColumn</code> / the hour grid / overlaps / now-line — it's its own cell grid built from <code>eventsByDateFlow</code> (the same <code>Map&lt;LocalDate, List&lt;CalendarGridEvent&gt;&gt;</code> the grid views group by day). So it inherits far less "for free," but its surface is also much smaller: three behaviors and the refresh question.</p>
+      <div class="flow" style="margin-top:6px">
+        <span class="box">5961 groundwork ✓</span><span class="arw">→</span>
+        <span class="box">5962 Day + engine ✓</span><span class="arw">→</span>
+        <span class="box">5963 Week / 3-Day + startOfWeek</span><span class="arw">→ reused by →</span>
+        <span class="box">MMA-5964 <b>(this)</b> Month</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCOPE -->
+  <section id="scope">
+    <h2>Scope — In vs Out</h2>
+    <div class="card tight">
+      <h3 style="margin-top:4px">In scope</h3>
+      <ul class="clean">
+        <li>Dynamic <b>4–6 week grid</b> sized to the month — no empty leading/trailing padding weeks (change from the prototype's fixed 6-week grid) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-27">FR-27</a></span></li>
+        <li>Each cell: <b>as many chips as fit the cell + "N more"</b>, ordered <b>multi-day first, then by start time</b> (Google-style) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-12">FR-12</a></span></li>
+        <li>Week starts on the device locale's first day of week — adopt the helper 5963 added <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-13">FR-13</a></span></li>
+        <li>Verify drill-down: tap a day cell → Day view for that date (already wired) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-11">FR-11</a></span></li>
+        <li>Add pull-to-refresh — Month was missing it; the ticket's "no PTR" note is stale (spec AC-17 wins) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-23">FR-23</a></span></li>
+      </ul>
+      <h3>Out of scope</h3>
+      <ul class="clean">
+        <li><b>No now-line</b> in Month, and no time-grid rendering (overlaps / hour grid / scroll-to-now are grid-view concerns) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-6">FR-6</a></span></li>
+        <li>The <code>startOfWeek</code> helper itself → built in <b>MMA-5963</b>; this ticket only <em>consumes</em> it</li>
+        <li>Event routing / multi-day bar rendering inside time grids → <b>MMA-5962</b></li>
+        <li>Event creation / editing (still deferred)</li>
+        <li>Sample-data removal (<code>USE_SAMPLE_DATA</code> / <span class="path">sample/</span>) — tracked under the 5961 TODO</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- WORKSTREAMS -->
+  <section id="work">
+    <h2>The 5 Workstreams</h2>
+    <p class="sub" style="margin-bottom:10px">WS1–WS3 are the spec behaviors (the real work). WS4 is a decision to settle first. WS5 is verification + tests.</p>
+    <div class="frkey" style="margin-bottom:18px">
+      <span><i class="kfr"></i> FR button → spec requirement</span>
+      <span><i class="kac"></i> AC button → spec acceptance criterion</span>
+      <span><i class="kws"></i> WS button → workstream on this page</span>
+      <span style="color:var(--faint)">FR/AC buttons open the full spec (calendar-spec.html) at that anchor</span>
+    </div>
+
+    <!-- WS1 -->
+    <div class="ws" id="ws1">
+      <div class="head"><span class="num">1</span><span class="t">Dynamic 4–6 week grid — size to the month, no padding weeks</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-27">FR-27</a> · ticket AC #3</p>
+        <p>Today the grid is fixed: <code>WEEKS_SHOWN = 6</code> (<span class="path">month/CalendarMonthView.kt:61</span>), and <code>dates</code> is built as <code>WEEKS_SHOWN * DAYS_IN_WEEK</code> days from <code>gridStart</code> (L132). A month like Feb-non-leap starting on the first day of week fits in 4 rows, most months in 5, and only some in 6 — so a fixed 6 always risks a trailing all-other-month padding week. The spec calls this out as a <b>change</b> from the prototype.</p>
+        <ul>
+          <li>Compute rows from the data: <code>gridStart = startOfWeek(month.firstDay, locale)</code> (WS2) through the week containing <code>month.lastDay</code>. Weeks = <code>ceil((daysFromGridStartToLastDay + 1) / 7)</code> → yields 4, 5, or 6.</li>
+          <li>Replace the fixed <code>(0 until WEEKS_SHOWN * DAYS_IN_WEEK)</code> range with that computed count; the <code>chunked(DAYS_IN_WEEK)</code> row loop stays as-is.</li>
+          <li>Cells keep <code>Modifier.weight(1f)</code> vertically, so 4-row months get taller cells automatically — sanity-check <code>heightIn(min = 72.dp)</code> still looks right at 4 rows.</li>
+          <li>Interacts with WS2: the row count depends on the locale week-start, so land WS2 first (or together).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS2 -->
+    <div class="ws" id="ws2">
+      <div class="head"><span class="num">2</span><span class="t">Week-start follows the device locale</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-13">FR-13</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-11">AC-11</a></p>
+        <p>Month anchors on <code>DateUtil.getLastSunday(month.firstDay)</code> (<span class="path">month/CalendarMonthView.kt:131</span>) — hardcoded Sunday. There's an explicit <code>TODO(MMA-5964)</code> at L128 flagging exactly this: a Monday-first locale sees Monday weeks in Week view but Sunday rows here.</p>
+        <ul>
+          <li>Swap in <code>DateUtil.startOfWeek(month.firstDay, LocalLocale.current.platformLocale)</code> — the helper already exists (<span class="path">core/common/…/DateUtil.kt:436</span>), backed by <code>WeekFields.of(locale).firstDayOfWeek</code>. This is the adoption 5963's plan deferred to here.</li>
+          <li><code>WeekdayHeaderRow</code> already derives its labels from <code>gridStart</code> (L164–168), so the header follows automatically — no separate change.</li>
+          <li><b>Don't</b> touch <code>getLastSunday</code> — callings sustain-date logic depends on its literal Sunday semantics (per 5963's note).</li>
+          <li>Remove the <code>TODO(MMA-5964)</code> and the "always 6 weeks, Sunday-start" doc comment (L64) once WS1+WS2 land.</li>
+          <li>Unit-test Monday-first, Sunday-first, and Saturday-first (e.g. ar-EG) — AC-11 grades both default and Monday paths explicitly.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS3 -->
+    <div class="ws" id="ws3">
+      <div class="head"><span class="num">3</span><span class="t">Cell ordering — multi-day first, then by start time</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-12">FR-12</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-10">AC-10</a></p>
+        <p>Two parts: <b>ordering</b> and <b>how many chips show</b>. Order each day's events multi-day-first then by start time, in the cell (Month-local, <b>not</b> the shared <code>mapEventsToGrid</code> — the time-grid views depend on its order). The chip count is <b>height-driven</b>: the cell shows as many chips as fit and reserves the last line for "N more" on overflow, so it never clips. <b>Spec divergence:</b> the original spec said "≤3 chips" — amended to "as many as fit" (FR-12) because a fixed 3 left large-screen cells with a lot of empty space.</p>
+        <ul>
+          <li>Sort each day's list before capping to what fits: <code>sortedWith(compareByDescending&lt;CalendarGridEvent&gt; { it.multiDay }.thenBy { it.startTime })</code>. Each event already carries <code>multiDay</code> and <code>startTime</code>.</li>
+          <li><b>Do it Month-local</b> (in the cell / a Month helper), <b>not</b> in the shared <code>mapEventsToGrid</code> — the grid views route multi-day events into the all-day row and rely on the existing order; re-sorting the shared map could shift Day/Week/3-Day. This is the key watch-out.</li>
+          <li>"N more" count is unaffected — it's <code>events.size - shown.size</code> regardless of order.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS4 -->
+    <div class="ws" id="ws4">
+      <div class="head"><span class="num">4</span><span class="t">Add pull-to-refresh to Month</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-23">FR-23</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-17">AC-17</a></p>
+        <p><b>Resolved:</b> the Jira ticket's "No pull-to-refresh" line is stale. Spec AC-17 (updated per PR #1884) and the 5963 plan are authoritative — Month gets the gesture like every other grid view.</p>
+        <table>
+          <tr><th>Source</th><th>Says</th></tr>
+          <tr><td>Jira ticket (Section 1)</td><td><span class="tag gap">stale</span> "No pull-to-refresh; no now-line."</td></tr>
+          <tr><td>Spec AC-17 (per PR #1884)</td><td><span class="tag done">authoritative</span> "gesture in all grid views <b>incl. Month</b>"</td></tr>
+          <tr><td>MMA-5963 plan (WS4)</td><td>"Month adopts this same state in <b>5964</b> (spec updated per PR #1884 review)"</td></tr>
+        </table>
+        <ul>
+          <li>Wrap the pager content in <code>PullToRefreshBox</code> using the same <code>isRefreshingFlow</code> / <code>onRefresh</code> already on <code>gridState</code> (<code>CalendarGridUiState</code>) — copy Day's pattern (<span class="path">day/CalendarDayView.kt:113</span>). Month has no vertical scroll, so the nesting is simpler than the grid views.</li>
+          <li>Update the Jira ticket to drop the "no pull-to-refresh" line so it stops contradicting the spec.</li>
+          <li>Now-line stays out (AC-5 says none in Month) — that half of the ticket line is still correct.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS5 -->
+    <div class="ws" id="ws5">
+      <div class="head"><span class="num">5</span><span class="t">Drill-down verify + tests</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-11">FR-11</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-9">AC-9</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-10">AC-10</a></p>
+        <p>Drill-down is already wired: <code>onDayClick = onDayFocused</code> (<span class="path">app/…/CalendarScreen.kt:290</span>), and <code>onDayFocused</code> (~L253) sets the selected date then switches to <code>CalendarViewMode.DAY</code>. Verify + lock with tests.</p>
+        <ul>
+          <li>Verify the opened Day lands on the <em>tapped</em> date, not today or the 1st of the month.</li>
+          <li>No Month tests exist yet (the <span class="path">grid/</span> tests cover measurements/columns/lanes/snap only). Add coverage for the four ticket ACs — favor unit tests on the pure logic: the <b>week-count math</b> (WS1) and <b>week-start</b> (WS2) are unit-testable without Compose; the <b>ordering</b> (WS3) is a small comparator test.</li>
+          <li>Cell contents + drill-down are the UI-ish parts — a Robolectric or screenshot screen test if the pure-logic tests don't cover them (see <code>/evaluate-screen-tests</code>).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- DONE VS GAP MAP -->
+  <section id="files">
+    <h2>Done vs Gap — where everything lives</h2>
+    <div class="card">
+      <p class="sub">View layer under <span class="path">feature/calendar/src/main/kotlin/org/lds/ldstools/feature/calendar/</span>; host + ViewModel under <span class="path">app/src/main/java/org/lds/ldstools/ux/calendar/</span>. Everything below is already on the branch.</p>
+      <table>
+        <tr><th>Concern</th><th>File</th><th>Status → action</th></tr>
+        <tr><td>Month grid, pager, day cells, "+N more"</td><td><span class="path">month/CalendarMonthView.kt</span></td><td><span class="tag done">renders</span> scaffold complete — three behaviors to fix below</td></tr>
+        <tr><td>Fixed 6-week grid</td><td><span class="path">month/CalendarMonthView.kt:61,132</span> (<code>WEEKS_SHOWN</code>)</td><td><span class="tag gap">WS1</span> compute 4–6 weeks from the month</td></tr>
+        <tr><td>Week anchor (hardcoded Sunday)</td><td><span class="path">month/CalendarMonthView.kt:131</span> + <code>TODO(MMA-5964)</code> L128</td><td><span class="tag gap">WS2</span> swap to <code>startOfWeek(…, locale)</code></td></tr>
+        <tr><td>Locale week-start helper</td><td><span class="path">core/common/…/DateUtil.kt:436</span> (<code>startOfWeek</code>)</td><td><span class="tag done">exists</span> built in 5963 — just adopt it</td></tr>
+        <tr><td>Cell chips (order + count)</td><td><span class="path">month/CalendarMonthView.kt</span> (<code>MonthDayCell</code>)</td><td><span class="tag gap">WS3</span> sort multi-day-first then start time; show as many as fit + "N more" (Month-local)</td></tr>
+        <tr><td>Event map (shared — don't re-sort)</td><td><span class="path">app/…/grid/GetCalendarGridUiStateUseCase.kt</span> (<code>mapEventsToGrid</code>)</td><td><span class="tag verify">WS3</span> leave order alone — grid views depend on it</td></tr>
+        <tr><td>Drill-down wiring</td><td><span class="path">app/…/CalendarScreen.kt:290</span> (<code>onDayClick=onDayFocused</code>)</td><td><span class="tag done">WS5</span> verify only — routes cell taps → Day</td></tr>
+        <tr><td>Refresh plumbing to reuse (if PTR in)</td><td><span class="path">day/CalendarDayView.kt:113</span> + <code>CalendarGridUiState.onRefresh</code></td><td><span class="tag verify">WS4</span> decision-gated; pattern ready to copy</td></tr>
+        <tr><td>Switcher + routing</td><td><span class="path">grid/CalendarViewMode.kt</span> (<code>MONTH</code>), <span class="path">CalendarScreen.kt:286</span></td><td><span class="tag done">wired</span> no change</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- BUILD ORDER -->
+  <section id="order">
+    <h2>Suggested Build Order</h2>
+    <div class="card">
+      <ol>
+        <li><b>WS2 week-start</b> — smallest change (one call swap + delete TODO), unit-testable, and WS1 depends on its <code>gridStart</code>.</li>
+        <li><b>WS1 dynamic rows</b> — build the 4–6 week count on top of WS2's <code>gridStart</code>; verify cell heights at 4 rows.</li>
+        <li><b>WS3 ordering</b> — isolated comparator change in the cell; safe once you keep it Month-local.</li>
+        <li><b>WS4 pull-to-refresh</b> — wrap the pager in <code>PullToRefreshBox</code>, copying Day's pattern; update the stale ticket line.</li>
+        <li><b>WS5 verify + tests</b> — drill-down check, then unit tests for week-count / week-start / ordering; screen test only if needed.</li>
+      </ol>
+      <div class="card tight warnbox" style="margin-top:10px"><p style="margin:0"><strong>Sequencing note:</strong> unlike 5963, this ticket does <em>not</em> touch 5962's engine files (Month is its own cell grid), so there's no "wait for engine freeze" gate. The only cross-ticket dependency is consuming <code>startOfWeek</code> from 5963 — already merged.</p></div>
+    </div>
+  </section>
+
+  <!-- RISKS -->
+  <section id="risks">
+    <h2>Risks &amp; Watch-outs</h2>
+    <div class="card">
+      <table>
+        <tr><th>Risk</th><th>Why it bites</th><th>Mitigation</th></tr>
+        <tr><td>Re-sorting the shared event map</td><td><code>mapEventsToGrid</code> feeds Day/Week/3-Day too; those route multi-day into the all-day row and assume the current order — a "multi-day first" sort there could reshuffle the grid views</td><td>Sort <b>Month-local</b> (in the cell / a Month helper), never in the shared use case (WS3)</td></tr>
+        <tr><td>Off-by-one in week count</td><td>4/5/6-week boundary is easy to miscompute — a month ending exactly on the last column vs. spilling one day changes the row count</td><td>Unit-test the count for a 4-week Feb, a typical 5-week month, and a 6-week month, across Sunday- and Monday-start locales (WS1×WS2)</td></tr>
+        <tr><td>Row count × locale interaction</td><td>The same month is 5 rows Sunday-start but could be 6 Monday-start (or vice versa); computing rows off the wrong <code>gridStart</code> reintroduces padding</td><td>Derive rows from the WS2 <code>gridStart</code>, not a hardcoded Sunday; land WS2 before/with WS1</td></tr>
+        <tr><td>Chip-capacity height estimates</td><td>Chip count is derived from dp estimates (28dp header / 18dp line), not real measurement — a very large system font scale could make a line taller than estimated and clip the last chip or "N more"</td><td>Estimates are deliberately conservative (round down); if it clips under a big font scale, switch to per-cell measurement (<code>BoxWithConstraints</code>/<code>SubcomposeLayout</code>)</td></tr>
+        <tr><td>Stale ticket text (PTR)</td><td>The ticket still says "no PTR" — a reader (or reviewer) who trusts it would drop the gesture and diverge from spec AC-17 + the sibling views</td><td>Resolved: build PTR per spec; edit the ticket to remove the stale line (WS4)</td></tr>
+        <tr><td>Month pager never writes focused date</td><td>Existing design: swiping months must <em>not</em> move the focused date to the 1st (comment at L83). A refactor could accidentally start publishing it</td><td>Preserve the read-only-paging invariant; only day-tap / picker / Today update the focused date</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- NEXT -->
+  <section id="next">
+    <h2>What To Do Next</h2>
+    <div class="card">
+      <ol>
+        <li><b>Adopt <code>startOfWeek</code></b> (WS2): swap L131, delete the <code>TODO(MMA-5964)</code> and the "6 weeks, Sunday-start" doc comment, add locale unit tests.</li>
+        <li><b>Compute the 4–6 week grid</b> (WS1) off the new <code>gridStart</code>, then add the Month-local <code>multiDay-first, startTime</code> sort (WS3).</li>
+        <li><b>Add pull-to-refresh</b> (WS4) copying Day's <code>PullToRefreshBox</code>, and edit the Jira ticket to remove the stale "no pull-to-refresh" line.</li>
+      </ol>
+      <p class="sub" style="margin-top:6px">PR checklist (mirrors the ticket's 4 ACs / testing guide):</p>
+      <ul class="check">
+        <li>Cell contents &amp; order: chips fill the cell (multi-day first, then by start time); overflowing days show "+N more" and never clip it</li>
+        <li>Drill-down: tapping a day cell opens Day view for that exact date</li>
+        <li>Dynamic rows: 4- and 5-week months render with no empty padding weeks</li>
+        <li>Week-start: Monday-first locale → Monday columns + header; Sunday-first → Sunday</li>
+        <li>Pull-to-refresh works in Month (pull → sync + indicator), matching the other grid views (spec AC-17)</li>
+        <li>Shared event map order unchanged — Day/Week/3-Day unaffected by the Month sort</li>
+        <li>Week-count and week-start math unit-tested across locales; existing calendar tests green</li>
+        <li><code>TODO(MMA-5964)</code> and the stale "6 weeks" doc comment removed; detekt/lint clean</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SPEC ACS -->
+  <section id="acs">
+    <h2>Acceptance Criteria for This Ticket — from the spec</h2>
+    <div class="card">
+      <p class="sub">The spec ACs this ticket's work is graded against (module spec MMA-5960 / calendar-spec.html). Purple WS buttons jump up to the workstream that covers each. The ticket's own four ACs map: #1 Cell contents &amp; order → AC-10 · #2 Drill-down → AC-9 · #3 Dynamic rows → FR-27 (no dedicated spec AC — verified as part of Month rendering) · #4 Week-start → AC-11.</p>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-10</span><span class="t">Month cell contents &amp; order</span><span class="frs">FR-12 · <a class="wsref" href="#ws3">WS3</a></span></div>
+        <ul>
+          <li>Given a Month day cell with more events than fit, When viewing, Then as many chips as fit the cell are shown plus a "N more" indicator (never clipped);</li>
+          <li>And chips are ordered multi-day events first, then by start time.</li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-9</span><span class="t">Drill-down to Day</span><span class="frs">FR-11 · <a class="wsref" href="#ws5">WS5</a></span></div>
+        <ul>
+          <li>Given Month, When the user taps a day cell, Then Day view opens for that day. <em>(Wiring already exists — this ticket verifies + tests the Month path.)</em></li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-11</span><span class="t">Localization both paths + timezone</span><span class="frs">FR-13/14/21 · <a class="wsref" href="#ws2">WS2</a></span></div>
+        <ul>
+          <li>Given the device locale's first day of week is Monday, When viewing Month, Then weeks start Monday (grid + header);</li>
+          <li>And given the default (Sunday first), Then weeks start Sunday;</li>
+          <li>And all events render in the device timezone.</li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">FR-27</span><span class="t">Dynamic month grid (change)</span><span class="frs">no dedicated AC · <a class="wsref" href="#ws1">WS1</a></span></div>
+        <ul>
+          <li>Month sizes to the actual 4–6 weeks with no empty padding weeks. <em>(Flagged as a "change" in the spec; the ticket's own AC #3 grades it — there is no separate spec AC number.)</em></li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-17</span><span class="t">Refresh — Month included</span><span class="frs">FR-23 · <a class="wsref" href="#ws4">WS4</a></span></div>
+        <ul>
+          <li>Given Day / 3-Day / Week / <b>Month</b>, When the user pulls down, Then a calendar sync is triggered and the refresh indicator shows until it completes. <em>(Authoritative per PR #1884; the Jira ticket's "no pull-to-refresh" text is stale and will be corrected.)</em></li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-5</span><span class="t">Now-line — none in Month</span><span class="frs">FR-6 · out of scope</span></div>
+        <ul>
+          <li>Given Month, Then no now-line is drawn. <em>(No conflict — both the ticket and spec agree Month has no now-line.)</em></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    MMA-5964 · Calendar Month View · Plan generated from the Jira ticket (icseng) + calendar spec (MMA-5960, calendar-spec.html) + code audit of branch MMA-5964.
+    Depends on MMA-5961 (data) + MMA-5962 (Day drill-down); consumes startOfWeek from MMA-5963. Companion to MMA-5963-multi-day-views-plan.html.
+  </div>
+
+</div>
+</body>
+</html>

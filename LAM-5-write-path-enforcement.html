@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAM-5 — Write-Path Enforcement</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:880px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:56px 96px}
+h1{font-size:clamp(24px,5vw,34px);line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:clamp(18px,3.4vw,22px);margin:34px 0 12px;letter-spacing:-.01em}
+h3{font-size:clamp(15px,2.6vw,17px);margin:26px 0 8px;color:var(--ink)}
+p{margin:0 0 14px;max-width:70ch}
+.sub{color:var(--faint);font-size:14px;margin:0 0 30px}
+code,a{overflow-wrap:anywhere}
+code{background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:1.5px 5px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#c8d3dc}
+pre{overflow-x:auto;max-width:100%;background:#12151a;border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;font-size:12.8px;line-height:1.6;margin:0 0 16px}
+pre code{background:none;border:0;padding:0;color:#c8d3dc}
+a{color:var(--accent)}
+
+/* nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto a{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto a:hover{background:var(--bg);color:var(--accent)}
+.skipto a.active{background:var(--accent-soft);color:var(--accent)}
+.navlabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);padding:0 10px 5px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media(max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,.skipto.open .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  .skipto.open .skipto-toggle svg{transform:rotate(180deg)}
+  .skipto.closed .skipto-menu{display:none}
+  .skipto.closed .skipto-toggle svg{transform:none}
+  main{padding-top:72px}
+}
+
+/* pages + tabs */
+.page{display:none}.page.active{display:block}
+.tabpanel{display:none}.tabpanel.active{display:block}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;border-bottom:1px solid var(--border)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;transition:.15s;
+  font-family:inherit}
+.tab:hover{color:var(--ink);background:var(--card)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 22px;margin:0 0 18px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));margin:0 0 18px}
+.one-sentence{background:var(--accent-soft);border:1px solid #2b5540;border-radius:var(--radius);
+  padding:18px 22px;margin:0 0 30px}
+.one-sentence .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 7px}
+.one-sentence p{margin:0;font-size:16.5px;line-height:1.55;max-width:none}
+
+/* priority */
+.pri{display:inline-block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;border:1px solid var(--border-strong);
+  color:var(--muted);margin:0 0 10px;overflow-wrap:anywhere;max-width:100%}
+.pri.must{background:var(--accent-soft);border-color:#2b5540;color:var(--accent)}
+.pri.imp{background:var(--warn-soft);border-color:#5a4520;color:var(--warn)}
+.pri.opt{background:#1a1d21}
+
+/* step blocks */
+.step{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
+  padding:20px 22px;margin:0 0 20px;box-shadow:var(--shadow)}
+.step-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:0 0 4px}
+.step-n{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);
+  font-weight:600}
+.step h3{margin:0 0 14px;font-size:17px}
+.loc{display:inline-block;background:#12151a;border:1px solid var(--border);border-radius:7px;
+  padding:4px 9px;font-size:12.2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#9fb3c4;overflow-wrap:anywhere;max-width:100%;margin:0 0 10px}
+.mini{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);
+  margin:18px 0 7px;font-weight:600}
+.mini:first-child{margin-top:0}
+ul{margin:0 0 14px;padding-left:20px}
+li{margin:0 0 6px}
+li::marker{color:var(--faint)}
+.why b{color:var(--accent);font-weight:600}
+.divider{height:1px;background:var(--border);margin:18px 0}
+
+/* todo */
+.todo{list-style:none;padding:0;margin:0}
+.todo li{display:flex;gap:11px;align-items:flex-start;padding:11px 0;
+  border-bottom:1px solid var(--border);margin:0}
+.todo li:last-child{border-bottom:0}
+.todo input{margin-top:4px;width:15px;height:15px;accent-color:var(--accent);flex-shrink:0}
+.todo label{cursor:pointer}
+.todo input:checked+label{color:var(--faint);text-decoration:line-through}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tablewrap{overflow-x:auto;margin:0 0 18px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600}
+
+@media(max-width:720px){
+  .card,.step{padding:15px 16px}
+  main{padding-block:36px 72px}
+}
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Pages">
+  <button class="skipto-toggle" aria-label="Page menu"><svg width="18" height="18"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <a data-page="p-overview" class="active">Overview</a>
+    <a data-page="p-steps">Steps</a>
+    <a data-page="p-verify">Verify &amp; TODO</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ============ PAGE 1 ============ -->
+<section class="page active" id="p-overview">
+
+  <h1>LAM-5 — Write-Path Enforcement</h1>
+  <p class="sub">Decide and document how the JSON blob and the search index are kept in sync ·
+    Project E-LAM-0001 · Branch <code>LAM-5-B</code></p>
+
+  <div class="one-sentence">
+    <div class="lbl">One-Sentence Version</div>
+    <p>LAM-3 already built most of the encapsulation but never ratified it — so this ticket
+      writes the decision down, collapses two index-write loops into one, and adds an AST test
+      that fails the build if any other package touches those tables.</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-decision">The Decision</button>
+    <button class="tab" data-tab="t-gaps">The Three Gaps</button>
+    <button class="tab" data-tab="t-context">Background</button>
+    <button class="tab" data-tab="t-pri">Priority Levels</button>
+  </div>
+
+  <div class="tabpanel active" id="t-decision">
+    <span class="pri must">Must Know</span>
+    <h2>Code structure, backed by a mechanical check</h2>
+    <p>Not test-and-review discipline alone. Four mechanisms, in order of strength:</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="mini">Mechanism 1</div>
+        <p><b>Unexported pool.</b> <code>Service.pool</code> is private, so no caller can reach
+          through a <code>Service</code> to the database.</p>
+      </div>
+      <div class="card">
+        <div class="mini">Mechanism 2</div>
+        <p><b>One exported write method.</b> <code>Save</code> is the only way in from outside
+          the package.</p>
+      </div>
+      <div class="card">
+        <div class="mini">Mechanism 3</div>
+        <p><b>One index-write site.</b> A new unexported <code>indexBody</code> becomes the only
+          <code>INSERT INTO search_index</code> in the codebase.</p>
+      </div>
+      <div class="card">
+        <div class="mini">Mechanism 4</div>
+        <p><b>AST boundary test.</b> Fails the build if any package outside
+          <code>internal/document</code> issues SQL against either table.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3>Two naming calls worth recording</h3>
+    <ul>
+      <li><b>Keep <code>Save</code>, not <code>SaveDocument</code>.</b> The ticket suggests the
+        latter, but <code>document.SaveDocument</code> stutters — against the Effective Go
+        guidance the ticket itself links.</li>
+      <li><b>Unexport <code>FieldText</code> → <code>fieldText</code>.</b> It is derivation
+        internals, not API. Nothing outside the package calls it.</li>
+    </ul>
+  </div>
+
+  <div class="tabpanel" id="t-gaps">
+    <span class="pri must">Must Know</span>
+    <h2>Why the existing claim isn't true yet</h2>
+    <p>The package comment already asserts <em>"Service.Save is the only code path permitted to
+      write either table."</em> Three things make that unenforced or inaccurate.</p>
+
+    <div class="card">
+      <div class="mini">Gap 1 — the hole structure can't close</div>
+      <p>Go's encapsulation is <b>package-scoped</b>. Any package can call <code>db.Connect</code>
+        and issue raw SQL against <code>document</code> / <code>search_index</code>.
+        <code>main.go</code> already holds a bare <code>*pgxpool.Pool</code>.</p>
+      <p style="color:var(--muted);margin-bottom:0">Structure makes the right path easy — not the
+        wrong path impossible. That is what the AST test is for.</p>
+    </div>
+
+    <div class="card">
+      <div class="mini">Gap 2 — one write site is actually two</div>
+      <p><code>Save</code> and <code>RebuildIndex</code> each carry their own
+        <code>INSERT INTO search_index</code> loop. Two loops is two places to drift.</p>
+    </div>
+
+    <div class="card">
+      <div class="mini">Gap 3 — an unlabelled exception</div>
+      <p><code>RebuildIndex</code> writes the index <em>without</em> touching a blob. That is
+        legitimate — it is a pure function of the blobs — but right now it reads like a
+        violation. The ADR has to name it as sanctioned.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-context">
+    <span class="pri imp">Important</span>
+    <h2>Where this came from</h2>
+    <p>The hybrid storage model (LAM-3) keeps two representations of a document: the
+      <code>document.body</code> JSON blob as source of truth, and the derived
+      <code>search_index</code> rows.</p>
+    <p>§4 of the Architecture &amp; Tech Stack notes flagged the obvious risk — a write path that
+      updates one and not the other — and deferred the design to its own conversation. This is
+      that conversation.</p>
+
+    <h3>Branch state before starting</h3>
+    <div class="tablewrap">
+      <table>
+        <tr><th>Branch</th><th>Head</th><th>State</th></tr>
+        <tr><td><code>main</code></td><td><code>eb8326e</code></td><td>16 behind</td></tr>
+        <tr><td><code>E-LAM-0001-B</code></td><td><code>3ec5049</code></td><td>epic branch</td></tr>
+        <tr><td><code>LAM-38-B</code></td><td><code>d12fe9a</code></td>
+            <td>6 ahead, pushed, no PR open</td></tr>
+      </table>
+    </div>
+    <p style="color:var(--warn)"><b>Note:</b> Step 1 merges LAM-38, which moves that ticket to
+      Done. If LAM-38 isn't actually finished, finish it first.</p>
+  </div>
+
+  <div class="tabpanel" id="t-pri">
+    <h2>Priority Levels</h2>
+
+    <div class="card">
+      <span class="pri must">Must Know</span>
+      <ul style="margin-bottom:0">
+        <li>Go's encapsulation is package-scoped — that is the entire reason for the AST test</li>
+        <li>Step 8 (deliberate-failure check) is not optional; an untested guard proves nothing</li>
+        <li><code>RebuildIndex</code> is a sanctioned exception, not a bug</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <span class="pri imp">Important</span>
+      <ul style="margin-bottom:0">
+        <li>Parse with comments off — <code>cmd/reindex/main.go:1</code> mentions
+          <code>search_index</code> in prose and must stay green</li>
+        <li>The guard covers reads too, because a read outside the package bypasses LAM-4's
+          workspace scoping</li>
+        <li>Merging LAM-38 first is what gets the guard running in CI</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <span class="pri opt">Optional</span>
+      <ul style="margin-bottom:0">
+        <li>The <code>docs/adr/README.md</code> convention file — nice to have, not load-bearing</li>
+        <li>Linking ADRs from the repo README</li>
+      </ul>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ PAGE 2 ============ -->
+<section class="page" id="p-steps">
+
+  <h1>Implementation Steps</h1>
+  <p class="sub">12 steps in 6 groups · each group is one coherent commit</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-s1">1 · Branch Prep</button>
+    <button class="tab" data-tab="t-s2">2 · One Write Site</button>
+    <button class="tab" data-tab="t-s3">3 · Encapsulation</button>
+    <button class="tab" data-tab="t-s4">4 · The Guard</button>
+    <button class="tab" data-tab="t-s5">5 · The ADR</button>
+    <button class="tab" data-tab="t-s6">6 · The Ticket</button>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="tabpanel active" id="t-s1">
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 1</span><span class="pri must">Must Know</span></div>
+      <h3>Cut LAM-5-B from a refreshed epic branch</h3>
+      <div class="loc">LaminarFlow-Backend — branch prep, no files edited</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>main            eb8326e  (16 behind)
+E-LAM-0001-B    3ec5049  Merge pull request #3 from Willpatbarr/LAM-4-B
+LAM-38-B        d12fe9a  (6 ahead of E-LAM-0001-B, pushed, no PR open)</code></pre>
+
+      <div class="mini">What</div>
+      <ul>
+        <li>open and merge LAM-38's PR into <code>E-LAM-0001-B</code></li>
+        <li>cut <code>LAM-5-B</code> off the refreshed epic branch</li>
+      </ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — LAM-5's guard has to run in CI to mean anything</li>
+        <li><b>C</b> — <code>ci.yml</code>, <code>main_test.go</code>,
+          <code>migrations/README.md</code> live only on <code>LAM-38-B</code></li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul><li>before any file edits</li></ul>
+
+      <div class="mini">Example</div>
+<pre><code>gh auth switch --user Willpatbarr
+git checkout LAM-38-B &amp;&amp; gh pr create --base E-LAM-0001-B --head LAM-38-B
+# after merge
+git checkout E-LAM-0001-B &amp;&amp; git pull
+git checkout -b LAM-5-B
+ls .github/workflows/ci.yml internal/document/main_test.go   # must both exist</code></pre>
+    </div>
+  </div>
+
+  <!-- Steps 2-4 -->
+  <div class="tabpanel" id="t-s2">
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 2</span><span class="pri must">Must Know</span></div>
+      <h3>Add the indexBody helper</h3>
+      <div class="loc">internal/document/document.go : 107–109</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>	return id, nil
+}
+
+// indexedDoc is one document's ID paired with its decoded body.</code></pre>
+
+      <div class="mini">What</div>
+      <ul>
+        <li>add an unexported <code>indexBody</code> helper here</li>
+        <li>it owns the only <code>INSERT INTO search_index</code></li>
+      </ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — LAM-5 decides the invariant is enforced by structure</li>
+        <li><b>C</b> — the insert loop is currently duplicated in two methods</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul>
+        <li>between <code>Save</code> and the <code>indexedDoc</code> type</li>
+        <li>takes <code>pgx.Tx</code>, not the pool, so callers must already be in a transaction</li>
+      </ul>
+
+      <div class="mini">Example</div>
+<pre><code>// indexBody writes one document's search_index rows from its decoded body. It
+// is the only place in the codebase that inserts into search_index - Save and
+// RebuildIndex both route through here so the two paths cannot drift.
+//
+// It takes a pgx.Tx rather than the pool on purpose: an index write that is not
+// already inside the caller's transaction is exactly the drift this design
+// exists to prevent, so the signature makes that impossible to express.
+func indexBody(ctx context.Context, tx pgx.Tx, docID string, body map[string]any) error {
+	for fieldID, value := range body {
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO search_index (document_id, field_id, content)
+			 VALUES ($1::uuid, $2, $3)`,
+			docID, fieldID, fieldText(value),
+		); err != nil {
+			return fmt.Errorf("index field %q: %w", fieldID, err)
+		}
+	}
+	return nil
+}</code></pre>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 3</span><span class="pri must">Must Know</span></div>
+      <h3>Call indexBody from Save</h3>
+      <div class="loc">internal/document/document.go : 92–100</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>	for fieldID, value := range normalized {
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO search_index (document_id, field_id, content)
+			 VALUES ($1::uuid, $2, $3)`,
+			id, fieldID, FieldText(value),
+		); err != nil {
+			return "", fmt.Errorf("index field %q: %w", fieldID, err)
+		}
+	}</code></pre>
+
+      <div class="mini">What</div>
+      <ul><li>replace the loop with a call to <code>indexBody</code></li></ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — one write site is the decision being ratified</li>
+        <li><b>C</b> — this is one of the two duplicated loops</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul>
+        <li>directly after the <code>DELETE FROM search_index</code> block</li>
+        <li>keep the existing delete-then-insert comment above it untouched</li>
+      </ul>
+
+      <div class="mini">Example — after edit</div>
+<pre><code>	if err := indexBody(ctx, tx, id, normalized); err != nil {
+		return "", err
+	}</code></pre>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 4</span><span class="pri must">Must Know</span></div>
+      <h3>Call indexBody from RebuildIndex</h3>
+      <div class="loc">internal/document/document.go : 160–170</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>	for _, d := range docs {
+		for fieldID, value := range d.body {
+			if _, err := tx.Exec(ctx,
+				`INSERT INTO search_index (document_id, field_id, content)
+				 VALUES ($1::uuid, $2, $3)`,
+				d.id, fieldID, FieldText(value),
+			); err != nil {
+				return 0, fmt.Errorf("index %s field %q: %w", d.id, fieldID, err)
+			}
+		}
+	}</code></pre>
+
+      <div class="mini">What</div>
+      <ul>
+        <li>collapse the inner loop into an <code>indexBody</code> call</li>
+        <li>wrap the error with the document ID</li>
+      </ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — rebuild must produce byte-identical rows to the live path</li>
+        <li><b>C</b> — a second insert loop is a second place to drift</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul><li>keep the outer <code>for _, d := range docs</code> loop</li></ul>
+
+      <div class="mini">Example — after edit</div>
+<pre><code>	for _, d := range docs {
+		if err := indexBody(ctx, tx, d.id, d.body); err != nil {
+			return 0, fmt.Errorf("index %s: %w", d.id, err)
+		}
+	}</code></pre>
+    </div>
+  </div>
+
+  <!-- Steps 5-6 -->
+  <div class="tabpanel" id="t-s3">
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 5</span><span class="pri imp">Important</span></div>
+      <h3>Unexport the text extractor</h3>
+      <div class="loc">internal/document/text.go : 11, 19, 33, 50</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>// FieldText reduces one field value to the plain text stored in search_index.
+...
+func FieldText(value any) string {
+...
+			if text := FieldText(item); text != "" {
+...
+			if text := FieldText(v[key]); text != "" {</code></pre>
+
+      <div class="mini">What</div>
+      <ul><li>rename <code>FieldText</code> to <code>fieldText</code> at all four spots</li></ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the ticket's "unexported so only the owning package can use it"</li>
+        <li><b>C</b> — it is derivation internals; nothing outside the package calls it</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul>
+        <li>doc comment, declaration, and both recursive call sites</li>
+        <li>the call site in <code>indexBody</code> from Step 2 already uses the new name</li>
+      </ul>
+
+      <div class="mini">Example — after edit</div>
+<pre><code>// fieldText reduces one field value to the plain text stored in search_index.
+...
+func fieldText(value any) string {</code></pre>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 6</span><span class="pri imp">Important</span></div>
+      <h3>Point the package doc at the ADR</h3>
+      <div class="loc">internal/document/text.go : 1–2</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>// Package document owns a document's body blob and its derived search index.
+// Service.Save is the only code path permitted to write either table.</code></pre>
+
+      <div class="mini">What</div>
+      <ul>
+        <li>point the package doc at the ADR and the guard</li>
+        <li>name <code>RebuildIndex</code> as the sanctioned exception</li>
+      </ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the claim is now enforced, so it should say how</li>
+        <li><b>C</b> — the current comment reads as an unenforced honor-system note</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul><li>same two-line spot, expanded</li></ul>
+
+      <div class="mini">Example — after edit</div>
+<pre><code>// Package document owns a document's body blob and its derived search index.
+// Service.Save is the only code path permitted to write a document body, and
+// indexBody the only one permitted to write search_index. RebuildIndex is the
+// one sanctioned exception - it writes the index without a blob because it is
+// a pure function of the blobs. boundary_test.go enforces the rule against the
+// rest of the module; docs/adr/0001-write-path-enforcement.md says why.</code></pre>
+    </div>
+  </div>
+
+  <!-- Steps 7-8 -->
+  <div class="tabpanel" id="t-s4">
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 7</span><span class="pri must">Must Know</span></div>
+      <h3>Add the package boundary test</h3>
+      <div class="loc">internal/document/boundary_test.go — new file</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>(does not exist yet)</code></pre>
+
+      <div class="mini">What</div>
+      <ul>
+        <li>walk the module root and parse every <code>.go</code> file</li>
+        <li>fail on SQL string literals naming <code>document</code> or <code>search_index</code></li>
+      </ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — Go's package scope cannot stop another package opening its own pool</li>
+        <li><b>C</b> — <code>db.Connect</code> returns a usable <code>*pgxpool.Pool</code> to any caller</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul>
+        <li>reuse the <code>filepath.Join("..", "..")</code> root trick from <code>main_test.go</code></li>
+        <li>skip <code>.git</code> and <code>internal/document/</code> itself</li>
+      </ul>
+
+      <div class="mini">What — false positives</div>
+      <ul>
+        <li>parse with comments off, inspect <code>*ast.BasicLit</code> strings only</li>
+        <li><code>cmd/reindex/main.go:1</code> mentions <code>search_index</code> in a comment and must stay green</li>
+      </ul>
+
+      <div class="mini">What — scope</div>
+      <ul>
+        <li>guard reads as well as writes</li>
+        <li>a read outside the package bypasses LAM-4's workspace scoping</li>
+      </ul>
+
+      <div class="mini">Example</div>
+<pre><code>// tableSQL matches a SQL statement naming either table this package owns.
+var tableSQL = regexp.MustCompile(
+	`(?i)\b(insert\s+into|update|delete\s+from|from|join)\s+"?(document|search_index)\b`)
+
+// TestNoSQLOutsideThisPackage fails if any package other than this one issues
+// SQL against document or search_index.
+//
+// Go's encapsulation is package-scoped: Service.pool being unexported stops a
+// caller reaching through a Service, but nothing stops a new package calling
+// db.Connect and writing the tables itself. That is the hole this closes.
+//
+// Only string literals are inspected, and files are parsed with comments
+// discarded, so prose mentioning a table name is never a failure.
+func TestNoSQLOutsideThisPackage(t *testing.T) {
+	root := filepath.Join("..", "..")
+	fset := token.NewFileSet()
+	var offenders []string
+
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if d.Name() == ".git" || filepath.Base(path) == "document" {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if filepath.Ext(path) != ".go" {
+			return nil
+		}
+
+		// Mode 0 drops comments, so only real string literals are inspected.
+		f, err := parser.ParseFile(fset, path, nil, 0)
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", path, err)
+		}
+
+		ast.Inspect(f, func(n ast.Node) bool {
+			lit, ok := n.(*ast.BasicLit)
+			if !ok || lit.Kind != token.STRING {
+				return true
+			}
+			s, err := strconv.Unquote(lit.Value)
+			if err != nil {
+				return true
+			}
+			if tableSQL.MatchString(s) {
+				offenders = append(offenders, fset.Position(lit.Pos()).String())
+			}
+			return true
+		})
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk: %v", err)
+	}
+
+	for _, o := range offenders {
+		t.Errorf("SQL against document/search_index outside package document: %s\n"+
+			"  route it through document.Service so the blob and the index stay in sync\n"+
+			"  see docs/adr/0001-write-path-enforcement.md", o)
+	}
+}</code></pre>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 8</span><span class="pri must">Must Know</span></div>
+      <h3>Prove the guard actually fails</h3>
+      <div class="loc">LaminarFlow-Backend — deliberate-failure check, no committed files</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>(a guard that has never failed proves nothing)</code></pre>
+
+      <div class="mini">What</div>
+      <ul>
+        <li>add a throwaway <code>.go</code> file outside <code>internal/document/</code></li>
+        <li>confirm the test fails and names it</li>
+        <li>delete it and confirm green</li>
+      </ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the guard is the whole enforcement claim</li>
+        <li><b>C</b> — a regexp that matches nothing passes silently forever</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul><li>do this before writing the ADR, so the ADR can state it was verified</li></ul>
+
+      <div class="mini">Example</div>
+<pre><code>cat &gt; internal/db/scratch.go &lt;&lt;'EOF'
+package db
+
+const q = `SELECT * FROM search_index`
+EOF
+./scripts/test.sh          # must FAIL, naming internal/db/scratch.go
+rm internal/db/scratch.go
+./scripts/test.sh          # must PASS</code></pre>
+    </div>
+  </div>
+
+  <!-- Steps 9-11 -->
+  <div class="tabpanel" id="t-s5">
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 9</span><span class="pri must">Must Know</span></div>
+      <h3>Write the ADR</h3>
+      <div class="loc">docs/adr/0001-write-path-enforcement.md — new file</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>(does not exist yet)</code></pre>
+
+      <div class="mini">What</div>
+      <ul><li>write the decision in Nygard shape</li></ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — this is LAM-5's actual deliverable</li>
+        <li><b>C</b> — §4 of the architecture notes left it open</li>
+      </ul>
+
+      <div class="mini">Where — must cover</div>
+      <ul>
+        <li>decision: structure plus a mechanical boundary check</li>
+        <li>limitation: Go's package scope, hence the AST test</li>
+        <li>exception: <code>RebuildIndex</code> writes the index without a blob</li>
+        <li>naming: <code>Save</code> not <code>SaveDocument</code> — it stutters</li>
+        <li>scope: reads guarded too, for LAM-4 workspace scoping</li>
+        <li>accepted: <code>main.go</code> still holds a raw pool for <code>/healthz/db</code></li>
+        <li>rejected: Postgres <code>REVOKE</code> + <code>SECURITY DEFINER</code>, and
+          discipline alone</li>
+      </ul>
+
+      <div class="mini">Example</div>
+<pre><code># 1. Write-path enforcement for the document blob and search index
+
+Status: Accepted — 2026-09-03 (LAM-5)
+
+## Context
+...why two representations exist, and what drift costs...
+
+## Decision
+Code structure, backed by a mechanical boundary check. Not discipline alone.
+...the four mechanisms: unexported pool, single Save, single indexBody, AST test...
+
+## Consequences
+### What this does not buy
+Go's encapsulation is package-scoped...
+### Sanctioned exception
+RebuildIndex writes search_index without a blob...
+### Rejected alternatives
+...</code></pre>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 10</span><span class="pri opt">Optional</span></div>
+      <h3>Add the ADR convention README</h3>
+      <div class="loc">docs/adr/README.md — new file</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>(does not exist yet)</code></pre>
+
+      <div class="mini">What</div>
+      <ul>
+        <li>state the numbered-ADR convention</li>
+        <li>state when a decision earns an ADR</li>
+      </ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — future decisions need somewhere obvious to land</li>
+        <li><b>C</b> — one loose file in <code>docs/adr/</code> is not yet a convention</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul><li>match the tone of <code>migrations/README.md</code></li></ul>
+
+      <div class="mini">Example</div>
+      <p style="margin-bottom:0"><code>migrations/README.md</code> is the existing precedent for a
+        rule documented next to the thing it governs. Mirror its "here is the rule, here is the
+        time we broke it" structure.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 11</span><span class="pri opt">Optional</span></div>
+      <h3>Link ADRs from the README</h3>
+      <div class="loc">README.md : 4–6</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>Common commands live in [COMMANDS.md](COMMANDS.md). Run the checks with
+`./scripts/test.sh` — a bare `go test ./...` skips every database test and
+still prints PASS.</code></pre>
+
+      <div class="mini">What</div>
+      <ul><li>add a sentence linking <code>docs/adr/</code></li></ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — an ADR nobody finds is a comment in a ticket</li>
+        <li><b>C</b> — README is the only index the repo has</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul><li>new paragraph after line 6</li></ul>
+
+      <div class="mini">Example — after edit</div>
+<pre><code>Decisions about how the code is structured live in [docs/adr/](docs/adr/).</code></pre>
+    </div>
+  </div>
+
+  <!-- Step 12 -->
+  <div class="tabpanel" id="t-s6">
+    <div class="step">
+      <div class="step-head"><span class="step-n">Step 12</span><span class="pri imp">Important</span></div>
+      <h3>Record the decision on the ticket</h3>
+      <div class="loc">Linear LAM-5 — comment, no files edited</div>
+
+      <div class="mini">Pre-edit state</div>
+<pre><code>Comments: (none)
+Status: Todo</code></pre>
+
+      <div class="mini">What</div>
+      <ul>
+        <li>post the one-paragraph decision summary</li>
+        <li>link the ADR path</li>
+        <li>move <code>LAM-5</code> to In Progress at the start of the work</li>
+      </ul>
+
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the ticket asks for the decision written down</li>
+        <li><b>C</b> — the ADR lives in the repo; the ticket needs the pointer</li>
+      </ul>
+
+      <div class="mini">Where</div>
+      <ul><li>after the ADR is committed, so the path is real</li></ul>
+
+      <div class="mini">Example</div>
+      <div class="card" style="margin-bottom:0">
+        <p style="margin-bottom:0"><b>Decision: code structure, backed by a mechanical boundary
+          check.</b> The blob and index move together because <code>Service.Save</code> is the only
+          exported write method and <code>indexBody</code> the only place inserting
+          <code>search_index</code> rows. Go's encapsulation is package-scoped, so
+          <code>internal/document/boundary_test.go</code> fails the build if any other package
+          issues SQL against either table. Full writeup:
+          <code>docs/adr/0001-write-path-enforcement.md</code>.</p>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ PAGE 3 ============ -->
+<section class="page" id="p-verify">
+
+  <h1>Verify &amp; TODO</h1>
+  <p class="sub">One gate, four things to confirm, twelve boxes</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-gate">Run The Gate</button>
+    <button class="tab" data-tab="t-confirm">What To Confirm</button>
+    <button class="tab" data-tab="t-todo">TODO</button>
+  </div>
+
+  <div class="tabpanel active" id="t-gate">
+    <span class="pri must">Must Know</span>
+    <h2>One command, from LaminarFlow-Backend/</h2>
+<pre><code>./scripts/test.sh</code></pre>
+    <p>Same script CI runs, so local and CI cannot drift. It loads <code>.env</code>, refuses to
+      run if <code>TEST_DATABASE_URL</code> is unset, and covers gofmt, <code>go build</code>,
+      <code>go vet</code>, <code>staticcheck</code>, and <code>go test -count=1 -v ./...</code>
+      against a throwaway database <code>TestMain</code> builds and drops.</p>
+
+    <div class="card">
+      <div class="mini">Before pushing</div>
+      <p style="margin-bottom:0">Repo hooks enforce it, but as a reminder: commit as
+        <code>Willpatbarr</code>, and <code>gh auth switch --user Willpatbarr</code> before
+        pushing.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-confirm">
+    <h2>Four things to confirm</h2>
+
+    <div class="card">
+      <span class="pri must">Must Know</span>
+      <h3 style="margin-top:0">The guard really bites</h3>
+      <p style="margin-bottom:0">Step 8 is not optional. A guard that has never failed proves
+        nothing — a regexp that matches nothing passes silently forever.</p>
+    </div>
+
+    <div class="card">
+      <span class="pri imp">Important</span>
+      <h3 style="margin-top:0">No comment false positives</h3>
+      <p style="margin-bottom:0"><code>cmd/reindex/main.go:1</code> mentions
+        <code>search_index</code> in prose and must stay green.</p>
+    </div>
+
+    <div class="card">
+      <span class="pri must">Must Know</span>
+      <h3 style="margin-top:0">The refactor is behavior-neutral</h3>
+      <p><code>TestRebuildMatchesLiveIndex</code> already asserts the rebuild and live paths
+        produce byte-identical index rows — that is what proves <code>indexBody</code> changed
+        neither path.</p>
+      <p style="margin-bottom:0"><code>TestSaveRemovesStaleIndexRows</code> covers
+        delete-then-insert surviving the extraction.</p>
+    </div>
+
+    <div class="card">
+      <span class="pri imp">Important</span>
+      <h3 style="margin-top:0">CI green before merging</h3>
+      <p style="margin-bottom:0">On the <code>LAM-5-B</code> → <code>E-LAM-0001-B</code> PR.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-todo">
+    <h2>TODO</h2>
+    <ul class="todo">
+      <li><input type="checkbox" id="c1"><label for="c1">Merge LAM-38 into <code>E-LAM-0001-B</code>, cut <code>LAM-5-B</code></label></li>
+      <li><input type="checkbox" id="c2"><label for="c2">Add <code>indexBody</code> helper to <code>document.go</code></label></li>
+      <li><input type="checkbox" id="c3"><label for="c3">Call it from <code>Save</code> (lines 92–100)</label></li>
+      <li><input type="checkbox" id="c4"><label for="c4">Call it from <code>RebuildIndex</code> (lines 160–170)</label></li>
+      <li><input type="checkbox" id="c5"><label for="c5">Rename <code>FieldText</code> → <code>fieldText</code> (4 spots)</label></li>
+      <li><input type="checkbox" id="c6"><label for="c6">Expand the package doc comment in <code>text.go</code></label></li>
+      <li><input type="checkbox" id="c7"><label for="c7">Write <code>boundary_test.go</code></label></li>
+      <li><input type="checkbox" id="c8"><label for="c8">Prove the guard fails, then delete the scratch file</label></li>
+      <li><input type="checkbox" id="c9"><label for="c9">Write <code>docs/adr/0001-write-path-enforcement.md</code></label></li>
+      <li><input type="checkbox" id="c10"><label for="c10">Add <code>docs/adr/README.md</code> convention note</label></li>
+      <li><input type="checkbox" id="c11"><label for="c11">Link <code>docs/adr/</code> from the repo README</label></li>
+      <li><input type="checkbox" id="c12"><label for="c12">Comment the decision on LAM-5, open the PR</label></li>
+    </ul>
+  </div>
+
+</section>
+
+</main>
+
+<script>
+document.querySelectorAll('.tabs .tab').forEach(function(b){
+  b.addEventListener('click',function(){
+    var page=b.closest('.page');
+    page.querySelectorAll('.tab, .tabpanel').forEach(function(el){el.classList.remove('active')});
+    b.classList.add('active');
+    page.querySelector('#'+b.dataset.tab).classList.add('active');
+  });
+});
+document.querySelectorAll('.skipto a[data-page]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.page, .skipto a').forEach(function(el){el.classList.remove('active')});
+    a.classList.add('active');
+    document.getElementById(a.dataset.page).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+var nav=document.querySelector('.skipto');
+var menu=nav.querySelector('.skipto-menu');
+function closeMenu(){nav.classList.remove('open');nav.classList.add('closed');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});}
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){
+  if(getComputedStyle(menu).display!=='none'){closeMenu();}
+  else{nav.classList.remove('closed');nav.classList.add('open');}
+});
+nav.addEventListener('mouseleave',function(){nav.classList.remove('closed')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',closeMenu)});
+</script>
+</body>
+</html>

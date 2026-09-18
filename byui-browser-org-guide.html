@@ -1,0 +1,1045 @@
+<title>byui-browser Organisational Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{color-scheme:dark;
+--bg:#14171a;--card:#1d2126;--ink:#e8eaed;--muted:#a4acb5;--faint:#737c86;
+--border:#2b3138;--border-strong:#3a424b;--accent:#6cc394;--accent-soft:#1c3128;
+--warn:#e0a458;--warn-soft:#33280f;
+--g1:#1C8E9C;--g2:#B06A1E;--g3:#5A8C33;
+--ok:#2E8B62;--no:#C24A4A;--act:#B06A1E;
+--shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);--radius:14px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.62;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif}
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+@media(max-width:1180px){main{padding-top:72px}}
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.page{display:none}.tabpanel{display:none}
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);font-weight:600;
+letter-spacing:-.015em;line-height:1.2}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+align-items:start;margin:0 0 1.9rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted);font-size:15px}
+@media(max-width:900px){.head{grid-template-columns:1fr}.head .lede{margin-top:1.1rem}}
+
+h2{font-size:1.34rem;font-weight:600;letter-spacing:-.01em;margin:2.4rem 0 .9rem;
+padding-bottom:.45rem;border-bottom:1px solid var(--border)}
+h3{font-size:1.08rem;font-weight:600;margin:1.9rem 0 .7rem}
+h3.u{display:flex;align-items:baseline;gap:.55rem}
+h3.u .rail{font-weight:400}
+h3.u.g1 .rail{color:var(--g1)}h3.u.g2 .rail{color:var(--g2)}h3.u.g3 .rail{color:var(--g3)}
+p{margin:0 0 1rem;max-width:62rem}
+b,strong{font-weight:600}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.875em;
+background:#23282e;border:1px solid var(--border);border-radius:4px;padding:.5px 5px;
+overflow-wrap:anywhere;max-width:100%}
+a{color:var(--accent);overflow-wrap:anywhere}
+
+/* tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong);
+position:sticky;top:0;z-index:40}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;transition:.15s;
+margin-bottom:-2px}
+.tab:hover{color:var(--ink)}
+
+/* nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;display:flex;
+flex-direction:column;gap:3px;background:var(--card);border:1px solid var(--border);
+border-radius:14px;padding:12px 12px 13px;box-shadow:var(--shadow);width:186px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:12.5px;padding:5px 10px;
+border-radius:8px;transition:.15s;cursor:pointer;line-height:1.35}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+font-weight:700;padding:9px 10px 3px}
+.navlabel:first-child{padding-top:2px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:3px}
+@media(max-width:1180px){
+.skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+.skipto-toggle{display:flex}
+.skipto-menu{display:none;padding:4px 6px 8px;min-width:186px;max-height:72vh;overflow-y:auto}
+.skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+.skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+#navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}}
+#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+
+/* tables */
+.tw{overflow-x:auto;max-width:100%;margin:0 0 1.5rem;border:1px solid var(--border);
+border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+color:var(--faint);padding:11px 14px;border-bottom:1px solid var(--border-strong);
+white-space:nowrap}
+table.pathidx td:first-child,table.lookup td:first-child{white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:0}
+table.kv td:first-child{width:14rem;color:var(--muted);white-space:nowrap}
+@media(max-width:560px){table.kv td:first-child{width:auto;white-space:normal}}
+
+/* ---- status pill: the shape claims status, the colour carries the value ---- */
+.pill{display:inline-block;border-radius:10px;padding:1px 9px;font-size:10.5px;
+font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
+line-height:1.7;vertical-align:1px}
+.pill.ok  {background:#2E8B6222;color:#2E8B62;border:1px solid #2E8B6266}
+.pill.act {background:#B06A1E22;color:#B06A1E;border:1px solid #B06A1E66}
+.pill.no  {background:#C24A4A22;color:#C24A4A;border:1px solid #C24A4A66}
+.pill.none{background:#A4ACB522;color:#A4ACB5;border:1px solid #A4ACB566}
+td:has(> .pill){white-space:nowrap}
+
+/* ---- unit card: a short discrete item, fully outlined ---- */
+.card{border:1px solid var(--border);border-radius:12px;background:var(--card);
+padding:4px 16px 2px;margin:0 0 14px}
+.card > h3{margin:14px 0 10px;font-size:1rem}
+.card .tw{border:0;border-radius:0;background:none;margin-bottom:12px}
+.card .tw table{font-size:13.5px}
+.card .tw td{padding:7px 0}
+.card .tw td:first-child{padding-right:16px}
+.card .tw thead{display:none}
+.card > p{margin:0 0 14px;font-size:14.5px}
+
+/* units flow into as many columns as fit, and stay populated */
+.units{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));
+gap:0 16px;align-items:start;margin:0 0 .5rem}
+
+/* ---- group heading, index cards ---- */
+.gh{border-bottom-width:2px}
+.gh.g1{color:var(--g1);border-bottom-color:var(--g1)}
+.gh.g2{color:var(--g2);border-bottom-color:var(--g2)}
+.gh.g3{color:var(--g3);border-bottom-color:var(--g3)}
+.gh.g0{color:var(--accent);border-bottom-color:var(--accent)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));
+gap:12px;margin:0 0 1.8rem}
+.pcard{display:block;border:1px solid var(--border);border-left-width:3px;
+border-radius:10px;background:var(--card);padding:13px 16px;cursor:pointer;transition:.15s}
+.pcard:hover{border-color:var(--border-strong);background:#22272d}
+.pcard.g1{border-left-color:var(--g1)}
+.pcard.g2{border-left-color:var(--g2)}
+.pcard.g3{border-left-color:var(--g3)}
+.pcard.g0{border-left-color:var(--accent)}
+.pcard .pt{display:block;font-weight:600;font-size:15px;margin:0 0 3px}
+.pcard.g1 .pt{color:var(--g1)}
+.pcard.g2 .pt{color:var(--g2)}
+.pcard.g3 .pt{color:var(--g3)}
+.pcard.g0 .pt{color:var(--accent)}
+.pcard .pd{display:block;color:var(--muted);font-size:13px;line-height:1.5}
+
+/* ---- reading legend: establishes the vocabulary once, at entry ---- */
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));
+gap:10px 20px;border:1px solid var(--border);border-radius:12px;background:var(--card);
+padding:14px 18px;margin:0 0 2rem}
+.lgroup{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.lh{display:block;width:100%;color:var(--faint);font-size:10px;letter-spacing:.11em;
+text-transform:uppercase;font-weight:700;margin:0 0 2px}
+.lswatch{font-size:11px;font-weight:700;letter-spacing:.05em;padding:1px 8px;
+border-radius:3px;text-transform:uppercase}
+.lswatch.g1{color:var(--g1);background:#1C8E9C1f}
+.lswatch.g2{color:var(--g2);background:#B06A1E1f}
+.lswatch.g3{color:var(--g3);background:#5A8C331f}
+.lkind{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+padding:2px 8px;border-radius:3px}
+.lkind.k-finding{color:var(--warn);background:var(--warn-soft);
+border:1px solid var(--warn)}
+.lkind.k-note{color:var(--muted);background:#24292f;border:1px solid var(--border-strong)}
+.lplain{font-size:13px;color:var(--accent);text-decoration:underline;
+text-underline-offset:2px}
+.tabref{color:var(--muted)}
+
+/* page links inside content */
+.tl{color:var(--accent);cursor:pointer;text-decoration:underline;
+text-underline-offset:2px;text-decoration-thickness:1px}
+.tl:hover{color:var(--ink)}
+
+/* ---- callout: colour plus a kind label, in the flow it interrupts ---- */
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+padding:12px 17px 13px;margin:0 0 1.5rem;font-size:14.5px;line-height:1.6}
+.note b{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;margin:0 0 6px}
+.note .kind{font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
+padding:2px 8px;border-radius:3px;white-space:nowrap}
+.note .ctitle{font-size:14.5px;font-weight:600;color:var(--ink)}
+.n-finding{border-color:var(--warn);background:var(--warn-soft)}
+.n-finding .kind{color:var(--warn);background:#e0a4581f;border:1px solid var(--warn)}
+.n-note{border-color:var(--border-strong);background:#1a1e23}
+.n-note .kind{color:var(--muted);background:#24292f;border:1px solid var(--border-strong)}
+
+/* code */
+.code{position:relative;margin:0 0 1.5rem}
+.code pre{margin:0;background:var(--card);border:1px solid var(--border);border-radius:10px;
+padding:16px 18px;overflow-x:auto;max-width:100%;font-size:13px;line-height:1.62;
+font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink)}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--card);
+padding:1px 4px;border-radius:3px;pointer-events:none;
+font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.k{color:#A25494}.ty{color:#4368A8}.ad{color:#2E8B62}.s{color:#5A8C33}
+.cm{color:var(--faint)}.fn{color:#4368A8}.mac{color:#A25494}.n{color:#B06A1E}
+.h{color:#A25494;font-weight:600}
+.tree pre{line-height:1.75;font-size:12.5px}
+.tree .tl{color:var(--accent)}
+
+/* priority list */
+.prio{display:inline-block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;border:0}
+.prio.blocking{background:#3B1D1D;color:#E58A8A}
+.prio.high{background:#33280F;color:#f77027}
+.prio.medium{background:#33300F;color:#DCC55E}
+.prio.low{background:#16301F;color:#6FBF95}
+.prio.none{background:#24292F;color:#A4ACB5}
+ol.tagged{list-style:none;padding-left:0;margin:0 0 1.5rem}
+ol.tagged li{display:grid;grid-template-columns:5.6rem 1.9rem 1fr;align-items:baseline;
+margin:0 0 13px;line-height:1.6}
+ol.tagged .num{color:var(--faint);font-variant-numeric:tabular-nums}
+ol.tagged .prio{justify-self:start}
+@media(max-width:560px){ol.tagged li{grid-template-columns:1.9rem 1fr}
+ol.tagged .prio{grid-column:1/-1;margin:0 0 4px;justify-self:start}}
+
+/* ---- todo: real checkbox inputs, toggled natively with no script ---- */
+ul.todo{list-style:none;padding-left:0;margin:0 0 1.5rem}
+ul.todo li{border:1px solid var(--border);border-radius:8px;background:var(--card);
+margin:0 0 8px;transition:.15s}
+ul.todo li:hover{border-color:var(--border-strong)}
+ul.todo .cb{position:absolute;width:0;height:0;opacity:0}
+ul.todo label{display:grid;grid-template-columns:1.9rem 1fr;gap:0 4px;position:relative;
+padding:10px 14px 10px 38px;cursor:pointer;font-size:14.5px;line-height:1.55;
+transition:.15s;-webkit-user-select:none;user-select:none}
+ul.todo .tn{color:var(--faint);font-variant-numeric:tabular-nums}
+ul.todo .tt{min-width:0;overflow-wrap:anywhere}
+ul.todo label::before{content:"";position:absolute;left:13px;top:12px;width:14px;height:14px;
+border:1.5px solid var(--border-strong);border-radius:3px;background:var(--bg);
+transition:.15s}
+ul.todo label::after{content:"";position:absolute;left:18px;top:14px;width:4px;height:9px;
+border:solid var(--bg);border-width:0 2px 2px 0;transform:rotate(45deg);opacity:0;
+transition:.15s}
+ul.todo label:hover::before{border-color:var(--accent)}
+ul.todo .cb:checked + label::before{background:#2E8B62;border-color:#2E8B62}
+ul.todo .cb:checked + label::after{opacity:1}
+ul.todo .cb:checked + label{color:var(--faint);text-decoration:line-through;
+text-decoration-color:var(--border-strong)}
+ul.todo .cb:checked + label .tn{color:#2E8B62;text-decoration:none}
+ul.todo .cb:focus-visible + label::before{outline:2px solid var(--accent);outline-offset:2px}
+
+#r-p-index:checked ~ main #p-index{display:block}
+#r-p-index:checked ~ .skipto label[for="r-p-index"]{background:var(--bg);color:#6cc394}
+#r-p-lookup:checked ~ main #p-lookup{display:block}
+#r-p-lookup:checked ~ .skipto label[for="r-p-lookup"]{background:var(--bg);color:#6cc394}
+#r-p-overview:checked ~ main #p-overview{display:block}
+#r-p-overview:checked ~ .skipto label[for="r-p-overview"]{background:var(--bg);color:#1C8E9C}
+#r-p-arch:checked ~ main #p-arch{display:block}
+#r-p-arch:checked ~ .skipto label[for="r-p-arch"]{background:var(--bg);color:#1C8E9C}
+#r-p-process:checked ~ main #p-process{display:block}
+#r-p-process:checked ~ .skipto label[for="r-p-process"]{background:var(--bg);color:#1C8E9C}
+#r-p-teams:checked ~ main #p-teams{display:block}
+#r-p-teams:checked ~ .skipto label[for="r-p-teams"]{background:var(--bg);color:#1C8E9C}
+#r-p-adr:checked ~ main #p-adr{display:block}
+#r-p-adr:checked ~ .skipto label[for="r-p-adr"]{background:var(--bg);color:#1C8E9C}
+#r-p-plat:checked ~ main #p-plat{display:block}
+#r-p-plat:checked ~ .skipto label[for="r-p-plat"]{background:var(--bg);color:#1C8E9C}
+#r-p-build:checked ~ main #p-build{display:block}
+#r-p-build:checked ~ .skipto label[for="r-p-build"]{background:var(--bg);color:#1C8E9C}
+#r-p-tree:checked ~ main #p-tree{display:block}
+#r-p-tree:checked ~ .skipto label[for="r-p-tree"]{background:var(--bg);color:#B06A1E}
+#r-p-deps:checked ~ main #p-deps{display:block}
+#r-p-deps:checked ~ .skipto label[for="r-p-deps"]{background:var(--bg);color:#B06A1E}
+#r-p-const:checked ~ main #p-const{display:block}
+#r-p-const:checked ~ .skipto label[for="r-p-const"]{background:var(--bg);color:#5A8C33}
+#r-p-gap:checked ~ main #p-gap{display:block}
+#r-p-gap:checked ~ .skipto label[for="r-p-gap"]{background:var(--bg);color:#5A8C33}
+#r-p-matrix:checked ~ main #p-matrix{display:block}
+#r-p-matrix:checked ~ .skipto label[for="r-p-matrix"]{background:var(--bg);color:#5A8C33}
+#r-p-ops:checked ~ main #p-ops{display:block}
+#r-p-ops:checked ~ .skipto label[for="r-p-ops"]{background:var(--bg);color:#5A8C33}
+#r-t-index-1:checked ~ .tabpanel#t-index-1{display:block}
+#r-t-lookup-1:checked ~ .tabpanel#t-lookup-1{display:block}
+#r-t-lookup-1:checked ~ .tabs label[for="r-t-lookup-1"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+#r-t-lookup-2:checked ~ .tabpanel#t-lookup-2{display:block}
+#r-t-lookup-2:checked ~ .tabs label[for="r-t-lookup-2"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+#r-t-overview-1:checked ~ .tabpanel#t-overview-1{display:block}
+#r-t-overview-1:checked ~ .tabs label[for="r-t-overview-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-overview-2:checked ~ .tabpanel#t-overview-2{display:block}
+#r-t-overview-2:checked ~ .tabs label[for="r-t-overview-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-arch-1:checked ~ .tabpanel#t-arch-1{display:block}
+#r-t-arch-1:checked ~ .tabs label[for="r-t-arch-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-arch-2:checked ~ .tabpanel#t-arch-2{display:block}
+#r-t-arch-2:checked ~ .tabs label[for="r-t-arch-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-arch-3:checked ~ .tabpanel#t-arch-3{display:block}
+#r-t-arch-3:checked ~ .tabs label[for="r-t-arch-3"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-arch-4:checked ~ .tabpanel#t-arch-4{display:block}
+#r-t-arch-4:checked ~ .tabs label[for="r-t-arch-4"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-arch-5:checked ~ .tabpanel#t-arch-5{display:block}
+#r-t-arch-5:checked ~ .tabs label[for="r-t-arch-5"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-process-1:checked ~ .tabpanel#t-process-1{display:block}
+#r-t-process-1:checked ~ .tabs label[for="r-t-process-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-process-2:checked ~ .tabpanel#t-process-2{display:block}
+#r-t-process-2:checked ~ .tabs label[for="r-t-process-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-process-3:checked ~ .tabpanel#t-process-3{display:block}
+#r-t-process-3:checked ~ .tabs label[for="r-t-process-3"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-process-4:checked ~ .tabpanel#t-process-4{display:block}
+#r-t-process-4:checked ~ .tabs label[for="r-t-process-4"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-process-5:checked ~ .tabpanel#t-process-5{display:block}
+#r-t-process-5:checked ~ .tabs label[for="r-t-process-5"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-teams-1:checked ~ .tabpanel#t-teams-1{display:block}
+#r-t-teams-1:checked ~ .tabs label[for="r-t-teams-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-teams-2:checked ~ .tabpanel#t-teams-2{display:block}
+#r-t-teams-2:checked ~ .tabs label[for="r-t-teams-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-adr-1:checked ~ .tabpanel#t-adr-1{display:block}
+#r-t-adr-1:checked ~ .tabs label[for="r-t-adr-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-adr-2:checked ~ .tabpanel#t-adr-2{display:block}
+#r-t-adr-2:checked ~ .tabs label[for="r-t-adr-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-adr-3:checked ~ .tabpanel#t-adr-3{display:block}
+#r-t-adr-3:checked ~ .tabs label[for="r-t-adr-3"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-plat-1:checked ~ .tabpanel#t-plat-1{display:block}
+#r-t-plat-1:checked ~ .tabs label[for="r-t-plat-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-plat-2:checked ~ .tabpanel#t-plat-2{display:block}
+#r-t-plat-2:checked ~ .tabs label[for="r-t-plat-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-build-1:checked ~ .tabpanel#t-build-1{display:block}
+#r-t-build-1:checked ~ .tabs label[for="r-t-build-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-build-2:checked ~ .tabpanel#t-build-2{display:block}
+#r-t-build-2:checked ~ .tabs label[for="r-t-build-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-build-3:checked ~ .tabpanel#t-build-3{display:block}
+#r-t-build-3:checked ~ .tabs label[for="r-t-build-3"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-build-4:checked ~ .tabpanel#t-build-4{display:block}
+#r-t-build-4:checked ~ .tabs label[for="r-t-build-4"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-tree-1:checked ~ .tabpanel#t-tree-1{display:block}
+#r-t-tree-1:checked ~ .tabs label[for="r-t-tree-1"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-tree-2:checked ~ .tabpanel#t-tree-2{display:block}
+#r-t-tree-2:checked ~ .tabs label[for="r-t-tree-2"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-deps-1:checked ~ .tabpanel#t-deps-1{display:block}
+#r-t-deps-1:checked ~ .tabs label[for="r-t-deps-1"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-deps-2:checked ~ .tabpanel#t-deps-2{display:block}
+#r-t-deps-2:checked ~ .tabs label[for="r-t-deps-2"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-deps-3:checked ~ .tabpanel#t-deps-3{display:block}
+#r-t-deps-3:checked ~ .tabs label[for="r-t-deps-3"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-const-1:checked ~ .tabpanel#t-const-1{display:block}
+#r-t-const-1:checked ~ .tabs label[for="r-t-const-1"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-const-2:checked ~ .tabpanel#t-const-2{display:block}
+#r-t-const-2:checked ~ .tabs label[for="r-t-const-2"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-const-3:checked ~ .tabpanel#t-const-3{display:block}
+#r-t-const-3:checked ~ .tabs label[for="r-t-const-3"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-const-4:checked ~ .tabpanel#t-const-4{display:block}
+#r-t-const-4:checked ~ .tabs label[for="r-t-const-4"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-const-5:checked ~ .tabpanel#t-const-5{display:block}
+#r-t-const-5:checked ~ .tabs label[for="r-t-const-5"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-gap-1:checked ~ .tabpanel#t-gap-1{display:block}
+#r-t-gap-1:checked ~ .tabs label[for="r-t-gap-1"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-gap-2:checked ~ .tabpanel#t-gap-2{display:block}
+#r-t-gap-2:checked ~ .tabs label[for="r-t-gap-2"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-gap-3:checked ~ .tabpanel#t-gap-3{display:block}
+#r-t-gap-3:checked ~ .tabs label[for="r-t-gap-3"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-matrix-1:checked ~ .tabpanel#t-matrix-1{display:block}
+#r-t-matrix-1:checked ~ .tabs label[for="r-t-matrix-1"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-matrix-2:checked ~ .tabpanel#t-matrix-2{display:block}
+#r-t-matrix-2:checked ~ .tabs label[for="r-t-matrix-2"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-ops-1:checked ~ .tabpanel#t-ops-1{display:block}
+#r-t-ops-1:checked ~ .tabs label[for="r-t-ops-1"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-ops-2:checked ~ .tabpanel#t-ops-2{display:block}
+#r-t-ops-2:checked ~ .tabs label[for="r-t-ops-2"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-ops-3:checked ~ .tabpanel#t-ops-3{display:block}
+#r-t-ops-3:checked ~ .tabs label[for="r-t-ops-3"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-ops-4:checked ~ .tabpanel#t-ops-4{display:block}
+#r-t-ops-4:checked ~ .tabs label[for="r-t-ops-4"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-ops-5:checked ~ .tabpanel#t-ops-5{display:block}
+#r-t-ops-5:checked ~ .tabs label[for="r-t-ops-5"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}</style>
+<input class="st" type="radio" name="pg" id="r-p-index" checked><input class="st" type="radio" name="pg" id="r-p-lookup"><input class="st" type="radio" name="pg" id="r-p-overview"><input class="st" type="radio" name="pg" id="r-p-arch"><input class="st" type="radio" name="pg" id="r-p-process"><input class="st" type="radio" name="pg" id="r-p-teams"><input class="st" type="radio" name="pg" id="r-p-adr"><input class="st" type="radio" name="pg" id="r-p-plat"><input class="st" type="radio" name="pg" id="r-p-build"><input class="st" type="radio" name="pg" id="r-p-tree"><input class="st" type="radio" name="pg" id="r-p-deps"><input class="st" type="radio" name="pg" id="r-p-const"><input class="st" type="radio" name="pg" id="r-p-gap"><input class="st" type="radio" name="pg" id="r-p-matrix"><input class="st" type="radio" name="pg" id="r-p-ops">
+<input class="st" type="checkbox" id="navtoggle">
+<nav class="skipto" aria-label="Pages"><label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label><div class="skipto-menu"><div class="navlabel">Start here</div><label for="r-p-index">Index</label><label for="r-p-lookup">Lookup</label><div class="navlabel">Documents</div><label for="r-p-overview">Project Overview</label><label for="r-p-arch">Architecture</label><label for="r-p-process">Process &amp; Workflow</label><label for="r-p-teams">Teams</label><label for="r-p-adr">ADRs</label><label for="r-p-plat">Platforms &amp; Tests</label><label for="r-p-build">Build &amp; Tooling</label><div class="navlabel">Diagrams</div><label for="r-p-tree">File Structure</label><label for="r-p-deps">Crate Dependencies</label><div class="navlabel">Reports</div><label for="r-p-const">Constraints Defined</label><label for="r-p-gap">Defined vs Done</label><label for="r-p-matrix">Team Matrix</label><label for="r-p-ops">Ops Brief</label></div></nav>
+<main><section class="page g0" id="p-index"><input class="st" type="radio" name="t-index" id="r-t-index-1" checked><div class="head"><h1>Index</h1><p class="lede">Organisational reference for the byui-browser repository: every document, the file and dependency structure, and what the stated process actually enforces.</p></div><div class="tabpanel" id="t-index-1">
+<div class="legend"><div class="lgroup"><span class="lh">Colour marks the group</span><span class="lswatch g1">Documents</span><span class="lswatch g2">Diagrams</span><span class="lswatch g3">Reports</span></div><div class="lgroup"><span class="lh">Pills rank a column</span><span class="pill ok">best</span><span class="pill act">partial</span><span class="pill no">worst</span><span class="pill none">n/a</span></div><div class="lgroup"><span class="lh">Callouts</span><span class="lkind k-finding">Finding</span><span class="lkind k-note">Note</span></div><div class="lgroup"><span class="lh">Underlined text</span><span class="lplain">opens another page</span></div></div>
+
+<h2 class="gh g1">Documents &mdash; what the repository says</h2>
+<div class="pgrid">
+<label class="pcard g1" for="r-p-overview"><span class="pt">Project Overview</span><span class="pd">What the project is, the toolchain, and the five workflow rules the README states</span></label>
+<label class="pcard g1" for="r-p-arch"><span class="pt">Architecture</span><span class="pd">Principles, process model, workspace layout, crate ownership, inter-team contracts</span></label>
+<label class="pcard g1" for="r-p-process"><span class="pt">Process &amp; Workflow</span><span class="pd">Branching, merge gates, cadence, testing, onboarding, evolution, next steps</span></label>
+<label class="pcard g1" for="r-p-teams"><span class="pt">Teams</span><span class="pd">Nine team charters and where each sits in the page-load pipeline</span></label>
+<label class="pcard g1" for="r-p-adr"><span class="pt">ADRs</span><span class="pd">The ADR process, the template, and the three ADRs nobody has written</span></label>
+<label class="pcard g1" for="r-p-plat"><span class="pt">Platforms &amp; Tests</span><span class="pd">The native shell plan and the integration test plan</span></label>
+<label class="pcard g1" for="r-p-build"><span class="pt">Build &amp; Tooling</span><span class="pd">Every command, manifest field, formatter setting, lint and ignored path</span></label>
+</div>
+
+<h2 class="gh g2">Diagrams &mdash; what the repository is</h2>
+<div class="pgrid">
+<label class="pcard g2" for="r-p-tree"><span class="pt">File Structure</span><span class="pd">The tree, with every documented file linked to its page, plus a path-by-path owner index</span></label>
+<label class="pcard g2" for="r-p-deps"><span class="pt">Crate Dependencies</span><span class="pd">What the fourteen manifests actually wire, against the pipeline the docs describe</span></label>
+</div>
+
+<h2 class="gh g3">Reports &mdash; what the repository enforces</h2>
+<div class="pgrid">
+<label class="pcard g3" for="r-p-const"><span class="pt">Constraints Defined</span><span class="pd">Every organisational rule stated, with the file and section that states it</span></label>
+<label class="pcard g3" for="r-p-gap"><span class="pt">Defined vs Done</span><span class="pd">The same rules against what is on disk: mechanism, prose, or missing entirely</span></label>
+<label class="pcard g3" for="r-p-matrix"><span class="pt">Team Matrix</span><span class="pd">Team to crate to path to GitHub handle, and the review fan-out per path</span></label>
+<label class="pcard g3" for="r-p-ops"><span class="pt">Ops Brief</span><span class="pd">Ranked gaps, enforcement holes, contradictions, cross-team blocks, TODO</span></label>
+</div>
+
+<h2 class="gh g0">Find a specific thing</h2>
+<div class="pgrid">
+<label class="pcard g0" for="r-p-lookup"><span class="pt">Lookup</span><span class="pd">Every path, rule, crate, command and concept in this guide, A to Z, with where it lives</span></label>
+</div>
+
+<h2>Repository state, in four numbers</h2>
+
+<div class="tw"><table><thead><tr><th>Measure</th><th>Count</th><th>Reading</th></tr></thead><tbody><tr><td>Rust source lines across all 14 crates</td><td><b>166</b></td><td>Every crate is a doc comment, a <code>forbid</code> attribute and a <code>TODO</code></td></tr><tr><td>External dependencies in <code>Cargo.lock</code></td><td><b>0</b></td><td>Nothing outside the workspace is pulled in yet</td></tr><tr><td>Architecture Decision Records written</td><td><b>0</b></td><td>The template exists; three ADRs are named as immediate next steps</td></tr><tr><td>Crate-to-crate dependencies outside <code>common</code></td><td><b>0</b></td><td>The rendering pipeline exists as prose, not as edges</td></tr></tbody></table></div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">How the pills read</span></b>A pill marks a categorical value in a column, and every value in that column carries one. The words change per column &mdash; <b>enforced</b> / <b>prose only</b>, <b>2 teams</b> / <b>10 teams</b>, <b>present</b> / <b>absent</b> &mdash; but the colour never does: green is the best value on that column's scale, amber is partial or cautionary, red is the worst, grey means the question does not apply to that row.</div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">Scope of this guide</span></b>It covers the organisational surface of the repository &mdash; documents, workflow configuration, ownership and process. Crate internals are stubs and are not documented beyond their declared ownership and planned interfaces. The copy inspected has no <code>.git</code> directory, so no commit, branch, tag, pull request or GitHub setting was examined. Every statement comes from files on disk.</div>
+</div></section><section class="page g0" id="p-lookup"><input class="st" type="radio" name="t-lookup" id="r-t-lookup-1" checked><input class="st" type="radio" name="t-lookup" id="r-t-lookup-2"><div class="head"><h1>Lookup</h1><p class="lede">Every path, rule, crate, command and concept in this guide, listed alphabetically, plus the same material grouped by the question that sends you looking for it.</p></div><div class="tabs" role="tablist"><label class="tab g0" for="r-t-lookup-1">A to Z</label><label class="tab g0" for="r-t-lookup-2">By Question</label></div><div class="tabpanel" id="t-lookup-1">
+<p>Every path, rule, crate, command and concept this guide covers, ordered alphabetically.
+Alphabetical order beats any visual device for finding a known target, so nothing else is
+marked here.</p>
+
+<div class="tw"><table class="lookup"><thead><tr><th>Term</th><th>What it is</th><th>Where</th></tr></thead><tbody><tr><td><code>.github/CODEOWNERS</code></td><td>14 path-ownership rules across 10 GitHub teams</td><td><label class="tl" for="r-p-matrix">Team Matrix</label> &middot; <span class="tabref">Team &rarr; Crate &rarr; Path</span></td></tr><tr><td><code>.gitignore</code></td><td>Ignored paths, three sections of which anticipate absent tooling</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Ignored Paths</span></td></tr><tr><td><code>0000-template.md</code></td><td>The ADR template every record copies</td><td><label class="tl" for="r-p-adr">ADRs</label> &middot; <span class="tabref">Template</span></td></tr><tr><td>ADR approval threshold</td><td>3 experienced engineers from different teams</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Governance</span></td></tr><tr><td>ADR backlog</td><td>Process model, IPC format, DOM representation &mdash; none written</td><td><label class="tl" for="r-p-adr">ADRs</label> &middot; <span class="tabref">Backlog</span></td></tr><tr><td>ADR naming</td><td><code>NNNN-short-title.md</code>, zero-padded, kebab-case</td><td><label class="tl" for="r-p-adr">ADRs</label> &middot; <span class="tabref">Process</span></td></tr><tr><td>Agent instructions</td><td>No <code>AGENTS.md</code> or <code>CLAUDE.md</code> exists</td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; <span class="tabref">Missing Artifacts</span></td></tr><tr><td>Architecture Sync</td><td>Weekly, 30&ndash;45 min, all teams, output is ADRs</td><td><label class="tl" for="r-p-process">Process &amp; Workflow</label> &middot; <span class="tabref">Cadence</span></td></tr><tr><td>Branch naming</td><td><code>team/short-description</code>, unenforced</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Branch &amp; PR</span></td></tr><tr><td>Branch protection</td><td>Not a repository file; three switches to verify by hand</td><td><label class="tl" for="r-p-matrix">Team Matrix</label> &middot; <span class="tabref">Review Fan-out</span></td></tr><tr><td>Breaking changes</td><td>The five-step RFC-to-removal path</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Governance</span></td></tr><tr><td><code>browser</code> crate</td><td>Top-level binary, depends on all 13, contested ownership</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td><code>Cargo.lock</code></td><td>Committed, version 4, 14 packages, zero external</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Workspace Manifest</span></td></tr><tr><td><code>Cargo.toml</code> (workspace)</td><td>Members, shared package fields, workspace deps and lints</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Workspace Manifest</span></td></tr><tr><td><code>chrome</code> crate</td><td>Browser UI logic hosted by the platform shells</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>CI workflow</td><td>One job, five steps, <code>ubuntu-latest</code> only</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">CI Pipeline</span></td></tr><tr><td>Clippy</td><td><code>--workspace --all-targets -- -D warnings</code> via <code>make lint</code></td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Format &amp; Lints</span></td></tr><tr><td>Commit message format</td><td>Not defined anywhere in the repository</td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; <span class="tabref">Missing Artifacts</span></td></tr><tr><td><code>common</code> crate</td><td>Shared types, ten-team review, four empty modules</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>Conformance tests</td><td>WPT, test262, CSS suite &mdash; stated, no harness</td><td><label class="tl" for="r-p-process">Process &amp; Workflow</label> &middot; <span class="tabref">Testing</span></td></tr><tr><td><code>CONTRIBUTING.md</code></td><td>Absent. The highest-volume gap given 27 juniors</td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; <span class="tabref">Missing Artifacts</span></td></tr><tr><td>Crash isolation</td><td>A panic in one tab must not take down the browser</td><td><label class="tl" for="r-p-arch">Architecture</label> &middot; <span class="tabref">Process Model</span></td></tr><tr><td><code>css</code> crate</td><td>Parser, cascade, computed values, invalidation</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td><code>default-members</code></td><td><code>crates/browser</code> &mdash; what a bare <code>cargo run</code> targets</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Workspace Manifest</span></td></tr><tr><td>Definition of Done</td><td>Not stated</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Branch &amp; PR</span></td></tr><tr><td>Dependency graph</td><td>Star: everything to <code>common</code>, nothing else</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Wired Today</span></td></tr><tr><td><code>devtools</code> crate</td><td>Protocol, inspector, debugger, profiler, console</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>DOM representation ADR</td><td>Unwritten; blocks four teams</td><td><label class="tl" for="r-p-ops">Ops Brief</label> &middot; <span class="tabref">Cross-team Blocks</span></td></tr><tr><td>Edition</td><td><code>2024</code>, set once at the workspace level</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Workspace Manifest</span></td></tr><tr><td>Experienced engineer</td><td>Load-bearing in four thresholds, defined nowhere</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Governance</span></td></tr><tr><td><code>fetch(request)</code></td><td>The high-level networking API stated in &sect;3.2</td><td><label class="tl" for="r-p-arch">Architecture</label> &middot; <span class="tabref">Contracts</span></td></tr><tr><td><code>forbid(unsafe_code)</code></td><td>In 13 of 14 crates; the binary is the exception</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Code Standards</span></td></tr><tr><td>Fuzzing</td><td>Five owner teams named, no <code>fuzz/</code> directory</td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; <span class="tabref">Gap Table</span></td></tr><tr><td><code>html</code> crate</td><td>Tokenizer, tree builder, DOM construction</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>IPC format ADR</td><td>Unwritten; blocks four teams</td><td><label class="tl" for="r-p-ops">Ops Brief</label> &middot; <span class="tabref">Cross-team Blocks</span></td></tr><tr><td>IPC message enum</td><td><code>common/src/ipc.rs</code>, a doc comment and a TODO</td><td><label class="tl" for="r-p-arch">Architecture</label> &middot; <span class="tabref">Process Model</span></td></tr><tr><td>Issue templates</td><td>No <code>.github/ISSUE_TEMPLATE/</code></td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; <span class="tabref">Missing Artifacts</span></td></tr><tr><td><code>js</code> crate</td><td>VM and values; the one crate unblocked today</td><td><label class="tl" for="r-p-ops">Ops Brief</label> &middot; <span class="tabref">Cross-team Blocks</span></td></tr><tr><td><code>layout</code> crate</td><td>Box tree and layout; never talks to the GPU</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td><code>layout_tree</code></td><td><code>(styled_dom, viewport) -&gt; LayoutTree</code></td><td><label class="tl" for="r-p-arch">Architecture</label> &middot; <span class="tabref">Contracts</span></td></tr><tr><td><code>LICENSE</code></td><td>MIT, matching the workspace manifest</td><td><label class="tl" for="r-p-overview">Project Overview</label> &middot; <span class="tabref">Project</span></td></tr><tr><td><code>make lint</code></td><td>rustfmt check then Clippy at <code>-D warnings</code></td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Make Targets</span></td></tr><tr><td><code>make release</code></td><td>Three target triples; CI compiles one</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Make Targets</span></td></tr><tr><td><code>make test</code></td><td><code>cargo test --workspace</code>, or <code>-p &lt;crate&gt;</code></td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Make Targets</span></td></tr><tr><td><code>max_width</code></td><td>100 columns, enforced by <code>cargo fmt --check</code></td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Format &amp; Lints</span></td></tr><tr><td>Merge gates</td><td>Five stated; two have a runner</td><td><label class="tl" for="r-p-process">Process &amp; Workflow</label> &middot; <span class="tabref">Branching &amp; PRs</span></td></tr><tr><td>Miri</td><td>Required for new <code>unsafe</code>; no CI job</td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; <span class="tabref">Gap Table</span></td></tr><tr><td><code>net</code> crate</td><td>HTTP/1.1, 2, 3, TLS, caching, connection pooling</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>Onboarding rules</td><td>Mentor pairing, task shape, <code>unsafe</code> off-limits</td><td><label class="tl" for="r-p-process">Process &amp; Workflow</label> &middot; <span class="tabref">Onboarding</span></td></tr><tr><td><code>paint</code> crate</td><td>Display list generation, consumed by <code>render</code></td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>Path ownership index</td><td>Every path with its CODEOWNERS rule and fan-out</td><td><label class="tl" for="r-p-tree">File Structure</label> &middot; <span class="tabref">Path Index</span></td></tr><tr><td>Platform shells</td><td>macOS AppKit, Windows Win32/WinUI, Linux GTK</td><td><label class="tl" for="r-p-plat">Platforms &amp; Tests</label> &middot; <span class="tabref">Platform Shells</span></td></tr><tr><td>PR template</td><td>No <code>.github/pull_request_template.md</code></td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; <span class="tabref">Missing Artifacts</span></td></tr><tr><td>Priority order</td><td>Security &rarr; boundaries &rarr; performance &rarr; features</td><td><label class="tl" for="r-p-arch">Architecture</label> &middot; <span class="tabref">Principles</span></td></tr><tr><td>Process model</td><td>Six process kinds with named owning teams</td><td><label class="tl" for="r-p-arch">Architecture</label> &middot; <span class="tabref">Process Model</span></td></tr><tr><td><code>render</code> crate</td><td>wgpu rendering and compositor, GPU process</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>Resolver</td><td>Version <code>3</code>, matching edition 2024</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Workspace Manifest</span></td></tr><tr><td>Review fan-out</td><td>1, 2 or 10 teams depending on the path touched</td><td><label class="tl" for="r-p-matrix">Team Matrix</label> &middot; <span class="tabref">Review Fan-out</span></td></tr><tr><td><code>rust-toolchain.toml</code></td><td>Absent. CI tracks a floating <code>stable</code></td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Code Standards</span></td></tr><tr><td><code>rust-version</code></td><td><code>1.85</code> &mdash; a floor, not a pin</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Workspace Manifest</span></td></tr><tr><td><code>RUSTFLAGS</code></td><td><code>-D warnings</code>, set in the CI workflow env only</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">CI Pipeline</span></td></tr><tr><td><code>rustfmt.toml</code></td><td>Four settings, three of them non-default</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Format &amp; Lints</span></td></tr><tr><td>Scrum of Scrums</td><td><code>@byui-cse/byui-browser-scrum-of-scrums</code>, owns every path</td><td><label class="tl" for="r-p-matrix">Team Matrix</label> &middot; <span class="tabref">Team &rarr; Crate &rarr; Path</span></td></tr><tr><td><code>security</code> crate</td><td>Sandboxing, site isolation, CSP, permissions</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>Sprint cadence</td><td>Not defined anywhere</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Governance</span></td></tr><tr><td><code>storage</code> crate</td><td>IndexedDB, localStorage, Cache API</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td><code>style_document</code></td><td><code>(dom, stylesheets) -&gt; ComputedStyles</code></td><td><label class="tl" for="r-p-arch">Architecture</label> &middot; <span class="tabref">Contracts</span></td></tr><tr><td>Team charters</td><td>Nine, as written for week 1</td><td><label class="tl" for="r-p-teams">Teams</label> &middot; <span class="tabref">Charters</span></td></tr><tr><td><code>tests/</code></td><td>Holds a README; not a workspace member</td><td><label class="tl" for="r-p-plat">Platforms &amp; Tests</label> &middot; <span class="tabref">Test Strategy</span></td></tr><tr><td>Trade-off priority</td><td>The ranked four-item list from &sect;7</td><td><label class="tl" for="r-p-arch">Architecture</label> &middot; <span class="tabref">Principles</span></td></tr><tr><td>Trunk-based development</td><td>On <code>main</code>, unenforced by any repository file</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Branch &amp; PR</span></td></tr><tr><td><code>unsafe</code> policy</td><td>Warn at workspace, forbid in 13 crates, 2 reviewers in prose</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; <span class="tabref">Code Standards</span></td></tr><tr><td>Vertical slice</td><td>&sect;8 step 4, unagreed; blocks three teams</td><td><label class="tl" for="r-p-process">Process &amp; Workflow</label> &middot; <span class="tabref">Next Steps</span></td></tr><tr><td><code>webapis</code> crate</td><td>Window, Document, Element, Fetch, timers, events</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; <span class="tabref">Per-Crate</span></td></tr><tr><td>Workspace members</td><td>14 crates; <code>tests/</code> is not among them</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; <span class="tabref">Workspace Manifest</span></td></tr></tbody></table></div>
+</div><div class="tabpanel" id="t-lookup-2">
+<p>The same material grouped by the question that sends you looking for it. Use this when you
+know what you want to know but not what it is called.</p>
+
+<div class="units">
+<div class="card"><h3 class="u g0"><span class="rail">&#9474;</span> &ldquo;What are we supposed to do?&rdquo;</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>A rule and where it is stated</td><td><label class="tl" for="r-p-const">Constraints Defined</label></td></tr><tr><td>Branch names, PR rules, merge gates</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; Branch &amp; PR</td></tr><tr><td>Meeting cadence and approval thresholds</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; Governance</td></tr><tr><td>What a junior should work on</td><td><label class="tl" for="r-p-process">Process &amp; Workflow</label> &middot; Onboarding</td></tr></tbody></table></div></div>
+<div class="card"><h3 class="u g0"><span class="rail">&#9474;</span> &ldquo;Is that actually happening?&rdquo;</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Rule against mechanism, one row each</td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; Gap Table</td></tr><tr><td>Files a repo like this usually has</td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; Missing Artifacts</td></tr><tr><td>What is genuinely finished</td><td><label class="tl" for="r-p-gap">Defined vs Done</label> &middot; What Is Done</td></tr><tr><td>Rules with nothing behind them</td><td><label class="tl" for="r-p-ops">Ops Brief</label> &middot; Enforcement Holes</td></tr></tbody></table></div></div>
+<div class="card"><h3 class="u g0"><span class="rail">&#9474;</span> &ldquo;Who has to review this?&rdquo;</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Team, crates, paths, GitHub handle</td><td><label class="tl" for="r-p-matrix">Team Matrix</label></td></tr><tr><td>How many teams a path pulls in</td><td><label class="tl" for="r-p-matrix">Team Matrix</label> &middot; Review Fan-out</td></tr><tr><td>Which rule covers a given file</td><td><label class="tl" for="r-p-tree">File Structure</label> &middot; Path Index</td></tr></tbody></table></div></div>
+<div class="card"><h3 class="u g0"><span class="rail">&#9474;</span> &ldquo;Where does this code live?&rdquo;</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>The repository tree</td><td><label class="tl" for="r-p-tree">File Structure</label> &middot; Tree</td></tr><tr><td>What depends on what today</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; Wired Today</td></tr><tr><td>What is supposed to depend on what</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; Intended Pipeline</td></tr><tr><td>One crate's scope and planned API</td><td><label class="tl" for="r-p-deps">Crate Dependencies</label> &middot; Per-Crate</td></tr></tbody></table></div></div>
+<div class="card"><h3 class="u g0"><span class="rail">&#9474;</span> &ldquo;What do I run?&rdquo;</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Every make target and what it calls</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; Make Targets</td></tr><tr><td>Formatter and lint settings</td><td><label class="tl" for="r-p-build">Build &amp; Tooling</label> &middot; Format &amp; Lints</td></tr><tr><td>What CI runs, step by step</td><td><label class="tl" for="r-p-const">Constraints Defined</label> &middot; CI Pipeline</td></tr></tbody></table></div></div>
+<div class="card"><h3 class="u g0"><span class="rail">&#9474;</span> &ldquo;What should we fix first?&rdquo;</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Ranked, with priority tags</td><td><label class="tl" for="r-p-ops">Ops Brief</label> &middot; Ranked Gaps</td></tr><tr><td>Documents that disagree with each other</td><td><label class="tl" for="r-p-ops">Ops Brief</label> &middot; Contradictions</td></tr><tr><td>What each team is waiting on</td><td><label class="tl" for="r-p-ops">Ops Brief</label> &middot; Cross-team Blocks</td></tr><tr><td>A one-action-per-line checklist</td><td><label class="tl" for="r-p-ops">Ops Brief</label> &middot; TODO</td></tr></tbody></table></div></div>
+</div>
+</div></section><section class="page g1" id="p-overview"><input class="st" type="radio" name="t-overview" id="r-t-overview-1" checked><input class="st" type="radio" name="t-overview" id="r-t-overview-2"><div class="head"><h1>Project Overview</h1><p class="lede">The README, read in full: what the project is, the toolchain it needs, and the five development rules it states.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-overview-1">Project</label><label class="tab g1" for="r-t-overview-2">Workflow &amp; Status</label></div><div class="tabpanel" id="t-overview-1">
+<p>The README is the entry point for anyone arriving at the repository. It states what the
+project is, how to build it, and five workflow rules.</p>
+
+<div class="units"><div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Identity</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Name</td><td><code>byui-browser</code></td></tr><tr><td>What</td><td>An independent web browser built from scratch in Rust</td></tr><tr><td>Who</td><td>The CSE 199R and CSE 399R classes at BYU-Idaho</td></tr><tr><td>Repository</td><td><code>github.com/byui-cse/byui-browser</code></td></tr><tr><td>License</td><td>MIT</td></tr><tr><td>Version</td><td><code>0.1.0</code>, set once at the workspace level</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Toolchain</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Language</td><td>Rust, stable channel</td></tr><tr><td>Minimum version</td><td><code>1.85</code> &mdash; <code>rust-version</code> in the workspace manifest</td></tr><tr><td>Edition</td><td><code>2024</code></td></tr><tr><td>Resolver</td><td><code>3</code></td></tr><tr><td>Setup command</td><td><code>rustup update stable</code></td></tr></tbody></table></div></div>
+
+</div><div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">Not pinned</span></b>The README asks for stable 1.85+, and CI installs whatever <code>stable</code> currently is. There is no <code>rust-toolchain.toml</code>, so the compiler the project builds against moves on its own. With <code>RUSTFLAGS: -D warnings</code> set in CI, a new Clippy lint in a future stable release breaks <code>main</code> with no code change. See <label class="tl" for="r-p-ops">Ops Brief</label>.</div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Declared status</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>README wording</td><td>&ldquo;Scaffolding only. Crates compile and declare ownership boundaries; engine behavior is intentionally unimplemented so teams can fill in their crates.&rdquo;</td></tr><tr><td>Verified</td><td>Accurate &mdash; 166 lines of Rust across 14 crates, every one a <code>TODO</code></td></tr></tbody></table></div></div>
+</div><div class="tabpanel" id="t-overview-2">
+<p>The README states five development rules. Four of them restate
+<code>docs/TECH_ARCHITECTURE.md</code> &sect;4; the fifth points at the ADR directory.</p>
+
+<div class="tw"><table><thead><tr><th>#</th><th>Rule as written</th><th>Enforced by</th></tr></thead><tbody><tr><td>1</td><td>Trunk-based development on <code>main</code></td><td>Nothing in the repository &mdash; a GitHub branch protection setting, if it exists, is not visible here</td></tr><tr><td>2</td><td>Feature branches: <code>team/short-description</code> (e.g. <code>css/cascade-layers</code>)</td><td>Nothing &mdash; no hook, no CI check on branch names</td></tr><tr><td>3</td><td>Before merge: <code>make lint</code> and <code>make test</code></td><td>CI runs both on every pull request to <code>main</code></td></tr><tr><td>4</td><td>Cross-crate / <code>common</code> changes need review from affected owning teams</td><td><code>.github/CODEOWNERS</code> &mdash; the <code>common</code> rule lists all ten teams</td></tr><tr><td>5</td><td>Record architecture decisions in <code>docs/adr/</code></td><td>Nothing &mdash; and no ADR has been recorded</td></tr></tbody></table></div>
+
+<h2>Build commands as the README gives them</h2>
+
+<div class="code"><span class="lang">bash</span><pre><span class="cm"># build the workspace (debug)</span>
+make build
+
+<span class="cm"># unit tests across the workspace</span>
+make test
+
+<span class="cm"># tests for a single crate</span>
+make test html
+
+<span class="cm"># rustfmt check + clippy (-D warnings)</span>
+make lint
+
+<span class="cm"># release build for macos | linux | windows</span>
+make release linux
+
+<span class="cm"># the binary entry point</span>
+cargo run -p browser</pre></div>
+
+<p>Running the binary today prints a single line to stderr and exits. Full breakdown of every
+target on <label class="tl" for="r-p-build">Build &amp; Tooling</label>.</p>
+</div></section><section class="page g1" id="p-arch"><input class="st" type="radio" name="t-arch" id="r-t-arch-1" checked><input class="st" type="radio" name="t-arch" id="r-t-arch-2"><input class="st" type="radio" name="t-arch" id="r-t-arch-3"><input class="st" type="radio" name="t-arch" id="r-t-arch-4"><input class="st" type="radio" name="t-arch" id="r-t-arch-5"><div class="head"><h1>Architecture</h1><p class="lede">Sections 1 to 3 of the architecture document: principles, the process model, the workspace layout, crate ownership, and the contracts between teams.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-arch-1">Principles</label><label class="tab g1" for="r-t-arch-2">Process Model</label><label class="tab g1" for="r-t-arch-3">Workspace</label><label class="tab g1" for="r-t-arch-4">Ownership</label><label class="tab g1" for="r-t-arch-5">Contracts</label></div><div class="tabpanel" id="t-arch-1">
+<p>Five core principles, stated in &sect;1.1. Each is a design constraint the whole project is
+meant to be judged against.</p>
+
+<div class="tw"><table><thead><tr><th>Principle</th><th>What it commits the project to</th></tr></thead><tbody><tr><td><b>Memory safety first</b></td><td>Prefer safe Rust. <code>unsafe</code> requires justification plus review by at least two experienced engineers</td></tr><tr><td><b>Clear ownership boundaries</b></td><td>Every piece of code has a single owning team</td></tr><tr><td><b>Message-passing over shared mutable state</b></td><td>Especially across process boundaries</td></tr><tr><td><b>Incremental correctness</b></td><td>Correct and slow beats fast and wrong. Performance is optimised after correctness and tests exist</td></tr><tr><td><b>Platform-agnostic core</b></td><td>The engine produces pixels and events. Platform shells stay thin</td></tr></tbody></table></div>
+
+<h2>Trade-off priority order</h2>
+<p>&sect;7 states the order to resolve conflicts in. It is a ranked list, and the ranking is the
+message.</p>
+
+<div class="code"><span class="lang">text</span><pre>1. Security &amp; correctness
+2. Clear team boundaries and maintainability
+3. Performance
+4. Feature completeness</pre></div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">Where the unsafe rule actually lives</span></b>The two-reviewer rule for <code>unsafe</code> is prose in &sect;1.1 with no mechanism. What does exist is stricter: 13 of the 14 crates carry <code>#![forbid(unsafe_code)]</code>, which is a hard compile error, and the workspace sets <code>unsafe_code = &quot;warn&quot;</code>. The exception is <code>crates/browser/src/main.rs</code>. See <label class="tl" for="r-p-gap">Defined vs Done</label>.</div>
+</div><div class="tabpanel" id="t-arch-2">
+<p>&sect;1.2 commits to a multi-process architecture from day one. Six process kinds, each with a
+named owner.</p>
+
+<div class="tw"><table><thead><tr><th>Process</th><th>Responsibility</th><th>Owning team(s)</th></tr></thead><tbody><tr><td>Browser (UI)</td><td>Chrome, tabs, navigation, UX</td><td>Browser UX</td></tr><tr><td>Renderer (per tab)</td><td>HTML/CSS/JS/Layout/Paint for one document</td><td>HTML &middot; CSS &middot; Layout &amp; Rendering &middot; JS Engine &middot; JS APIs</td></tr><tr><td>Network</td><td>All HTTP(S), caching, cookies</td><td>Networking</td></tr><tr><td>GPU / Compositor</td><td>Layer composition, GPU resource management</td><td>Layout &amp; Rendering</td></tr><tr><td>Utility / Storage</td><td>IndexedDB, localStorage, service workers</td><td>Security &amp; Storage</td></tr><tr><td>DevTools</td><td>Inspector, debugger, profiler</td><td>Devtools</td></tr></tbody></table></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> IPC</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Protocol</td><td>Typed and versioned</td></tr><tr><td>Recommended</td><td><code>ipc-channel</code> plus serde, or a custom binary protocol with schema evolution</td></tr><tr><td>Rule</td><td>Cross-process communication uses typed messages only. No shared memory for complex structures initially</td></tr><tr><td>Isolation</td><td>Renderer processes are crash-isolated &mdash; a panic in one tab must not take down the browser</td></tr><tr><td>Where it lives</td><td><code>crates/common/src/ipc.rs</code> &mdash; currently a doc comment and one <code>TODO</code></td></tr></tbody></table></div></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">The single largest open decision</span></b>The IPC message enum and its versioning scheme sit in <code>common</code>, which every crate depends on and which requires review from all ten teams to change. It is unwritten, and the ADR that would settle it is unwritten. Every team's first cross-process work queues behind it.</div>
+</div><div class="tabpanel" id="t-arch-3">
+<p>&sect;1.3 gives the workspace layout. The tree on disk matches it, with one addition: the
+architecture doc does not name <code>Cargo.lock</code>, <code>Makefile</code>,
+<code>rustfmt.toml</code> or <code>.github/</code>, all of which exist.</p>
+
+<div class="tw"><table><thead><tr><th>Crate</th><th>Architecture description</th><th>Cargo description on disk</th></tr></thead><tbody><tr><td><code>common</code></td><td>Shared types, error handling, logging, IPC definitions</td><td>Shared types, errors, logging helpers, and IPC definitions</td></tr><tr><td><code>html</code></td><td>HTML parser + DOM construction</td><td>HTML tokenizer, tree builder, and DOM construction</td></tr><tr><td><code>css</code></td><td>CSS parser, cascade, computed style</td><td>CSS parser, cascade, and computed style</td></tr><tr><td><code>layout</code></td><td>Box tree, layout algorithms</td><td>Box tree construction and layout algorithms</td></tr><tr><td><code>paint</code></td><td>Display list generation</td><td>Display list generation from laid-out content</td></tr><tr><td><code>render</code></td><td>GPU rendering (wgpu), compositor</td><td>GPU rendering (wgpu) and compositor</td></tr><tr><td><code>js</code></td><td>JavaScript engine (parser, bytecode, VM, later JIT)</td><td>JavaScript engine (parser, bytecode, VM; later JIT)</td></tr><tr><td><code>webapis</code></td><td>DOM bindings, Window, Document, Fetch</td><td>DOM bindings and Web API surface for the JS engine</td></tr><tr><td><code>net</code></td><td>Networking stack</td><td>HTTP(S) networking, caching, cookies, and connection pooling</td></tr><tr><td><code>storage</code></td><td>Storage APIs + security policy</td><td>Client-side storage APIs (IndexedDB, localStorage, Cache API)</td></tr><tr><td><code>security</code></td><td>Sandboxing, process isolation helpers, CSP</td><td>Sandboxing, site isolation, CSP, cookies policy, and permissions</td></tr><tr><td><code>chrome</code></td><td>Browser UI (or platform shells)</td><td>Browser UI: tabs, navigation, menus, settings, bookmarks</td></tr><tr><td><code>devtools</code></td><td>DevTools protocol + UI</td><td>DevTools protocol, inspector, debugger, and profiler</td></tr><tr><td><code>browser</code></td><td>Top-level binary that wires everything</td><td>Top-level browser binary that wires processes and crates together</td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">Drift worth a five-minute fix</span></b>&sect;1.3 puts &ldquo;security policy&rdquo; in <code>storage</code> and the Cargo manifest puts &ldquo;cookies policy&rdquo; in <code>security</code>. Both crates belong to the same team, so nothing is blocked, but the two descriptions disagree about which crate holds policy. The <code>net</code> crate's source comment settles it correctly &mdash; &ldquo;Cookie jar / cache policy decisions are owned by Security &amp; Storage&rdquo; &mdash; while its Cargo description still claims cookies.</div>
+
+<p>The full tree, with every documented file linked, is on <label class="tl" for="r-p-tree">File Structure</label>.</p>
+</div><div class="tabpanel" id="t-arch-4">
+<p>&sect;2 assigns every crate to exactly one primary team, with one exception: <code>common</code>
+is jointly maintained under strict change control.</p>
+
+<div class="tw"><table><thead><tr><th>Team</th><th>Primary crates</th><th>Key responsibilities</th></tr></thead><tbody><tr><td><b>HTML Team</b></td><td><code>html</code>, parts of <code>common</code> (DOM nodes)</td><td>HTML tokenizer, tree builder, DOM construction, mutation observers, basic DOM APIs</td></tr><tr><td><b>CSS Engine Team</b></td><td><code>css</code></td><td>CSS parser, stylesheet management, cascade, computed values, style invalidation</td></tr><tr><td><b>Layout &amp; Rendering Team</b></td><td><code>layout</code>, <code>paint</code>, <code>render</code></td><td>Box tree, layout (block/inline/flex/grid), painting, compositor, GPU backend</td></tr><tr><td><b>JavaScript Engine Team</b></td><td><code>js</code></td><td>Parser, AST, bytecode compiler, interpreter/VM, garbage collector, later JIT</td></tr><tr><td><b>JS APIs (Web APIs) Team</b></td><td><code>webapis</code></td><td>Bindings between JS and DOM/platform &mdash; Window, Document, Element, Fetch</td></tr><tr><td><b>Networking Team</b></td><td><code>net</code></td><td>HTTP/1.1 + HTTP/2 + HTTP/3, TLS (rustls), caching, connection pooling, cookies</td></tr><tr><td><b>Security &amp; Storage Team</b></td><td><code>security</code>, <code>storage</code></td><td>Process sandboxing, site isolation, CSP, permissions, IndexedDB, localStorage, Cache API</td></tr><tr><td><b>Browser UX Team</b></td><td><code>chrome</code>, platform shells</td><td>Tabs, address bar, menus, settings, bookmarks, window management, accessibility</td></tr><tr><td><b>Devtools Team</b></td><td><code>devtools</code></td><td>Protocol, inspector frontend, debugger, profiler, network panel, console</td></tr></tbody></table></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> The ownership rule</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Stated</td><td>&ldquo;A team may only merge changes into crates they own without cross-team review.&rdquo;</td></tr><tr><td>Consequence</td><td>&ldquo;Changes that touch another team's crate require explicit approval from that team.&rdquo;</td></tr><tr><td>Mechanism</td><td><code>.github/CODEOWNERS</code> &mdash; 14 rules, mirroring this table</td></tr><tr><td>Gap</td><td>CODEOWNERS requests review; it does not require it. Required-reviewer enforcement is a GitHub branch protection setting, which is not a repository file</td></tr></tbody></table></div></div>
+
+<p>The handle-level mapping is on <label class="tl" for="r-p-matrix">Team Matrix</label>.</p>
+</div><div class="tabpanel" id="t-arch-5">
+<p>&sect;3 defines the seams between teams. These are the interfaces that have to be agreed
+before any two teams can integrate, and none of them is wired yet.</p>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Shared types &mdash; the <code>common</code> crate</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>What lives here</td><td><code>NodeId</code>, <code>Style</code>, <code>LayoutBox</code>, <code>DisplayList</code>, IPC messages, error types</td></tr><tr><td>Change control</td><td>Review from <b>all</b> affected teams plus at least one experienced engineer</td></tr><tr><td>Style rule</td><td>Prefer newtype wrappers and strong typing over raw integers or strings</td></tr><tr><td>On disk</td><td>Four modules &mdash; <code>dom</code>, <code>error</code>, <code>ids</code>, <code>ipc</code> &mdash; each a doc comment and a <code>TODO</code></td></tr></tbody></table></div></div>
+
+<h2>Interfaces between teams</h2>
+
+<div class="tw"><table><thead><tr><th>Seam</th><th>Interface as stated in &sect;3.2</th><th>Wired</th></tr></thead><tbody><tr><td>HTML &rarr; CSS</td><td><code>css::style_document(dom: &amp;Dom, stylesheets: &amp;[Stylesheet]) -&gt; ComputedStyles</code></td><td><span class="pill no">no</span></td></tr><tr><td>CSS &rarr; Layout</td><td><code>layout::layout_tree(styled_dom: &amp;StyledDom, viewport: Size) -&gt; LayoutTree</code></td><td><span class="pill no">no</span></td></tr><tr><td>Layout &rarr; Paint</td><td>Layout produces a display list or layer tree. Layout never talks directly to the GPU</td><td><span class="pill no">no</span></td></tr><tr><td>Paint &rarr; Render</td><td>Paint/Render turns the display list into GPU commands or a framebuffer</td><td><span class="pill no">no</span></td></tr><tr><td>JS &harr; Web APIs &harr; DOM</td><td>JS Engine owns the VM and values; Web APIs owns the bindings; DOM mutations go through a controlled mutation interface</td><td><span class="pill no">no</span></td></tr><tr><td>Networking &rarr; everyone</td><td><code>fetch(request) -&gt; Response</code>. Renderer processes never open raw sockets</td><td><span class="pill no">no</span></td></tr><tr><td>Security boundaries</td><td>Renderer processes are heavily sandboxed. Any new capability must be reviewed by Security &amp; Storage</td><td><span class="pill no">no</span></td></tr></tbody></table></div>
+
+<h2>Communication mechanisms</h2>
+
+<div class="tw"><table><thead><tr><th>Scope</th><th>Mechanism</th></tr></thead><tbody><tr><td>In-process, same renderer</td><td>Direct function calls plus shared ownership via <code>Arc</code> or arenas where appropriate</td></tr><tr><td>Cross-process</td><td>Typed IPC messages only. No shared memory for complex structures initially</td></tr><tr><td>Events and invalidation</td><td>Explicit invalidation messages (style dirty, layout dirty) rather than observers that can create cycles</td></tr></tbody></table></div>
+
+<p>The dependency edges that would carry these interfaces are on
+<label class="tl" for="r-p-deps">Crate Dependencies</label>.</p>
+</div></section><section class="page g1" id="p-process"><input class="st" type="radio" name="t-process" id="r-t-process-1" checked><input class="st" type="radio" name="t-process" id="r-t-process-2"><input class="st" type="radio" name="t-process" id="r-t-process-3"><input class="st" type="radio" name="t-process" id="r-t-process-4"><input class="st" type="radio" name="t-process" id="r-t-process-5"><div class="head"><h1>Process &amp; Workflow</h1><p class="lede">Sections 4 to 8 of the architecture document: branching, merge gates, coordination cadence, testing strategy, onboarding, evolution rules and the immediate next steps.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-process-1">Branching &amp; PRs</label><label class="tab g1" for="r-t-process-2">Cadence</label><label class="tab g1" for="r-t-process-3">Testing</label><label class="tab g1" for="r-t-process-4">Onboarding</label><label class="tab g1" for="r-t-process-5">Next Steps</label></div><div class="tabpanel" id="t-process-1">
+<p>&sect;4.1 and &sect;4.2 define how work gets from a branch onto <code>main</code>. Five branching
+rules and five merge gates.</p>
+
+<div class="units"><div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Branching</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Model</td><td>Trunk-based development on <code>main</code></td></tr><tr><td>Branch name</td><td><code>team/short-description</code> &mdash; the worked example is <code>css/cascade-layers</code></td></tr><tr><td>PR size</td><td>Small, focused pull requests preferred</td></tr><tr><td>Cross-team PRs</td><td>Must have reviewers from every owning team whose code is touched</td></tr><tr><td>Critical paths</td><td>Experienced engineers act as code owners for parser, layout core, JS VM, IPC, and security</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Required checks before merge</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Formatting and lints</td><td><code>cargo fmt</code> plus <code>cargo clippy -- -D warnings</code></td></tr><tr><td>Unit tests</td><td>For the changed crate</td></tr><tr><td>Integration tests</td><td>That exercise the new path, when applicable</td></tr><tr><td>Conformance</td><td>For parser, style, layout or JS changes: relevant web-platform-tests or internal conformance tests</td></tr><tr><td>Miri</td><td>For any new <code>unsafe</code> or complex ownership</td></tr></tbody></table></div></div>
+
+</div><div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">Two of the five gates have a runner. Three do not</span></b>CI runs formatting, lints and <code>cargo test --workspace</code>. There is no Miri job, no conformance harness, and <code>tests/</code> is not a workspace member &mdash; so <code>cargo test --workspace</code> cannot reach an integration test even once one is written. Full accounting on <label class="tl" for="r-p-gap">Defined vs Done</label>.</div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Not defined anywhere</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Commit message format</td><td>No convention stated, no template, no commitlint, no hook</td></tr><tr><td>Pull request description format</td><td>No <code>.github/pull_request_template.md</code></td></tr><tr><td>Merge strategy</td><td>Squash, merge commit or rebase is not stated</td></tr><tr><td>Definition of Done</td><td>Not stated</td></tr></tbody></table></div></div>
+</div><div class="tabpanel" id="t-process-2">
+<p>&sect;4.3 defines three coordination channels; &sect;4.4 defines the five-step path for a breaking
+change.</p>
+
+<div class="tw"><table><thead><tr><th>Channel</th><th>Frequency</th><th>Who</th><th>Output</th></tr></thead><tbody><tr><td><b>Architecture Sync</b></td><td>Weekly, 30&ndash;45 min</td><td>Representatives from all teams</td><td>Decisions recorded as ADRs in <code>/docs/adr/</code></td></tr><tr><td><b>Cross-team demo</b></td><td>Bi-weekly</td><td>All teams</td><td>Progress on integration points</td></tr><tr><td><b>Async written proposals</b></td><td>As needed</td><td>Anyone</td><td>GitHub Discussions or in-repo RFCs, preferred for significant interface changes</td></tr></tbody></table></div>
+
+<h2>Handling breaking changes</h2>
+
+<div class="code"><span class="lang">text</span><pre>1. Propose the change in an RFC or Discussion
+2. Get buy-in from affected teams
+3. Land the new API alongside the old one (if possible)
+4. Migrate call sites
+5. Remove the old API in a follow-up PR</pre></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">Scrum artefacts are absent</span></b>The GitHub organisation has a <code>@byui-cse/byui-browser-scrum-of-scrums</code> team, which is the default owner of every path in the repository. No document defines a scrum-of-scrums meeting, a sprint length, a backlog location, a story workflow, or a Definition of Done. The coordination cadence that is written down is the architecture sync and the demo, and neither is a scrum ceremony.</div>
+
+<h2>Evolution of the architecture document</h2>
+<p>&sect;7 makes the architecture document itself a controlled artefact.</p>
+
+<div class="tw"><table><thead><tr><th>Step</th><th>Requirement</th></tr></thead><tbody><tr><td>1</td><td>A short written proposal</td></tr><tr><td>2</td><td>Discussion in the weekly Architecture Sync</td></tr><tr><td>3</td><td>Approval from at least 3 experienced engineers from different teams</td></tr><tr><td>4</td><td>Update to <code>docs/TECH_ARCHITECTURE.md</code> plus a corresponding ADR</td></tr></tbody></table></div>
+</div><div class="tabpanel" id="t-process-3">
+<p>&sect;5 defines six levels of testing with a named owner for each. The <code>tests/</code>
+README refines the top three.</p>
+
+<div class="tw"><table><thead><tr><th>Level</th><th>Owner</th><th>Tools / approach</th><th>Exists</th></tr></thead><tbody><tr><td>Unit tests</td><td>Each team</td><td><code>cargo test</code> inside the crate</td><td><span class="pill act">runner only</span></td></tr><tr><td>Integration tests</td><td>Cross-team</td><td><code>tests/</code>, full pipeline &mdash; HTML to pixels, or JS execution</td><td><span class="pill no">no</span></td></tr><tr><td>Conformance</td><td>Relevant teams</td><td>Subset of WPT, test262 (JS), CSS test suite</td><td><span class="pill no">no</span></td></tr><tr><td>Fuzzing</td><td>HTML, CSS, JS, Net, Security</td><td><code>cargo-fuzz</code> on parsers and deserialisers</td><td><span class="pill no">no</span></td></tr><tr><td>Performance</td><td>Layout &amp; Rendering + JS</td><td>Criterion benchmarks, real-page traces</td><td><span class="pill no">no</span></td></tr><tr><td>Security</td><td>Security &amp; Storage</td><td>Sandbox escape tests, process isolation tests</td><td><span class="pill no">no</span></td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">The integration directory is not in the build</span></b><code>tests/</code> holds a README and nothing else, and the workspace <code>members</code> list in <code>Cargo.toml</code> does not include it. Adding an integration crate under <code>tests/</code> will not be compiled or run by <code>make test</code> until the workspace manifest lists it. This is a one-line fix and it blocks a stated merge gate.</div>
+
+<p>Crash isolation is stated as a property of the process model rather than a test level:
+&ldquo;a panic in one tab must not take down the browser.&rdquo; No test asserts it.</p>
+
+<p>The <code>tests/</code> README adds that unit tests stay inside each crate, and that new
+integration crates or test binaries are added &ldquo;as vertical slices land.&rdquo; Detail on
+<label class="tl" for="r-p-plat">Platforms &amp; Tests</label>.</p>
+</div><div class="tabpanel" id="t-process-4">
+<p>&sect;6 is the only section written specifically for the 27 junior engineers. It is five rules,
+and it is the part of the architecture document most likely to be read by the most people.</p>
+
+<div class="tw"><table><thead><tr><th>Rule</th><th>As written</th></tr></thead><tbody><tr><td><b>Mentorship</b></td><td>Every junior is paired with an experienced mentor on their team for the first 3 months</td></tr><tr><td><b>Task shape</b></td><td>Start with well-scoped tasks that have clear interfaces &mdash; a specific CSS property, a DOM method, a network cache rule</td></tr><tr><td><b>Early contributions</b></td><td>Prefer adding tests and documentation over large refactors early on</td></tr><tr><td><b><code>unsafe</code></b></td><td>Off-limits for juniors without explicit mentor approval</td></tr><tr><td><b>Trust the compiler</b></td><td>Use the type system aggressively &mdash; if the compiler is happy and the tests pass, the change is usually safe to land</td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">The onboarding path has no document</span></b>&sect;6 describes what a junior should work on. Nothing describes how they start: no <code>CONTRIBUTING.md</code>, no first-issue label, no environment setup beyond <code>rustup update stable</code>, and no pull request template to show them what a good description looks like. With 27 juniors, the missing <code>CONTRIBUTING.md</code> is the highest-volume gap in the repository.</div>
+
+<p>The closing line of the architecture document states the reasoning behind the whole
+structure:</p>
+
+<div class="code"><span class="lang">text</span><pre>This architecture prioritizes long-term velocity and safety over short-term
+feature speed. With 27 junior engineers, clear boundaries and strong type
+contracts are the highest-leverage investment we can make.</pre></div>
+</div><div class="tabpanel" id="t-process-5">
+<p>&sect;8 lists five immediate next steps. Two are done, one is partly done, two are not started.</p>
+
+<div class="tw"><table><thead><tr><th>#</th><th>Step as written</th><th>State</th></tr></thead><tbody><tr><td>1</td><td>Create the Cargo workspace and empty crates with ownership comments</td><td><span class="pill ok">done</span> &mdash; 14 crates, every one carrying an <b>Owning team</b> doc comment</td></tr><tr><td>2</td><td>Define the core shared types in <code>common</code> &mdash; <code>NodeId</code>, basic DOM skeleton, IPC message enum</td><td><span class="pill no">not started</span> &mdash; four module files, four <code>TODO</code>s, no types</td></tr><tr><td>3</td><td>Stand up a minimal multi-process skeleton &mdash; Browser process plus one Renderer that loads a static HTML string and paints a solid colour</td><td><span class="pill no">not started</span> &mdash; <code>main</code> prints one line to stderr</td></tr><tr><td>4</td><td>Agree on the first vertical slice: parse simple HTML &rarr; apply basic CSS &rarr; layout a block &rarr; paint to a window</td><td><span class="pill no">not started</span> &mdash; no ADR, no issue, no branch visible</td></tr><tr><td>5</td><td>Write the first set of ADRs for process model, IPC format, and DOM representation</td><td><span class="pill no">not started</span> &mdash; <code>docs/adr/</code> holds the template and its README only</td></tr></tbody></table></div>
+
+<div class="code"><span class="lang">rust</span><pre><span class="cm">// crates/browser/src/main.rs</span>
+<span class="k">fn</span> <span class="fn">main</span>() {
+    <span class="cm">// TODO(browser): Wire up multi-process startup and the first vertical slice.</span>
+    <span class="mac">eprintln!</span>(<span class="s">"byui-browser: scaffolding only &mdash; engine not implemented yet"</span>);
+}</pre></div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">Steps 2, 4 and 5 are one dependency chain</span></b>Step 5 &mdash; the ADRs &mdash; settles the process model, the IPC format and the DOM representation. Step 2 writes those decisions into <code>common</code>. Step 4 needs both before the first slice can be built, and step 3 needs the IPC format. Nothing else can be sequenced around this chain, which is why it leads the ranked list on <label class="tl" for="r-p-ops">Ops Brief</label>.</div>
+</div></section><section class="page g1" id="p-teams"><input class="st" type="radio" name="t-teams" id="r-t-teams-1" checked><input class="st" type="radio" name="t-teams" id="r-t-teams-2"><div class="head"><h1>Teams</h1><p class="lede">Nine team charters as written for week 1, plus where each team sits relative to the others in the page-load pipeline.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-teams-1">Charters</label><label class="tab g1" for="r-t-teams-2">Pipeline Position</label></div><div class="tabpanel" id="t-teams-1">
+<p>Nine teams, each with a charter in <code>docs/TEAMS.md</code>. The charters are written for
+students in week 1 and describe scope in plain terms; the architecture document gives the same
+teams their crate boundaries.</p>
+
+<div class="units"><div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 1. The HTML Team</h3><p>Builds the HTML parser that turns raw markup into the DOM tree, handling malformed and real-world HTML the way browsers actually have to. Owns the DOM API surface that CSS, JS and Layout query and manipulate.</p></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 2. The CSS Engine Team</h3><p>Builds the CSS parser and the cascade, specificity and inheritance resolution that turns stylesheets plus the DOM into a computed style for every element &mdash; the CSSOM. This team determines what the styles are, not where things end up on screen.</p></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 3. The Layout &amp; Rendering Team</h3><p>Takes the DOM and computed styles and builds the layout tree, computing box model, positioning and text flow for every element. Then paints and composites the final pixels, including handling reflows when the page changes.</p></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 4. The JavaScript Engine Team</h3><p>Builds the core JS interpreter and engine: parsing, an execution model, and the runtime that executes scripts against the page. The lowest-level piece the JS APIs and Devtools teams build on top of.</p></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 5. The JS APIs (Web APIs) Team</h3><p>Implements the browser-provided APIs scripts call &mdash; DOM manipulation methods, fetch, timers, events. Connects the JS Engine to the DOM, Networking and Storage.</p></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 6. The Networking Team</h3><p>Handles fetching resources over HTTP(S): requests, responses, redirects, caching and connection management for pages, scripts, stylesheets and other assets. Feeds parsed responses into the HTML, CSS and JS pipelines.</p></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 7. The Security &amp; Storage Team</h3><p>Implements same-origin policy, cookies and client-side storage such as localStorage and IndexedDB, plus permissions handling such as camera or geolocation. Responsible for making sure pages cannot do things they should not do to each other or to the user.</p></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 8. The Browser UX Team</h3><p>Builds the browser chrome: address bar, tabs, navigation controls, bookmarks, settings. Wires that UI to Networking, HTML, CSS and Layout to actually load and display pages.</p></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> 9. The Devtools Team</h3><p>Builds the developer-facing inspection tools: DOM and style inspector, console, network panel, JS debugging. Depends on hooks from nearly every other team, so this group needs close coordination across the whole project.</p></div>
+</div></div><div class="tabpanel" id="t-teams-2">
+<p>Where each team sits relative to the others, read off the interfaces in architecture
+&sect;3.2. Ordered by position in the page-load pipeline rather than alphabetically, because the
+ordering is the message.</p>
+
+<div class="tw"><table><thead><tr><th>Position</th><th>Team</th><th>Receives from</th><th>Hands to</th></tr></thead><tbody><tr><td>1</td><td>Networking</td><td>Browser UX (navigation)</td><td>HTML, CSS, JS &mdash; parsed responses</td></tr><tr><td>2</td><td>HTML</td><td>Networking</td><td>CSS, Layout, Web APIs &mdash; the DOM tree</td></tr><tr><td>3</td><td>CSS Engine</td><td>HTML &mdash; the DOM</td><td>Layout &mdash; computed styles</td></tr><tr><td>4</td><td>Layout &amp; Rendering</td><td>CSS &mdash; the styled DOM</td><td>the screen &mdash; display list, then pixels</td></tr><tr><td>&mdash;</td><td>JavaScript Engine</td><td>Web APIs &mdash; script source</td><td>Web APIs &mdash; values and calls</td></tr><tr><td>&mdash;</td><td>JS APIs</td><td>JS Engine, HTML, Networking, Storage</td><td>JS Engine &mdash; bindings</td></tr><tr><td>&mdash;</td><td>Security &amp; Storage</td><td>Networking, Web APIs</td><td>Networking &mdash; cookie jar and cache policy</td></tr><tr><td>&mdash;</td><td>Browser UX</td><td>Layout &amp; Rendering &mdash; pixels</td><td>Networking &mdash; navigation requests</td></tr><tr><td>&mdash;</td><td>Devtools</td><td>hooks from every team</td><td>the developer</td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">Devtools has nine upstream dependencies and no downstream consumer</span></b>The Devtools charter says it &ldquo;depends on hooks from nearly every other team.&rdquo; That makes it the team most exposed to every other team's interface churn and the one least able to start before the others have something to hook into. Worth an explicit sequencing decision rather than leaving it to emerge.</div>
+
+<p>The team-to-crate-to-GitHub-handle mapping is on <label class="tl" for="r-p-matrix">Team Matrix</label>.</p>
+</div></section><section class="page g1" id="p-adr"><input class="st" type="radio" name="t-adr" id="r-t-adr-1" checked><input class="st" type="radio" name="t-adr" id="r-t-adr-2"><input class="st" type="radio" name="t-adr" id="r-t-adr-3"><div class="head"><h1>ADRs</h1><p class="lede">The Architecture Decision Record process, the template every ADR copies, and the three ADRs the architecture document names but nobody has written.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-adr-1">Process</label><label class="tab g1" for="r-t-adr-2">Template</label><label class="tab g1" for="r-t-adr-3">Backlog</label></div><div class="tabpanel" id="t-adr-1">
+<p><code>docs/adr/README.md</code> defines a four-step process and a naming convention. The
+process is cross-referenced from architecture &sect;4.3 and &sect;7.</p>
+
+<div class="tw"><table><thead><tr><th>Step</th><th>Requirement</th></tr></thead><tbody><tr><td>1</td><td>Propose the change &mdash; Discussion, RFC, or draft ADR</td></tr><tr><td>2</td><td>Discuss in the Weekly Architecture Sync</td></tr><tr><td>3</td><td>Get approval from at least 3 experienced engineers from different teams</td></tr><tr><td>4</td><td>Land the ADR and update <code>docs/TECH_ARCHITECTURE.md</code> when needed</td></tr></tbody></table></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Naming</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Pattern</td><td><code>NNNN-short-title.md</code> &mdash; zero-padded number, kebab-case title</td></tr><tr><td>Example given</td><td><code>0001-process-model.md</code></td></tr><tr><td>Template</td><td><code>0000-template.md</code>, copied when starting a new ADR</td></tr><tr><td>Directory owner</td><td>All ten teams &mdash; <code>/docs/adr/</code> is one of four paths in CODEOWNERS with full fan-out</td></tr></tbody></table></div></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">Zero ADRs exist</span></b><code>docs/adr/</code> contains its README and the template. No numbered ADR has been written. Architecture &sect;7 requires an ADR for every change to the architecture document, and &sect;8 names three as immediate next steps &mdash; so the process is defined, referenced from three places, and has never been exercised.</div>
+</div><div class="tabpanel" id="t-adr-2">
+<p><code>docs/adr/0000-template.md</code>, reproduced in full. Four sections plus a header
+block.</p>
+
+<div class="code"><span class="lang">markdown</span><pre><span class="h"># ADR NNNN: Title</span>
+
+- <span class="k">**Status**</span>: Proposed | Accepted | Superseded | Rejected
+- <span class="k">**Date**</span>: YYYY-MM-DD
+- <span class="k">**Deciders**</span>: (teams / experienced engineers)
+
+<span class="h">## Context</span>
+
+What problem are we solving? What constraints matter?
+
+<span class="h">## Decision</span>
+
+What did we decide?
+
+<span class="h">## Consequences</span>
+
+What becomes easier or harder? Follow-up work?
+
+<span class="h">## Alternatives considered</span>
+
+What else was discussed, and why was it not chosen?</pre></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> What the template does not capture</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Supersedes / superseded by</td><td>The Status field offers &ldquo;Superseded&rdquo; but there is no field naming which ADR supersedes which</td></tr><tr><td>Affected crates</td><td>Not captured, though the ownership model turns on it</td></tr><tr><td>Review record</td><td>The 3-approver rule has no field to record the three approvers, only a free-text <b>Deciders</b> line</td></tr></tbody></table></div></div>
+</div><div class="tabpanel" id="t-adr-3">
+<p>The ADR README names three first ADRs, taken from architecture &sect;8. None is written.
+Ordered by what unblocks the most other work.</p>
+
+<div class="tw"><table><thead><tr><th>#</th><th>ADR</th><th>What it settles</th><th>Blocks</th></tr></thead><tbody><tr><td>1</td><td><b>Process model</b></td><td>How many processes, what runs in each, how they start and die</td><td>Everything in <code>crates/browser</code>; the &sect;8 step-3 skeleton</td></tr><tr><td>2</td><td><b>IPC format</b></td><td><code>ipc-channel</code> plus serde, or a custom binary protocol with schema evolution</td><td><code>common/src/ipc.rs</code>; every cross-process seam</td></tr><tr><td>3</td><td><b>DOM representation</b></td><td>Arena allocation, <code>NodeId</code> shape, mutation interface</td><td><code>common/src/dom.rs</code> and <code>common/src/ids.rs</code>; HTML, CSS, Layout and Web APIs all at once</td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">A fourth ADR is implied but not listed</span></b>Architecture &sect;3.2 states the four pipeline interfaces as concrete function signatures &mdash; <code>style_document</code>, <code>layout_tree</code> and two described in prose. Those signatures are architecture decisions living in a document that &sect;7 says may only change through an ADR, yet no ADR records them. Either they become ADR 0004, or &sect;3.2 is understood as non-binding.</div>
+
+<p>The document-level constraint list is on <label class="tl" for="r-p-const">Constraints Defined</label>.</p>
+</div></section><section class="page g1" id="p-plat"><input class="st" type="radio" name="t-plat" id="r-t-plat-1" checked><input class="st" type="radio" name="t-plat" id="r-t-plat-2"><div class="head"><h1>Platforms &amp; Tests</h1><p class="lede">The native shell plan and the integration test plan. Two short READMEs describing directories that are, today, empty.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-plat-1">Platform Shells</label><label class="tab g1" for="r-t-plat-2">Test Strategy</label></div><div class="tabpanel" id="t-plat-1">
+<p><code>platforms/README.md</code> defines the shell layer in three sentences and a table. All
+three directories exist and all three are empty but for a <code>.gitkeep</code>.</p>
+
+<div class="tw"><table><thead><tr><th>Directory</th><th>Platform</th><th>Owning team</th><th>Contents</th></tr></thead><tbody><tr><td><code>platforms/macos/</code></td><td>AppKit</td><td>Browser UX</td><td><code>.gitkeep</code></td></tr><tr><td><code>platforms/windows/</code></td><td>Win32 / WinUI</td><td>Browser UX</td><td><code>.gitkeep</code></td></tr><tr><td><code>platforms/linux/</code></td><td>GTK</td><td>Browser UX</td><td><code>.gitkeep</code></td></tr></tbody></table></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> The rule</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Stated</td><td>&ldquo;Thin native shells that host the browser UI. The engine produces pixels and events; shells stay small.&rdquo;</td></tr><tr><td>Instruction</td><td>&ldquo;Create a shell subdirectory when starting platform work. Do not put engine logic here.&rdquo;</td></tr><tr><td>Backing principle</td><td>Architecture &sect;1.1 &mdash; platform-agnostic core</td></tr><tr><td>CODEOWNERS</td><td><code>/platforms/</code> &rarr; Browser UX plus scrum-of-scrums</td></tr><tr><td>Enforcement</td><td>None &mdash; nothing checks that a shell stays thin, and the directories are not Cargo members</td></tr></tbody></table></div></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">CI never compiles two of the three targets</span></b><code>make release</code> supports <code>aarch64-apple-darwin</code>, <code>x86_64-unknown-linux-gnu</code> and <code>x86_64-pc-windows-msvc</code>. The CI workflow runs on <code>ubuntu-latest</code> only, with no matrix. macOS and Windows shells will be written against a toolchain no automated job ever exercises, and the first person to notice will be whoever runs <code>make release macos</code> by hand.</div>
+</div><div class="tabpanel" id="t-plat-2">
+<p><code>tests/README.md</code> refines architecture &sect;5 for the integration layer. Four kinds
+of test are planned; the directory holds the README alone.</p>
+
+<div class="tw"><table><thead><tr><th>Kind</th><th>Purpose</th><th>Owner per &sect;5</th></tr></thead><tbody><tr><td>Pipeline tests</td><td>HTML &rarr; CSS &rarr; layout &rarr; paint, or JS execution paths</td><td>Cross-team</td></tr><tr><td>WPT subset</td><td>Web Platform Tests the project chooses to track</td><td>Relevant teams</td></tr><tr><td>test262 subset</td><td>JavaScript conformance</td><td>JS Engine</td></tr><tr><td>CSS test suite</td><td>Style and layout conformance</td><td>CSS Engine, Layout &amp; Rendering</td></tr></tbody></table></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Placement rules</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Integration and conformance</td><td><code>tests/</code>, per architecture &sect;5</td></tr><tr><td>Unit tests</td><td>Inside each crate &mdash; <code>cargo test -p &lt;crate&gt;</code></td></tr><tr><td>Growth</td><td>&ldquo;Add new integration crates or test binaries under this directory as vertical slices land.&rdquo;</td></tr></tbody></table></div></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">The directory is outside the workspace</span></b><code>Cargo.toml</code> lists 14 members, all under <code>crates/</code>. <code>tests/</code> is not among them, so an integration crate added there is invisible to <code>cargo build --workspace</code> and <code>cargo test --workspace</code> &mdash; which is exactly what <code>make test</code> runs. Whoever lands the first vertical slice has to add the member line at the same time, or the tests silently never run.</div>
+
+<div class="code"><span class="lang">toml</span><pre><span class="cm"># Cargo.toml &mdash; the members list as it stands</span>
+[<span class="ty">workspace</span>]
+<span class="k">resolver</span> = <span class="s">"3"</span>
+<span class="k">members</span> = [
+    <span class="s">"crates/common"</span>,
+    <span class="cm">... eleven more crates ...</span>
+    <span class="s">"crates/browser"</span>,
+<span class="cm">    no entry for tests/</span>
+]</pre></div>
+</div></section><section class="page g1" id="p-build"><input class="st" type="radio" name="t-build" id="r-t-build-1" checked><input class="st" type="radio" name="t-build" id="r-t-build-2"><input class="st" type="radio" name="t-build" id="r-t-build-3"><input class="st" type="radio" name="t-build" id="r-t-build-4"><div class="head"><h1>Build &amp; Tooling</h1><p class="lede">Every command, manifest field, formatter setting, lint and ignored path &mdash; the files that decide what actually builds and what actually fails.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-build-1">Make Targets</label><label class="tab g1" for="r-t-build-2">Workspace Manifest</label><label class="tab g1" for="r-t-build-3">Format &amp; Lints</label><label class="tab g1" for="r-t-build-4">Ignored Paths</label></div><div class="tabpanel" id="t-build-1">
+<p>The <code>Makefile</code> is the single entry point for building, testing and linting, and it
+is what CI calls. Four targets; two take a secondary goal.</p>
+
+<div class="tw"><table><thead><tr><th>Target</th><th>Argument</th><th>Runs</th><th>In CI</th></tr></thead><tbody><tr><td><code>make build</code></td><td>&mdash;</td><td><code>cargo build --workspace</code></td><td><span class="pill none">no</span></td></tr><tr><td><code>make test</code></td><td>&mdash;</td><td><code>cargo test --workspace</code></td><td><span class="pill ok">yes</span></td></tr><tr><td><code>make test &lt;crate&gt;</code></td><td>crate name</td><td><code>cargo test -p &lt;crate&gt;</code></td><td><span class="pill none">no</span></td></tr><tr><td><code>make lint</code></td><td>&mdash;</td><td><code>cargo fmt --all -- --check</code> then <code>cargo clippy --workspace --all-targets -- -D warnings</code></td><td><span class="pill ok">yes</span></td></tr><tr><td><code>make release &lt;platform&gt;</code></td><td><code>macos</code> &middot; <code>linux</code> &middot; <code>windows</code></td><td><code>cargo build --release --target &lt;triple&gt; -p browser</code></td><td><span class="pill none">no</span></td></tr></tbody></table></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Release targets</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>macos</code></td><td><code>aarch64-apple-darwin</code></td></tr><tr><td><code>linux</code></td><td><code>x86_64-unknown-linux-gnu</code></td></tr><tr><td><code>windows</code></td><td><code>x86_64-pc-windows-msvc</code></td></tr><tr><td>No argument</td><td><code>$(error Usage: make release &lt;platform&gt; (macos|linux|windows))</code></td></tr><tr><td>Unknown argument</td><td><code>$(error Unknown platform '...'. Expected macos, linux, or windows)</code></td></tr></tbody></table></div></div>
+
+<div class="code"><span class="lang">makefile</span><pre><span class="cm"># the secondary-goal trick that makes `make test html` work</span>
+<span class="k">CMD</span>  := $(<span class="fn">firstword</span> $(<span class="ty">MAKECMDGOALS</span>))
+<span class="k">ARGS</span> := $(<span class="fn">wordlist</span> 2,$(<span class="fn">words</span> $(<span class="ty">MAKECMDGOALS</span>)),$(<span class="ty">MAKECMDGOALS</span>))
+
+<span class="k">ifneq</span> (,$(<span class="fn">filter</span> $(<span class="ty">CMD</span>),test release))
+$(<span class="ty">ARGS</span>):
+	@:
+<span class="k">endif</span></pre></div>
+
+<p>The second goal is turned into a do-nothing target so <code>make</code> does not complain about
+it. Consequence worth knowing: <code>make test nosuchcrate</code> fails inside Cargo, not in the
+Makefile.</p>
+</div><div class="tabpanel" id="t-build-2">
+<p>The workspace root manifest carries every shared setting. No crate sets its own version,
+edition, licence or Rust version &mdash; all inherit.</p>
+
+<div class="units"><div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Workspace package</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>version</code></td><td><code>0.1.0</code></td></tr><tr><td><code>edition</code></td><td><code>2024</code></td></tr><tr><td><code>license</code></td><td><code>MIT</code></td></tr><tr><td><code>repository</code></td><td><code>https://github.com/byui-cse/byui-browser</code></td></tr><tr><td><code>rust-version</code></td><td><code>1.85</code></td></tr><tr><td><code>resolver</code></td><td><code>3</code></td></tr><tr><td><code>default-members</code></td><td><code>[&quot;crates/browser&quot;]</code></td></tr></tbody></table></div></div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">What default-members does here</span></b>A bare <code>cargo build</code> or <code>cargo run</code> targets <code>crates/browser</code> only. Because <code>browser</code> depends on all thirteen other crates, that still compiles the whole workspace &mdash; so the setting changes which binary runs, not how much is built. It also means any public API change in any crate forces a <code>browser</code> rebuild.</div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Workspace dependencies</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Declared</td><td>All 13 library crates, each as <code>{ path = &quot;crates/&lt;name&gt;&quot; }</code></td></tr><tr><td>External crates</td><td>None. <code>Cargo.lock</code> holds 14 packages and every one is local</td></tr><tr><td>Consumed by</td><td>Each crate writes <code>common = { workspace = true }</code> rather than repeating the path</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g1"><span class="rail">&#9474;</span> Workspace lints</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Declared</td><td><code>[workspace.lints.rust]</code> &mdash; <code>unsafe_code = &quot;warn&quot;</code></td></tr><tr><td>Opted in by</td><td>Every crate, via <code>[lints] workspace = true</code></td></tr><tr><td>Stricter in practice</td><td>13 of 14 crates also carry <code>#![forbid(unsafe_code)]</code>, which is a hard error</td></tr><tr><td>The exception</td><td><code>crates/browser/src/main.rs</code> has no <code>forbid</code> attribute</td></tr></tbody></table></div></div>
+</div></div><div class="tabpanel" id="t-build-3">
+<p>Formatting is machine-enforced through <code>rustfmt.toml</code> and <code>make lint</code>.
+Four settings, all non-default except the edition.</p>
+
+<div class="code"><span class="lang">toml</span><pre><span class="k">edition</span> = <span class="s">"2024"</span>
+<span class="k">max_width</span> = <span class="n">100</span>
+<span class="k">use_field_init_shorthand</span> = <span class="n">true</span>
+<span class="k">use_try_shorthand</span> = <span class="n">true</span></pre></div>
+
+<div class="tw"><table><thead><tr><th>Setting</th><th>Effect</th><th>Enforced by</th></tr></thead><tbody><tr><td><code>edition = &quot;2024&quot;</code></td><td>rustfmt parses 2024-edition syntax</td><td><code>cargo fmt --all -- --check</code></td></tr><tr><td><code>max_width = 100</code></td><td>Hard wrap at 100 columns</td><td><code>cargo fmt --all -- --check</code></td></tr><tr><td><code>use_field_init_shorthand</code></td><td><code>Foo { x }</code> rather than <code>Foo { x: x }</code></td><td><code>cargo fmt --all -- --check</code></td></tr><tr><td><code>use_try_shorthand</code></td><td><code>?</code> rather than <code>try!</code></td><td><code>cargo fmt --all -- --check</code></td></tr></tbody></table></div>
+
+<h2>Lints</h2>
+
+<div class="tw"><table><thead><tr><th>Lint source</th><th>Level</th><th>Where set</th><th>Fails build</th><th>Reach</th></tr></thead><tbody><tr><td><code>unsafe_code</code></td><td>warn</td><td><code>[workspace.lints.rust]</code></td><td><span class="pill act">CI only</span></td><td><code>RUSTFLAGS</code> promotes it to an error in CI; a local build only warns</td></tr><tr><td><code>unsafe_code</code></td><td>forbid</td><td><code>#![forbid(unsafe_code)]</code> in 13 crates</td><td><span class="pill ok">always</span></td><td>A hard compile error everywhere, in 13 of the 14 crates</td></tr><tr><td>Clippy, all lints</td><td>deny</td><td><code>make lint</code> &mdash; <code>-D warnings</code></td><td><span class="pill ok">always</span></td><td>Whenever <code>make lint</code> runs, locally or in CI</td></tr><tr><td>rustc warnings</td><td>deny</td><td><code>RUSTFLAGS</code> in the CI workflow env</td><td><span class="pill act">CI only</span></td><td>Set in the workflow env, not in a committed Cargo config</td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">The local and CI gates differ</span></b><code>RUSTFLAGS: -D warnings</code> is set in the workflow environment, not in <code>.cargo/config.toml</code>. A local <code>make build</code> therefore warns where CI fails. Moving that flag into a committed Cargo config would make the two match, at the cost of noisier local builds.</div>
+</div><div class="tabpanel" id="t-build-4">
+<p>The <code>.gitignore</code> is worth reading as a statement of intent: three of its five
+sections cover tooling the project does not yet have.</p>
+
+<div class="tw"><table><thead><tr><th>Section</th><th>Patterns</th><th>Tooling</th><th>What exists</th></tr></thead><tbody><tr><td>Rust / Cargo</td><td><code>/target/</code>, <code>**/*.rs.bk</code></td><td><span class="pill ok">present</span></td><td>Cargo itself</td></tr><tr><td>IDE / editor</td><td><code>.idea/</code>, <code>.vscode/</code>, <code>*.swp</code>, <code>*.swo</code>, <code>*~</code></td><td><span class="pill none">n/a</span></td><td>Developer-local; nothing for the project to own</td></tr><tr><td>OS</td><td><code>.DS_Store</code>, <code>Thumbs.db</code></td><td><span class="pill none">n/a</span></td><td>Developer-local; nothing for the project to own</td></tr><tr><td>Coverage / profiling</td><td><code>*.profraw</code>, <code>*.profdata</code>, <code>/coverage/</code>, <code>lcov.info</code></td><td><span class="pill no">absent</span></td><td>No coverage tooling, no job, no threshold</td></tr><tr><td>Fuzzing artifacts</td><td><code>fuzz/artifacts/</code>, <code>fuzz/corpus/</code></td><td><span class="pill no">absent</span></td><td>No <code>fuzz/</code> directory and no cargo-fuzz config</td></tr></tbody></table></div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">An ignore file is not a plan</span></b>Coverage and fuzzing both appear in <code>.gitignore</code> and fuzzing appears in architecture &sect;5 with five named owner teams. Neither has a directory, a config, a CI job or an owner on a ticket. The ignore patterns are the only trace either one exists in the project's intentions.</div>
+
+<p>Notably absent: <code>Cargo.lock</code> is <b>not</b> ignored, so it is committed &mdash;
+correct for a workspace with a binary. CI does not pass <code>--locked</code>, so a dependency
+resolution change can happen in CI without failing. That matters little at zero external
+dependencies and matters a great deal the week the first one lands.</p>
+</div></section><section class="page g2" id="p-tree"><input class="st" type="radio" name="t-tree" id="r-t-tree-1" checked><input class="st" type="radio" name="t-tree" id="r-t-tree-2"><div class="head"><h1>File Structure</h1><p class="lede">The repository tree with every documented file linked to its page, and an alphabetical path index showing who owns each one.</p></div><div class="tabs" role="tablist"><label class="tab g2" for="r-t-tree-1">Tree</label><label class="tab g2" for="r-t-tree-2">Path Index</label></div><div class="tabpanel" id="t-tree-1">
+<p>Underlined names open that file's page. Everything not underlined has no page &mdash; it is
+either a stub source file or a file whose whole content is stated on the line beside it.</p>
+
+<div class="code tree"><span class="lang">text</span><pre>byui-browser/
+&#9500;&#9472;&#9472; <label class="tl" for="r-p-build">Cargo.toml</label>         workspace root &middot; 14 members &middot; resolver 3
+&#9500;&#9472;&#9472; Cargo.lock         14 packages &middot; zero external dependencies
+&#9500;&#9472;&#9472; <label class="tl" for="r-p-build">Makefile</label>           build &middot; test &middot; lint &middot; release
+&#9500;&#9472;&#9472; <label class="tl" for="r-p-build">rustfmt.toml</label>       edition 2024 &middot; max_width 100
+&#9500;&#9472;&#9472; <label class="tl" for="r-p-build">.gitignore</label>         target &middot; IDE &middot; coverage &middot; fuzz artifacts
+&#9500;&#9472;&#9472; LICENSE            MIT
+&#9500;&#9472;&#9472; <label class="tl" for="r-p-overview">README.md</label>          project entry point
+&#9500;&#9472;&#9472; .github/
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-matrix">CODEOWNERS</label>     14 rules &middot; 10 GitHub teams
+&#9474;   &#9492;&#9472;&#9472; workflows/
+&#9474;       &#9492;&#9472;&#9472; <label class="tl" for="r-p-const">ci.yml</label>     lint + test &middot; ubuntu-latest only
+&#9500;&#9472;&#9472; crates/
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">common/</label>       shared types &middot; joint ownership &middot; 4 empty modules
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">html/</label>         HTML Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">css/</label>          CSS Engine Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">layout/</label>       Layout &amp; Rendering Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">paint/</label>        Layout &amp; Rendering Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">render/</label>       Layout &amp; Rendering Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">js/</label>           JavaScript Engine Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">webapis/</label>      JS APIs (Web APIs) Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">net/</label>          Networking Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">storage/</label>      Security &amp; Storage Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">security/</label>     Security &amp; Storage Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">chrome/</label>       Browser UX Team
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-deps">devtools/</label>     Devtools Team
+&#9474;   &#9492;&#9472;&#9472; <label class="tl" for="r-p-deps">browser/</label>      binary &middot; depends on all 13 &middot; no forbid(unsafe_code)
+&#9500;&#9472;&#9472; platforms/
+&#9474;   &#9500;&#9472;&#9472; <label class="tl" for="r-p-plat">README.md</label>      thin native shells &middot; Browser UX
+&#9474;   &#9500;&#9472;&#9472; macos/         .gitkeep only
+&#9474;   &#9500;&#9472;&#9472; windows/       .gitkeep only
+&#9474;   &#9492;&#9472;&#9472; linux/         .gitkeep only
+&#9500;&#9472;&#9472; tests/
+&#9474;   &#9492;&#9472;&#9472; <label class="tl" for="r-p-plat">README.md</label>      integration plan &middot; not a workspace member
+&#9492;&#9472;&#9472; docs/
+    &#9500;&#9472;&#9472; <label class="tl" for="r-p-arch">TECH_ARCHITECTURE.md</label>   &sect;1&ndash;3 here &middot; &sect;4&ndash;8 on <label class="tl" for="r-p-process">Process</label>
+    &#9500;&#9472;&#9472; <label class="tl" for="r-p-teams">TEAMS.md</label>               nine team charters
+    &#9492;&#9472;&#9472; adr/
+        &#9500;&#9472;&#9472; <label class="tl" for="r-p-adr">README.md</label>           the ADR process
+        &#9492;&#9472;&#9472; <label class="tl" for="r-p-adr">0000-template.md</label>    the template &middot; zero ADRs written</pre></div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">What the tree does not show</span></b>The 18 Rust source files under <code>crates/*/src/</code> are omitted. All 18 together are 166 lines: a doc comment naming the owning team, a <code>#![forbid(unsafe_code)]</code> attribute, and one <code>TODO</code>. Listing them would add 18 lines carrying one fact between them.</div>
+</div><div class="tabpanel" id="t-tree-2">
+<p>Every path in the repository, ordered alphabetically, with what reads it and who owns it.
+Ownership is read off <code>.github/CODEOWNERS</code>; <b>default</b> means no specific rule
+matches and the path falls to the <code>*</code> rule.</p>
+
+<div class="tw"><table class="pathidx"><thead><tr><th>Path</th><th>Kind</th><th>CODEOWNERS rule</th><th>Owning team beyond Scrum of Scrums</th><th>Fan-out</th></tr></thead><tbody><tr><td><code>.github/CODEOWNERS</code></td><td>config</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>.github/workflows/ci.yml</code></td><td>config</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>.gitignore</code></td><td>config</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>Cargo.lock</code></td><td>generated</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>Cargo.toml</code></td><td>manifest</td><td><code>/Cargo.toml</code></td><td>All nine teams + Scrum of Scrums</td><td><span class="pill no">10 teams</span></td></tr><tr><td><code>LICENSE</code></td><td>legal</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>Makefile</code></td><td>build</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>README.md</code></td><td>doc</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>crates/browser/</code></td><td>crate</td><td><code>/crates/browser/</code></td><td>Browser UX</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/chrome/</code></td><td>crate</td><td><code>/crates/chrome/</code></td><td>Browser UX</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/common/</code></td><td>crate</td><td><code>/crates/common/</code></td><td>All nine teams + Scrum of Scrums</td><td><span class="pill no">10 teams</span></td></tr><tr><td><code>crates/css/</code></td><td>crate</td><td><code>/crates/css/</code></td><td>CSS Engine</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/devtools/</code></td><td>crate</td><td><code>/crates/devtools/</code></td><td>Devtools</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/html/</code></td><td>crate</td><td><code>/crates/html/</code></td><td>HTML</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/js/</code></td><td>crate</td><td><code>/crates/js/</code></td><td>JavaScript Engine</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/layout/</code></td><td>crate</td><td><code>/crates/layout/</code></td><td>Layout &amp; Rendering</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/net/</code></td><td>crate</td><td><code>/crates/net/</code></td><td>Networking</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/paint/</code></td><td>crate</td><td><code>/crates/paint/</code></td><td>Layout &amp; Rendering</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/render/</code></td><td>crate</td><td><code>/crates/render/</code></td><td>Layout &amp; Rendering</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/security/</code></td><td>crate</td><td><code>/crates/security/</code></td><td>Security &amp; Storage</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/storage/</code></td><td>crate</td><td><code>/crates/storage/</code></td><td>Security &amp; Storage</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>crates/webapis/</code></td><td>crate</td><td><code>/crates/webapis/</code></td><td>JS APIs</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>docs/TEAMS.md</code></td><td>doc</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>docs/TECH_ARCHITECTURE.md</code></td><td>doc</td><td><code>/docs/TECH_ARCHITECTURE.md</code></td><td>All nine teams + Scrum of Scrums</td><td><span class="pill no">10 teams</span></td></tr><tr><td><code>docs/adr/</code></td><td>doc</td><td><code>/docs/adr/</code></td><td>All nine teams + Scrum of Scrums</td><td><span class="pill no">10 teams</span></td></tr><tr><td><code>platforms/</code></td><td>shells</td><td><code>/platforms/</code></td><td>Browser UX</td><td><span class="pill ok">2 teams</span></td></tr><tr><td><code>rustfmt.toml</code></td><td>config</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr><tr><td><code>tests/</code></td><td>tests</td><td><code>*</code></td><td>Scrum of Scrums</td><td><span class="pill act">1 team</span></td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">The enforcement layer has the narrowest ownership</span></b><code>ci.yml</code>, the <code>Makefile</code>, <code>rustfmt.toml</code>, <code>.gitignore</code> and <code>tests/</code> all fall to the default rule. Those five files are what actually enforce every other constraint in the repository, and changing any of them requires review from one team. That is defensible if it is deliberate. It is worth making deliberate.</div>
+</div></section><section class="page g2" id="p-deps"><input class="st" type="radio" name="t-deps" id="r-t-deps-1" checked><input class="st" type="radio" name="t-deps" id="r-t-deps-2"><input class="st" type="radio" name="t-deps" id="r-t-deps-3"><div class="head"><h1>Crate Dependencies</h1><p class="lede">What the fourteen Cargo manifests actually wire together, set against the pipeline the architecture document describes.</p></div><div class="tabs" role="tablist"><label class="tab g2" for="r-t-deps-1">Wired Today</label><label class="tab g2" for="r-t-deps-2">Intended Pipeline</label><label class="tab g2" for="r-t-deps-3">Per-Crate</label></div><div class="tabpanel" id="t-deps-1">
+<p>Read from the 14 <code>Cargo.toml</code> files and confirmed against <code>Cargo.lock</code>.
+The whole graph is two edge kinds.</p>
+
+<div class="code"><span class="lang">text</span><pre>browser  &rarr;  all 13 library crates
+
+html  css  layout  paint  render  js  webapis
+net   storage  security  chrome  devtools      &rarr;  common
+
+common  &rarr;  nothing
+
+No crate depends on any crate other than common.</pre></div>
+
+<div class="tw"><table><thead><tr><th>Crate</th><th>Depends on</th><th>Depended on by</th><th>External deps</th></tr></thead><tbody><tr><td><code>common</code></td><td>&mdash;</td><td>all 13 others</td><td>0</td></tr><tr><td><code>html</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>css</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>layout</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>paint</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>render</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>js</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>webapis</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>net</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>storage</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>security</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>chrome</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>devtools</code></td><td><code>common</code></td><td><code>browser</code></td><td>0</td></tr><tr><td><code>browser</code></td><td>all 13</td><td>&mdash;</td><td>0</td></tr></tbody></table></div>
+
+<p>What <code>common</code> actually contains:</p>
+
+<div class="code"><span class="lang">text</span><pre>common/src/
+&#9500;&#9472;&#9472; lib.rs    four `pub mod` lines and a forbid attribute
+&#9500;&#9472;&#9472; dom.rs    TODO(common): Define the DOM skeleton and related shared types.
+&#9500;&#9472;&#9472; error.rs  TODO(common): Define workspace-wide error types.
+&#9500;&#9472;&#9472; ids.rs    TODO(common): Define NodeId and other cross-crate identifiers.
+&#9492;&#9472;&#9472; ipc.rs    TODO(common): Define the IPC message enum and versioning scheme.</pre></div>
+</div><div class="tabpanel" id="t-deps-2">
+<p>The pipeline architecture &sect;3.2 describes. None of these edges exists in any
+<code>Cargo.toml</code>, so every row below is a decision still to be made about how the two
+crates will actually reach each other &mdash; direct dependency, shared type in
+<code>common</code>, or IPC message.</p>
+
+<div class="tw"><table><thead><tr><th>From</th><th>To</th><th>Interface stated in &sect;3.2</th><th>Edge exists</th></tr></thead><tbody><tr><td><code>net</code></td><td><code>html</code> &middot; <code>css</code> &middot; <code>js</code></td><td><code>fetch(request) -&gt; Response</code>, parsed responses fed into the pipelines</td><td><span class="pill no">no</span></td></tr><tr><td><code>html</code></td><td><code>css</code></td><td><code>css::style_document(dom, stylesheets) -&gt; ComputedStyles</code></td><td><span class="pill no">no</span></td></tr><tr><td><code>css</code></td><td><code>layout</code></td><td><code>layout::layout_tree(styled_dom, viewport) -&gt; LayoutTree</code></td><td><span class="pill no">no</span></td></tr><tr><td><code>layout</code></td><td><code>paint</code></td><td>Display list or layer tree</td><td><span class="pill no">no</span></td></tr><tr><td><code>paint</code></td><td><code>render</code></td><td>GPU commands or a framebuffer</td><td><span class="pill no">no</span></td></tr><tr><td><code>js</code></td><td><code>webapis</code></td><td>VM and values on one side, bindings on the other</td><td><span class="pill no">no</span></td></tr><tr><td><code>webapis</code></td><td><code>html</code> &middot; <code>css</code> &middot; <code>layout</code></td><td>Safe, minimal APIs; all DOM mutation through a controlled interface</td><td><span class="pill no">no</span></td></tr><tr><td><code>security</code></td><td><code>net</code></td><td>Cookie jar and cache policy decisions</td><td><span class="pill no">no</span></td></tr><tr><td><code>storage</code></td><td><code>webapis</code></td><td>IndexedDB, localStorage, Cache API surfaces</td><td><span class="pill no">no</span></td></tr><tr><td><code>devtools</code></td><td>every crate</td><td>Hooks from nearly every other team</td><td><span class="pill no">no</span></td></tr><tr><td><code>chrome</code></td><td><code>net</code> &middot; <code>html</code> &middot; <code>css</code> &middot; <code>layout</code></td><td>UI wired to the engine to load and display pages</td><td><span class="pill no">no</span></td></tr></tbody></table></div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">The two diagrams are the same decision seen twice</span></b>Today's graph is a star: everything touches <code>common</code> and nothing else. The intended graph is a pipeline. Which of the eleven rows above becomes a Cargo dependency and which becomes a type in <code>common</code> or an IPC message <i>is</i> the process-model and IPC-format ADR &mdash; it is not a separate decision that can be made later. See <label class="tl" for="r-p-adr">ADRs</label>.</div>
+</div><div class="tabpanel" id="t-deps-3">
+<p>Ordered by position in the intended pipeline. Each entry gives what the crate's own source
+comment claims, which is more specific than the Cargo description in several cases.</p>
+
+<div class="units"><div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>common</code> &mdash; all teams</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Source comment</td><td>&ldquo;Jointly maintained by all teams. Changes to public types require review from every affected team plus at least one experienced engineer.&rdquo;</td></tr><tr><td>Modules</td><td><code>dom</code> &middot; <code>error</code> &middot; <code>ids</code> &middot; <code>ipc</code></td></tr><tr><td>DOM lead</td><td>&ldquo;HTML team leads DOM representation; other teams consume these types.&rdquo;</td></tr><tr><td>ID rule</td><td>&ldquo;Prefer newtype wrappers over raw integers/strings.&rdquo;</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>net</code> &mdash; Networking</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Scope</td><td>HTTP/1.1, HTTP/2, HTTP/3, TLS, caching, cookies</td></tr><tr><td>Planned API</td><td><code>fetch(request) -&gt; Response</code></td></tr><tr><td>Hard rule</td><td>&ldquo;Renderer processes never open raw sockets; all network goes through the Network process.&rdquo;</td></tr><tr><td>Cookie ownership</td><td>&ldquo;Cookie jar / cache policy decisions are owned by Security &amp; Storage.&rdquo;</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>html</code> &mdash; HTML Team</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Scope</td><td>Tokenizer, tree builder, DOM construction, mutation observers, basic DOM APIs</td></tr><tr><td>Planned interface</td><td>Produces an arena-allocated DOM tree</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>css</code> &mdash; CSS Engine</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Scope</td><td>Parser, stylesheet management, cascade, computed values, invalidation</td></tr><tr><td>Planned interface</td><td><code>style_document(dom, stylesheets) -&gt; ComputedStyles</code></td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>layout</code> &middot; <code>paint</code> &middot; <code>render</code> &mdash; Layout &amp; Rendering</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>layout</code></td><td>Box tree, block/inline/flex/grid. <code>layout_tree(styled_dom, viewport) -&gt; LayoutTree</code></td></tr><tr><td><code>paint</code></td><td>Display list generation. Consumed by <code>render</code></td></tr><tr><td><code>render</code></td><td>GPU rendering and compositor, wgpu. Runs in the GPU / Compositor process</td></tr><tr><td>Hard rule</td><td>&ldquo;Layout never talks directly to the GPU.&rdquo;</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>js</code> &middot; <code>webapis</code> &mdash; JS Engine and JS APIs</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>js</code></td><td>Parser, AST, bytecode, VM, GC. &ldquo;Owns the VM and values. DOM bindings live in <code>webapis</code>, not here.&rdquo;</td></tr><tr><td><code>webapis</code></td><td>Window, Document, Element, Fetch, timers, events</td></tr><tr><td>Hard rule</td><td>&ldquo;DOM mutations from JS must go through a controlled mutation interface so style/layout invalidation stays correct.&rdquo;</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>security</code> &middot; <code>storage</code> &mdash; Security &amp; Storage</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>security</code></td><td>Sandboxing, process isolation helpers, CSP, permissions, cookie policy</td></tr><tr><td><code>storage</code></td><td>IndexedDB, localStorage, Cache API. Runs in the Utility / Storage process</td></tr><tr><td>Hard rule</td><td>&ldquo;Any new capability (file access, device APIs) must be reviewed by this team.&rdquo;</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>chrome</code> &middot; <code>browser</code> &mdash; Browser UX</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>chrome</code></td><td>Tabs, address bar, menus, settings, bookmarks. Shared UI logic hosted by the platform shells</td></tr><tr><td><code>browser</code></td><td>&ldquo;Primary owners: Browser UX Team (process wiring is cross-team).&rdquo; Composes the crates; owns no engine logic</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g2"><span class="rail">&#9474;</span> <code>devtools</code> &mdash; Devtools</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Scope</td><td>Protocol, inspector, debugger, profiler, network panel, console</td></tr><tr><td>Process</td><td>Runs in the DevTools process and coordinates with other teams' hooks</td></tr></tbody></table></div></div>
+</div></div></section><section class="page g3" id="p-const"><input class="st" type="radio" name="t-const" id="r-t-const-1" checked><input class="st" type="radio" name="t-const" id="r-t-const-2"><input class="st" type="radio" name="t-const" id="r-t-const-3"><input class="st" type="radio" name="t-const" id="r-t-const-4"><input class="st" type="radio" name="t-const" id="r-t-const-5"><div class="head"><h1>Constraints Defined</h1><p class="lede">Every organisational rule the repository states, and the exact file and section that states it. What enforces each one is the next page.</p></div><div class="tabs" role="tablist"><label class="tab g3" for="r-t-const-1">CI Pipeline</label><label class="tab g3" for="r-t-const-2">Code Ownership</label><label class="tab g3" for="r-t-const-3">Branch &amp; PR</label><label class="tab g3" for="r-t-const-4">Governance</label><label class="tab g3" for="r-t-const-5">Code Standards</label></div><div class="tabpanel" id="t-const-1">
+<p>One workflow file, one job, five steps. This is the only automation in the repository.</p>
+
+<div class="units"><div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Workflow</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Path</td><td><code>.github/workflows/ci.yml</code></td></tr><tr><td>Name</td><td><code>CI</code></td></tr><tr><td>Triggers</td><td><code>push</code> to <code>main</code> &middot; <code>pull_request</code> targeting <code>main</code></td></tr><tr><td>Jobs</td><td>One &mdash; <code>check</code>, named &ldquo;lint, test&rdquo;</td></tr><tr><td>Runner</td><td><code>ubuntu-latest</code>. No matrix, no macOS, no Windows</td></tr><tr><td>Concurrency group</td><td>Not set &mdash; rapid pushes run duplicate jobs</td></tr><tr><td>Timeout</td><td>Not set &mdash; the GitHub default of 6 hours applies</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Environment</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>CARGO_TERM_COLOR</code></td><td><code>always</code></td></tr><tr><td><code>RUSTFLAGS</code></td><td><code>-D warnings</code> &mdash; applies to every step in the job</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Steps</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>1</td><td><code>actions/checkout@v4</code></td></tr><tr><td>2</td><td><code>dtolnay/rust-toolchain@stable</code> with <code>rustfmt</code> and <code>clippy</code></td></tr><tr><td>3</td><td><code>Swatinem/rust-cache@v2</code></td></tr><tr><td>4</td><td><code>make lint</code> &rarr; <code>cargo fmt --all -- --check</code>, then <code>cargo clippy --workspace --all-targets -- -D warnings</code></td></tr><tr><td>5</td><td><code>make test</code> &rarr; <code>cargo test --workspace</code></td></tr></tbody></table></div></div>
+
+</div><div class="code"><span class="lang">yaml</span><pre><span class="k">env</span>:
+  <span class="k">CARGO_TERM_COLOR</span>: always
+  <span class="k">RUSTFLAGS</span>: <span class="s">-D warnings</span>
+
+<span class="k">jobs</span>:
+  <span class="ty">check</span>:
+    <span class="k">name</span>: lint, test
+    <span class="k">runs-on</span>: ubuntu-latest
+    <span class="k">steps</span>:
+      - <span class="k">uses</span>: actions/checkout@v4
+      - <span class="k">uses</span>: dtolnay/rust-toolchain@stable
+        <span class="k">with</span>:
+          <span class="k">components</span>: rustfmt, clippy
+      - <span class="k">uses</span>: Swatinem/rust-cache@v2
+      - <span class="k">run</span>: make lint
+      - <span class="k">run</span>: make test</pre></div>
+
+<div class="tw"><table><thead><tr><th>Not in the pipeline</th><th>Stated as required in</th><th>Consequence</th></tr></thead><tbody><tr><td>Miri</td><td>Architecture &sect;4.2 &mdash; &ldquo;Miri for any new <code>unsafe</code>&rdquo;</td><td>A stated merge gate no job runs</td></tr><tr><td>Conformance tests (WPT, test262, CSS suite)</td><td>Architecture &sect;4.2 and &sect;5</td><td>A stated merge gate no job runs</td></tr><tr><td>Integration tests</td><td>Architecture &sect;4.2 and &sect;5</td><td><code>tests/</code> is not a workspace member, so <code>cargo test --workspace</code> cannot reach them</td></tr><tr><td>macOS and Windows builds</td><td><code>make release</code> supports both</td><td>Two of three release targets are never compiled</td></tr><tr><td><code>--locked</code></td><td><code>Cargo.lock</code> is committed</td><td>Lockfile drift passes CI silently</td></tr><tr><td>Dependabot or Renovate</td><td>&mdash;</td><td>No supply-chain update path. Zero impact at zero dependencies</td></tr></tbody></table></div>
+</div><div class="tabpanel" id="t-const-2">
+<p>Fourteen rules in <code>.github/CODEOWNERS</code>. GitHub applies last-match-wins, which is why
+<code>@byui-cse/byui-browser-scrum-of-scrums</code> is repeated on every rule rather than relying
+on the default.</p>
+
+<div class="code"><span class="lang">text</span><pre><span class="cm"># Path ownership mirrors docs/TECH_ARCHITECTURE.md.</span>
+<span class="cm">#</span>
+<span class="cm"># @byui-cse/byui-browser-scrum-of-scrums &mdash; admins; can contribute, review any PR,</span>
+<span class="cm"># and own every path (listed on each rule so last-match-wins still includes them).</span></pre></div>
+
+<div class="tw"><table><thead><tr><th>Rule</th><th>Teams on the rule</th><th>Why that count</th></tr></thead><tbody><tr><td><code>*</code></td><td>1</td><td>Default owner for paths without a more specific rule</td></tr><tr><td><code>/crates/common/</code></td><td>10</td><td>&ldquo;Shared types &mdash; jointly maintained; changes need broad review&rdquo;</td></tr><tr><td><code>/crates/html/</code></td><td>2</td><td>HTML Team plus scrum-of-scrums</td></tr><tr><td><code>/crates/css/</code></td><td>2</td><td>CSS Engine Team plus scrum-of-scrums</td></tr><tr><td><code>/crates/layout/</code></td><td>2</td><td>Layout &amp; Rendering plus scrum-of-scrums</td></tr><tr><td><code>/crates/paint/</code></td><td>2</td><td>Layout &amp; Rendering plus scrum-of-scrums</td></tr><tr><td><code>/crates/render/</code></td><td>2</td><td>Layout &amp; Rendering plus scrum-of-scrums</td></tr><tr><td><code>/crates/js/</code></td><td>2</td><td>JavaScript Engine plus scrum-of-scrums</td></tr><tr><td><code>/crates/webapis/</code></td><td>2</td><td>JS APIs plus scrum-of-scrums</td></tr><tr><td><code>/crates/net/</code></td><td>2</td><td>Networking plus scrum-of-scrums</td></tr><tr><td><code>/crates/security/</code></td><td>2</td><td>Security &amp; Storage plus scrum-of-scrums</td></tr><tr><td><code>/crates/storage/</code></td><td>2</td><td>Security &amp; Storage plus scrum-of-scrums</td></tr><tr><td><code>/crates/chrome/</code></td><td>2</td><td>Browser UX plus scrum-of-scrums</td></tr><tr><td><code>/platforms/</code></td><td>2</td><td>Browser UX plus scrum-of-scrums</td></tr><tr><td><code>/crates/devtools/</code></td><td>2</td><td>Devtools plus scrum-of-scrums</td></tr><tr><td><code>/crates/browser/</code></td><td>2</td><td>Browser UX plus scrum-of-scrums</td></tr><tr><td><code>/Cargo.toml</code></td><td>10</td><td>&ldquo;Top-level binary + workspace config &mdash; cross-team review&rdquo;</td></tr><tr><td><code>/docs/TECH_ARCHITECTURE.md</code></td><td>10</td><td>Architecture docs</td></tr><tr><td><code>/docs/adr/</code></td><td>10</td><td>Architecture docs</td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">One comment, two rules, two different fan-outs</span></b>The comment &ldquo;Top-level binary + workspace config &mdash; cross-team review&rdquo; sits above two rules: <code>/crates/browser/</code> with 2 teams and <code>/Cargo.toml</code> with 10. Only the second delivers cross-team review. Architecture &sect;1.3 calls <code>browser</code> the crate that &ldquo;wires everything&rdquo; and its own source comment says &ldquo;process wiring is cross-team&rdquo; &mdash; so either the rule should list all ten teams, or the comment should stop claiming it does.</div>
+
+<p>The nine team handles, plus the scrum-of-scrums handle, are listed on
+<label class="tl" for="r-p-matrix">Team Matrix</label>.</p>
+</div><div class="tabpanel" id="t-const-3">
+<p>Every rule about how a change reaches <code>main</code>, with where it is stated and what
+enforces it.</p>
+
+<div class="tw"><table><thead><tr><th>Constraint</th><th>Stated in</th><th>Gate</th><th>What enforces it</th></tr></thead><tbody><tr><td>Trunk-based development on <code>main</code></td><td>README &middot; &sect;4.1</td><td><span class="pill no">none</span></td><td>Nothing in the repository. A branch protection setting, if any, is not a file</td></tr><tr><td>Branch naming <code>team/short-description</code></td><td>README &middot; &sect;4.1</td><td><span class="pill no">none</span></td><td>No hook, no CI check on branch names</td></tr><tr><td>Small, focused pull requests</td><td>&sect;4.1</td><td><span class="pill no">none</span></td><td>Subjective by design. A PR template is the usual mechanism</td></tr><tr><td>Cross-team PRs need reviewers from every owning team touched</td><td>README &middot; &sect;4.1 &middot; &sect;2</td><td><span class="pill act">partial</span></td><td>CODEOWNERS requests the reviews; branch protection would require them</td></tr><tr><td>Experienced engineers own critical paths</td><td>&sect;4.1</td><td><span class="pill no">none</span></td><td>CODEOWNERS resolves teams, not seniority, and no roster exists</td></tr><tr><td><code>cargo fmt</code> and <code>clippy -D warnings</code></td><td>README &middot; &sect;4.2</td><td><span class="pill ok">enforced</span></td><td>CI, via <code>make lint</code>, on every PR to <code>main</code></td></tr><tr><td>Unit tests for the changed crate</td><td>&sect;4.2</td><td><span class="pill ok">enforced</span></td><td>CI, via <code>make test</code></td></tr><tr><td>Integration tests exercising the new path</td><td>&sect;4.2</td><td><span class="pill no">none</span></td><td>No runner &mdash; <code>tests/</code> is outside the workspace</td></tr><tr><td>Conformance tests for parser, style, layout, JS</td><td>&sect;4.2</td><td><span class="pill no">none</span></td><td>No harness and no vendored suite</td></tr><tr><td>Miri for new <code>unsafe</code> or complex ownership</td><td>&sect;4.2</td><td><span class="pill no">none</span></td><td>No Miri job in the workflow</td></tr><tr><td><code>unsafe</code> needs two experienced reviewers</td><td>&sect;1.1</td><td><span class="pill act">partial</span></td><td><code>forbid(unsafe_code)</code> in 13 of 14 crates makes it a compile error instead</td></tr><tr><td><code>unsafe</code> off-limits to juniors without approval</td><td>&sect;6</td><td><span class="pill act">partial</span></td><td>Same &mdash; the compiler is stricter than the rule, in 13 crates</td></tr></tbody></table></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Stated nowhere</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Commit message format</td><td>No convention, no template, no <code>commitlint</code>, no hook</td></tr><tr><td>Pull request description format</td><td>No <code>.github/pull_request_template.md</code></td></tr><tr><td>Issue templates</td><td>No <code>.github/ISSUE_TEMPLATE/</code></td></tr><tr><td>Merge strategy</td><td>Squash, merge commit or rebase &mdash; unstated</td></tr><tr><td>Required status checks</td><td>A GitHub setting, not a repository file. Not verifiable from the tree</td></tr><tr><td>Definition of Done</td><td>Unstated</td></tr></tbody></table></div></div>
+</div><div class="tabpanel" id="t-const-4">
+<p>Rules about how the project makes decisions, rather than how code lands.</p>
+
+<div class="units"><div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Meeting cadence</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Weekly Architecture Sync</td><td>30&ndash;45 min. Representatives from all teams. Output: ADRs</td></tr><tr><td>Bi-weekly cross-team demo</td><td>Progress on integration points</td></tr><tr><td>Async first</td><td>Written proposals &mdash; GitHub Discussions or in-repo RFCs &mdash; preferred for significant interface changes</td></tr><tr><td>Scrum-of-scrums meeting</td><td><b>not defined</b> &mdash; the GitHub team exists, the ceremony does not</td></tr><tr><td>Sprint length, backlog, story workflow</td><td><b>not defined</b></td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Decision thresholds</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>An ADR</td><td>Approval from at least 3 experienced engineers from different teams</td></tr><tr><td>A change to <code>docs/TECH_ARCHITECTURE.md</code></td><td>Proposal &rarr; Architecture Sync &rarr; 3 approvals from different teams &rarr; file update plus ADR</td></tr><tr><td>A change to a public type in <code>common</code></td><td>Review from all affected teams plus at least one experienced engineer</td></tr><tr><td>A new capability &mdash; file access, device APIs</td><td>Review by Security &amp; Storage</td></tr><tr><td><code>unsafe</code></td><td>Justification plus review by at least two experienced engineers</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Breaking changes &mdash; the five steps</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>1</td><td>Propose the change in an RFC or Discussion</td></tr><tr><td>2</td><td>Get buy-in from affected teams</td></tr><tr><td>3</td><td>Land the new API alongside the old one, if possible</td></tr><tr><td>4</td><td>Migrate call sites</td></tr><tr><td>5</td><td>Remove the old API in a follow-up PR</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Trade-off priority, in order</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>1</td><td>Security and correctness</td></tr><tr><td>2</td><td>Clear team boundaries and maintainability</td></tr><tr><td>3</td><td>Performance</td></tr><tr><td>4</td><td>Feature completeness</td></tr></tbody></table></div></div>
+
+</div><div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">&ldquo;Experienced engineer&rdquo; is load-bearing and undefined</span></b>Four separate thresholds turn on the phrase &mdash; 3 experienced engineers for an ADR, 3 for an architecture change, 1 for a <code>common</code> type, 2 for <code>unsafe</code>. No document lists who they are. The architecture doc says there are 10 across 9 teams. With no roster and no GitHub team for them, every one of those four thresholds is unverifiable at review time.</div>
+</div><div class="tabpanel" id="t-const-5">
+<p>Constraints the compiler and the formatter enforce, independent of anyone's review.</p>
+
+<div class="tw"><table><thead><tr><th>Constraint</th><th>Set in</th><th>Value</th><th>Failure mode</th></tr></thead><tbody><tr><td>Rust edition</td><td><code>[workspace.package]</code></td><td><code>2024</code></td><td>Compile error</td></tr><tr><td>Minimum Rust version</td><td><code>[workspace.package]</code></td><td><code>1.85</code></td><td>Cargo refuses to build</td></tr><tr><td>Dependency resolver</td><td><code>[workspace]</code></td><td><code>3</code></td><td>Cargo warning</td></tr><tr><td>Line width</td><td><code>rustfmt.toml</code></td><td><code>100</code></td><td><code>make lint</code> fails</td></tr><tr><td>Field init shorthand</td><td><code>rustfmt.toml</code></td><td><code>true</code></td><td><code>make lint</code> fails</td></tr><tr><td>Try shorthand</td><td><code>rustfmt.toml</code></td><td><code>true</code></td><td><code>make lint</code> fails</td></tr><tr><td><code>unsafe_code</code></td><td><code>[workspace.lints.rust]</code></td><td><code>warn</code></td><td>Warning locally, error in CI via <code>RUSTFLAGS</code></td></tr><tr><td><code>unsafe_code</code></td><td><code>#![forbid]</code> in 13 crates</td><td>forbid</td><td>Compile error, always</td></tr><tr><td>Clippy</td><td><code>make lint</code></td><td><code>-D warnings</code></td><td><code>make lint</code> fails</td></tr></tbody></table></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> The one crate without forbid</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>File</td><td><code>crates/browser/src/main.rs</code></td></tr><tr><td>Has</td><td>An ownership doc comment and a <code>TODO</code></td></tr><tr><td>Missing</td><td><code>#![forbid(unsafe_code)]</code>, which the other 13 all carry</td></tr><tr><td>Effect locally</td><td><code>unsafe</code> in the binary crate produces a warning, not an error</td></tr><tr><td>Effect in CI</td><td><code>RUSTFLAGS: -D warnings</code> promotes it to an error</td></tr><tr><td>Fix</td><td>One line, and it makes the rule uniform across all 14 crates</td></tr></tbody></table></div></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">No toolchain pin</span></b>There is no <code>rust-toolchain.toml</code>. <code>rust-version = &quot;1.85&quot;</code> is a floor, not a pin, and CI installs whatever <code>stable</code> is on the day. Combined with <code>-D warnings</code> and <code>clippy -D warnings</code>, a new lint in a future stable release turns <code>main</code> red with no code change and no one to attribute it to. A pinned toolchain file makes that a deliberate, dated upgrade instead.</div>
+</div></section><section class="page g3" id="p-gap"><input class="st" type="radio" name="t-gap" id="r-t-gap-1" checked><input class="st" type="radio" name="t-gap" id="r-t-gap-2"><input class="st" type="radio" name="t-gap" id="r-t-gap-3"><div class="head"><h1>Defined vs Done</h1><p class="lede">The same rules, checked against what is actually on disk: which have a mechanism, which are prose, and which artifacts a repository of this shape is missing.</p></div><div class="tabs" role="tablist"><label class="tab g3" for="r-t-gap-1">Gap Table</label><label class="tab g3" for="r-t-gap-2">Missing Artifacts</label><label class="tab g3" for="r-t-gap-3">What Is Done</label></div><div class="tabpanel" id="t-gap-1">
+<p>Every organisational constraint the repository states, against whether anything actually makes
+it happen. Ordered by the document that states it, so a row can be checked against its source.</p>
+
+<div class="tw"><table><thead><tr><th>Constraint</th><th>Stated in</th><th>Verdict</th><th>Mechanism on disk</th></tr></thead><tbody><tr><td>Trunk-based on <code>main</code></td><td>README &middot; &sect;4.1</td><td><span class="pill no">prose only</span></td><td>None</td></tr><tr><td>Branch naming <code>team/short-description</code></td><td>README &middot; &sect;4.1</td><td><span class="pill no">prose only</span></td><td>None</td></tr><tr><td>fmt + clippy before merge</td><td>README &middot; &sect;4.2</td><td><span class="pill ok">enforced</span></td><td><code>make lint</code> in CI</td></tr><tr><td>Unit tests for changed crate</td><td>&sect;4.2</td><td><span class="pill ok">enforced</span></td><td><code>make test</code> in CI</td></tr><tr><td>Integration tests</td><td>&sect;4.2 &middot; &sect;5 &middot; tests README</td><td><span class="pill no">no runner</span></td><td>A README only, and <code>tests/</code> is not a workspace member</td></tr><tr><td>Conformance &mdash; WPT, test262, CSS suite</td><td>&sect;4.2 &middot; &sect;5</td><td><span class="pill no">prose only</span></td><td>None</td></tr><tr><td>Fuzzing on parsers and deserialisers</td><td>&sect;5</td><td><span class="pill no">prose only</span></td><td>Two <code>.gitignore</code> patterns, no <code>fuzz/</code> directory</td></tr><tr><td>Performance benchmarks</td><td>&sect;5</td><td><span class="pill no">prose only</span></td><td>None</td></tr><tr><td>Security &mdash; sandbox escape, isolation tests</td><td>&sect;5</td><td><span class="pill no">prose only</span></td><td>None</td></tr><tr><td>Miri for new <code>unsafe</code></td><td>&sect;4.2</td><td><span class="pill no">prose only</span></td><td>No CI job</td></tr><tr><td>Crash isolation per renderer</td><td>&sect;1.2 &middot; &sect;5</td><td><span class="pill no">prose only</span></td><td>No test asserts it</td></tr><tr><td><code>unsafe</code> needs 2 experienced reviewers</td><td>&sect;1.1</td><td><span class="pill ok">exceeded</span></td><td><code>forbid(unsafe_code)</code> in 13 of 14 crates &mdash; a compile error</td></tr><tr><td>Single owning team per crate</td><td>&sect;2</td><td><span class="pill ok">enforced</span></td><td>14 CODEOWNERS rules, matching &sect;2 exactly</td></tr><tr><td><code>common</code> changes need broad review</td><td>&sect;3.1 &middot; README</td><td><span class="pill ok">enforced</span></td><td>A CODEOWNERS rule listing all ten teams</td></tr><tr><td><code>browser</code> is cross-team</td><td>&sect;1.3 &middot; CODEOWNERS comment &middot; source comment</td><td><span class="pill act">contradicted</span></td><td>The CODEOWNERS rule lists two teams, not ten</td></tr><tr><td>ADRs record architecture decisions</td><td>README &middot; &sect;4.3 &middot; &sect;7 &middot; adr README</td><td><span class="pill act">unexercised</span></td><td>Template and process doc present; zero ADRs written</td></tr><tr><td>Weekly Architecture Sync</td><td>&sect;4.3</td><td><span class="pill no">prose only</span></td><td>Nothing in the repository</td></tr><tr><td>Bi-weekly cross-team demo</td><td>&sect;4.3</td><td><span class="pill no">prose only</span></td><td>Nothing in the repository</td></tr><tr><td>Breaking-change five-step path</td><td>&sect;4.4</td><td><span class="pill no">prose only</span></td><td>Nothing in the repository</td></tr><tr><td>Junior paired with a mentor for 3 months</td><td>&sect;6</td><td><span class="pill no">prose only</span></td><td>Nothing in the repository</td></tr><tr><td>Ownership comment in every crate</td><td>&sect;8 step 1</td><td><span class="pill ok">done</span></td><td>Present in all 14 crates</td></tr><tr><td>Shell directories stay thin</td><td>platforms README</td><td><span class="pill none">moot</span></td><td>Three empty directories; nothing to violate yet</td></tr></tbody></table></div>
+</div><div class="tabpanel" id="t-gap-2">
+<p>Files a repository of this shape normally carries, and whether this one does. Not every
+absence is a defect &mdash; the right column says which matter here.</p>
+
+<div class="tw"><table><thead><tr><th>Artifact</th><th>Conventional path</th><th>State</th><th>Matters here because</th></tr></thead><tbody><tr><td><b>Contributing guide</b></td><td><code>CONTRIBUTING.md</code></td><td><span class="pill no">absent</span></td><td>27 juniors arrive with no written path from clone to first PR</td></tr><tr><td><b>Pull request template</b></td><td><code>.github/pull_request_template.md</code></td><td><span class="pill no">absent</span></td><td>&sect;4.1 requires cross-team reviewers; a template is where that checklist lives</td></tr><tr><td><b>Issue templates</b></td><td><code>.github/ISSUE_TEMPLATE/</code></td><td><span class="pill no">absent</span></td><td>No structured way to file the vertical-slice work from &sect;8</td></tr><tr><td><b>Commit convention</b></td><td>any &mdash; doc, <code>commitlint</code>, hook</td><td><span class="pill no">absent</span></td><td>The only unstated format in an otherwise heavily specified workflow</td></tr><tr><td><b>Agent instructions</b></td><td><code>AGENTS.md</code> or <code>CLAUDE.md</code></td><td><span class="pill no">absent</span></td><td>No guidance on assistant use in a course repo where it is near-certain</td></tr><tr><td><b>Toolchain pin</b></td><td><code>rust-toolchain.toml</code></td><td><span class="pill no">absent</span></td><td><code>-D warnings</code> plus a floating <code>stable</code> breaks <code>main</code> on its own</td></tr><tr><td><b>Dependency updates</b></td><td><code>.github/dependabot.yml</code></td><td><span class="pill no">absent</span></td><td>Zero impact at zero dependencies. High impact the week rustls and wgpu land</td></tr><tr><td><b>Security policy</b></td><td><code>SECURITY.md</code></td><td><span class="pill none">low</span></td><td>Normal to omit in a course repository, even one building a browser</td></tr><tr><td><b>Code of conduct</b></td><td><code>CODE_OF_CONDUCT.md</code></td><td><span class="pill none">low</span></td><td>The institution's own policy likely covers it</td></tr><tr><td><b>Changelog</b></td><td><code>CHANGELOG.md</code></td><td><span class="pill none">low</span></td><td>Nothing has shipped</td></tr><tr><td><b>Licence</b></td><td><code>LICENSE</code></td><td><span class="pill ok">present</span></td><td>MIT, matching the workspace manifest</td></tr><tr><td><b>Codeowners</b></td><td><code>.github/CODEOWNERS</code></td><td><span class="pill ok">present</span></td><td>Complete and consistent with &sect;2</td></tr><tr><td><b>CI</b></td><td><code>.github/workflows/ci.yml</code></td><td><span class="pill ok">present</span></td><td>Lint and test on every PR to <code>main</code></td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">The gaps cluster in one place</span></b>Ownership and architecture are documented to an unusual depth for a project at this stage &mdash; fourteen CODEOWNERS rules and an eight-section architecture document against 166 lines of Rust. The contributor-facing layer is the part that does not exist: no contributing guide, no PR template, no issue template, no commit convention. That is the layer 27 juniors touch first.</div>
+</div><div class="tabpanel" id="t-gap-3">
+<p>What is actually finished, stated plainly. This is a real foundation and the list is longer
+than the project's own README claims.</p>
+
+<div class="units"><div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Workspace</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Crates</td><td>14, all compiling, all with inherited version, edition, licence, repository and rust-version</td></tr><tr><td>Lockfile</td><td>Committed, version 4, 14 packages, zero external dependencies</td></tr><tr><td>Lints</td><td><code>[workspace.lints.rust]</code> declared and opted into by every crate</td></tr><tr><td>Resolver</td><td>Version 3, matching edition 2024</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Ownership</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>CODEOWNERS</td><td>14 rules covering every crate, <code>platforms/</code>, the workspace manifest and both architecture doc paths</td></tr><tr><td>Consistency</td><td>Every rule matches the team table in architecture &sect;2</td></tr><tr><td>Source comments</td><td>All 14 crates carry an <b>Owning team</b> or <b>Primary owners</b> doc comment</td></tr><tr><td>Joint ownership</td><td><code>common</code> is correctly modelled as a 10-team path</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Automation</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>CI</td><td>Runs on push to <code>main</code> and on every pull request targeting it</td></tr><tr><td>Caching</td><td><code>Swatinem/rust-cache@v2</code></td></tr><tr><td>Lint gate</td><td>rustfmt check plus Clippy at <code>-D warnings</code>, workspace-wide, all targets</td></tr><tr><td>Test gate</td><td><code>cargo test --workspace</code></td></tr><tr><td>Local parity</td><td>CI calls the same <code>make</code> targets a developer runs</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Documentation</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Architecture</td><td>Eight sections covering principles, process model, ownership, contracts, workflow, testing, onboarding and evolution</td></tr><tr><td>Interfaces</td><td>Four pipeline seams stated as concrete signatures or contracts</td></tr><tr><td>Team charters</td><td>Nine, written for the audience that will read them first</td></tr><tr><td>ADR process</td><td>Defined, with a template and a naming convention</td></tr><tr><td>Directory READMEs</td><td><code>platforms/</code> and <code>tests/</code> both explain what goes in them and what does not</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Safety</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>forbid(unsafe_code)</code></td><td>13 of 14 crates &mdash; stricter than the architecture document requires</td></tr><tr><td>Planned interfaces</td><td>Recorded in the source comment of the crate that will implement them, not only in the architecture doc</td></tr><tr><td>Hard rules in source</td><td>&ldquo;Layout never talks directly to the GPU&rdquo;, &ldquo;Renderer processes never open raw sockets&rdquo;, &ldquo;DOM bindings live in <code>webapis</code>, not here&rdquo;</td></tr></tbody></table></div></div>
+</div></div></section><section class="page g3" id="p-matrix"><input class="st" type="radio" name="t-matrix" id="r-t-matrix-1" checked><input class="st" type="radio" name="t-matrix" id="r-t-matrix-2"><div class="head"><h1>Team Matrix</h1><p class="lede">Team to crate to path to GitHub handle in one table, plus how many teams a pull request pulls in depending on which path it touches.</p></div><div class="tabs" role="tablist"><label class="tab g3" for="r-t-matrix-1">Team &rarr; Crate &rarr; Path</label><label class="tab g3" for="r-t-matrix-2">Review Fan-out</label></div><div class="tabpanel" id="t-matrix-1">
+<p>One row per team. The GitHub handle is what CODEOWNERS uses and what a reviewer request
+resolves to.</p>
+
+<div class="tw"><table><thead><tr><th>Team</th><th>GitHub handle</th><th>Crates</th><th>Paths owned</th><th>Process</th></tr></thead><tbody><tr><td><b>Scrum of Scrums</b></td><td><code>@byui-cse/byui-browser-scrum-of-scrums</code></td><td>&mdash;</td><td>Every path &mdash; listed on all 14 rules</td><td>Admins; can contribute and review any PR</td></tr><tr><td><b>HTML</b></td><td><code>@byui-cse/byui-browser-html</code></td><td><code>html</code>, DOM parts of <code>common</code></td><td><code>/crates/html/</code></td><td>Renderer</td></tr><tr><td><b>CSS Engine</b></td><td><code>@byui-cse/byui-browser-css</code></td><td><code>css</code></td><td><code>/crates/css/</code></td><td>Renderer</td></tr><tr><td><b>Layout &amp; Rendering</b></td><td><code>@byui-cse/byui-browser-layout-rendering</code></td><td><code>layout</code>, <code>paint</code>, <code>render</code></td><td><code>/crates/layout/</code>, <code>/crates/paint/</code>, <code>/crates/render/</code></td><td>Renderer + GPU / Compositor</td></tr><tr><td><b>JavaScript Engine</b></td><td><code>@byui-cse/byui-browser-js-engine</code></td><td><code>js</code></td><td><code>/crates/js/</code></td><td>Renderer</td></tr><tr><td><b>JS APIs (Web APIs)</b></td><td><code>@byui-cse/byui-browser-webapis</code></td><td><code>webapis</code></td><td><code>/crates/webapis/</code></td><td>Renderer</td></tr><tr><td><b>Networking</b></td><td><code>@byui-cse/byui-browser-networking</code></td><td><code>net</code></td><td><code>/crates/net/</code></td><td>Network</td></tr><tr><td><b>Security &amp; Storage</b></td><td><code>@byui-cse/byui-browser-security-storage</code></td><td><code>security</code>, <code>storage</code></td><td><code>/crates/security/</code>, <code>/crates/storage/</code></td><td>Utility / Storage</td></tr><tr><td><b>Browser UX</b></td><td><code>@byui-cse/byui-browser-browser-ux</code></td><td><code>chrome</code>, <code>browser</code>, platform shells</td><td><code>/crates/chrome/</code>, <code>/crates/browser/</code>, <code>/platforms/</code></td><td>Browser (UI)</td></tr><tr><td><b>Devtools</b></td><td><code>@byui-cse/byui-browser-devtools</code></td><td><code>devtools</code></td><td><code>/crates/devtools/</code></td><td>DevTools</td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">Browser UX owns three paths, one of which is contested</span></b><code>/crates/browser/</code> is assigned to Browser UX, and the crate's own source comment agrees &mdash; &ldquo;Primary owners: Browser UX Team&rdquo; &mdash; while adding &ldquo;process wiring is cross-team.&rdquo; The CODEOWNERS rule does not encode the second half. Whoever lands the multi-process skeleton from &sect;8 step 3 will be editing a cross-team file with a two-team review requirement.</div>
+</div><div class="tabpanel" id="t-matrix-2">
+<p>How many teams a pull request pulls in, by the path it touches. Ordered by fan-out, because
+the ordering is what a scrum of scrums needs from this table.</p>
+
+<div class="tw"><table><thead><tr><th>Path touched</th><th>Fan-out</th><th>Typical change</th></tr></thead><tbody><tr><td><code>/crates/common/</code></td><td><span class="pill no">10 teams</span></td><td>Any shared type, any IPC message, any error variant</td></tr><tr><td><code>/Cargo.toml</code></td><td><span class="pill no">10 teams</span></td><td>Adding a workspace member or a shared dependency</td></tr><tr><td><code>/docs/TECH_ARCHITECTURE.md</code></td><td><span class="pill no">10 teams</span></td><td>Any architecture change, plus a mandatory ADR</td></tr><tr><td><code>/docs/adr/</code></td><td><span class="pill no">10 teams</span></td><td>Writing any ADR</td></tr><tr><td>A single crate directory</td><td><span class="pill ok">2 teams</span></td><td>Ordinary team work</td></tr><tr><td><code>/platforms/</code></td><td><span class="pill ok">2 teams</span></td><td>Native shell work</td></tr><tr><td><code>/crates/browser/</code></td><td><span class="pill ok">2 teams</span></td><td>Process wiring, which three documents call cross-team</td></tr><tr><td><code>ci.yml</code> &middot; <code>Makefile</code> &middot; <code>rustfmt.toml</code> &middot; <code>tests/</code></td><td><span class="pill act">1 team</span></td><td>Changing what enforces every other rule</td></tr></tbody></table></div>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">The fan-out is inverted at both ends</span></b>The four highest-fan-out paths are the four that must be edited first: the ADRs, the architecture doc, the <code>common</code> types and the workspace manifest that would add <code>tests/</code>. The lowest-fan-out paths are the ones that decide whether any rule is actually checked. Early velocity is bounded by the first group; correctness of the process is bounded by the second.</div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> What CODEOWNERS can and cannot do</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Does</td><td>Automatically requests review from the listed teams when a matching path changes</td></tr><tr><td>Does not</td><td>Require that review before merge &mdash; that is a branch protection setting</td></tr><tr><td>Does not</td><td>Distinguish experienced engineers from juniors. Four separate thresholds in the architecture doc turn on that distinction</td></tr><tr><td>Consequence</td><td>If &ldquo;Require review from Code Owners&rdquo; is off in branch protection, every ownership rule in this guide is advisory</td></tr></tbody></table></div></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">One setting to verify</span></b>Nothing in the repository can tell you whether branch protection on <code>main</code> requires code-owner review, requires the CI check to pass, or blocks direct pushes. Those three switches determine whether the fourteen CODEOWNERS rules and the CI job are gates or suggestions. Checking them is the shortest high-value task on this page.</div>
+</div></section><section class="page g3" id="p-ops"><input class="st" type="radio" name="t-ops" id="r-t-ops-1" checked><input class="st" type="radio" name="t-ops" id="r-t-ops-2"><input class="st" type="radio" name="t-ops" id="r-t-ops-3"><input class="st" type="radio" name="t-ops" id="r-t-ops-4"><input class="st" type="radio" name="t-ops" id="r-t-ops-5"><div class="head"><h1>Ops Brief</h1><p class="lede">Ranked gaps, rules with nothing behind them, contradictions between documents, and what each team is waiting on before it can write real code.</p></div><div class="tabs" role="tablist"><label class="tab g3" for="r-t-ops-1">Ranked Gaps</label><label class="tab g3" for="r-t-ops-2">Enforcement Holes</label><label class="tab g3" for="r-t-ops-3">Contradictions</label><label class="tab g3" for="r-t-ops-4">Cross-team Blocks</label><label class="tab g3" for="r-t-ops-5">TODO</label></div><div class="tabpanel" id="t-ops-1">
+<p>Ranked by what unblocks the most people soonest, not by size. Priority tags follow the OMLR
+convention: <b>Blocking</b> means something else cannot proceed until it is done.</p>
+
+<ol class="tagged">
+<li><span class="prio blocking">Blocking</span><span class="num">1.</span><span class="it"><b>Write the three ADRs.</b> Process model, IPC format, DOM representation. Architecture &sect;8 names them; <code>docs/adr/</code> holds a template and nothing else. Every team's first cross-process or cross-crate work queues behind these three decisions, and the ADR path itself needs ten reviewers, so starting late costs twice.</span></li>
+<li><span class="prio blocking">Blocking</span><span class="num">2.</span><span class="it"><b>Fill <code>common</code>.</b> Four empty modules that all thirteen other crates depend on. It cannot be filled before the ADRs land, and nothing else can start before it is filled. This is the critical path, and it runs through the highest-review-cost file in the repository.</span></li>
+<li><span class="prio high">High</span><span class="num">3.</span><span class="it"><b>Add <code>tests/</code> to the workspace members.</b> One line in <code>Cargo.toml</code>. Without it, <code>cargo test --workspace</code> cannot reach an integration test, and &ldquo;integration tests that exercise the new path&rdquo; is a stated merge gate. Cheapest item on this list by a wide margin.</span></li>
+<li><span class="prio high">High</span><span class="num">4.</span><span class="it"><b>Write <code>CONTRIBUTING.md</code> and a PR template.</b> 27 juniors, a branch naming rule, a cross-team review rule and no written path from clone to merged PR. The PR template is where the cross-team reviewer checklist from &sect;4.1 belongs.</span></li>
+<li><span class="prio high">High</span><span class="num">5.</span><span class="it"><b>Define a commit message format.</b> The only part of the workflow with no stated convention, in a repository that specifies branch names, review fan-out, ADR approval counts and line width. Pick one, write it in <code>CONTRIBUTING.md</code>, and stop relitigating it in review.</span></li>
+</ol>
+
+<h2>Next five</h2>
+
+<ol class="tagged" start="6">
+<li><span class="prio medium">Medium</span><span class="num">6.</span><span class="it"><b>Pin the toolchain.</b> Add <code>rust-toolchain.toml</code>. With <code>-D warnings</code> and a floating <code>stable</code>, a new Clippy lint turns <code>main</code> red with no code change and no owner.</span></li>
+<li><span class="prio medium">Medium</span><span class="num">7.</span><span class="it"><b>Add macOS and Windows to the CI matrix.</b> <code>make release</code> supports three targets; CI compiles one. The shells for the other two will be written against a toolchain nothing exercises.</span></li>
+<li><span class="prio medium">Medium</span><span class="num">8.</span><span class="it"><b>Verify branch protection on <code>main</code>.</b> Code-owner review required, CI check required, direct pushes blocked. Nothing in the repository can answer this, and all three determine whether the ownership model is a gate or a suggestion.</span></li>
+<li><span class="prio medium">Medium</span><span class="num">9.</span><span class="it"><b>Decide what &ldquo;experienced engineer&rdquo; means.</b> Four approval thresholds turn on the phrase. No roster exists, so none of the four is checkable at review time. A GitHub team would make all four mechanical.</span></li>
+<li><span class="prio low">Low</span><span class="num">10.</span><span class="it"><b>Add <code>#![forbid(unsafe_code)]</code> to <code>crates/browser/src/main.rs</code>.</b> One line. Makes the rule uniform across all fourteen crates and removes the only place <code>unsafe</code> compiles locally.</span></li>
+</ol>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">Provenance of the tags</span></b>The five priority levels and their colours are the <code>held</code> convention in <code>OMLR_glossary.md</code>. Where the glossary and the HTMLer shell file give different hexes for High, the glossary value is used, on the same reasoning the shell file applies to the accent colour: a <code>held</code> meaning is not restated with a different value.</div>
+</div><div class="tabpanel" id="t-ops-2">
+<p>Rules that are written down, agreed, and have nothing behind them. Grouped by why they fail,
+because the fix differs by group.</p>
+
+<div class="units"><div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Gates with no runner</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Integration tests</td><td><code>tests/</code> is outside the workspace. Fix: one <code>members</code> line</td></tr><tr><td>Conformance &mdash; WPT, test262, CSS suite</td><td>No harness, no vendored suite, no job. Fix: an ADR on which subsets to track, then a job</td></tr><tr><td>Miri</td><td>Stated for any new <code>unsafe</code>. Fix: a job, or accept that <code>forbid</code> makes it moot</td></tr><tr><td>Fuzzing</td><td>Five owner teams named in &sect;5. <code>.gitignore</code> anticipates the artifacts. No <code>fuzz/</code> directory exists</td></tr><tr><td>Performance benchmarks</td><td>Criterion named in &sect;5. No benches, no job</td></tr><tr><td>Crash isolation</td><td>Stated twice. No test asserts it</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Rules with no check</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Branch naming</td><td><code>team/short-description</code>. No hook, no CI check, no branch protection pattern</td></tr><tr><td>Small, focused PRs</td><td>Subjective by design. A PR template is the usual mechanism</td></tr><tr><td>Experienced engineers own critical paths</td><td>CODEOWNERS resolves teams, not seniority. No roster exists</td></tr><tr><td>Two experienced reviewers for <code>unsafe</code></td><td>Same. In practice <code>forbid</code> is stricter, which hides the gap until the first justified <code>unsafe</code></td></tr><tr><td>Weekly sync, bi-weekly demo</td><td>Outside the repository by nature. The ADR count is the only observable proxy, and it is zero</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> Reviews requested but not required</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>What CODEOWNERS does</td><td>Requests review from the matching teams</td></tr><tr><td>What it does not do</td><td>Block the merge</td></tr><tr><td>What would</td><td>Branch protection: &ldquo;Require review from Code Owners&rdquo; plus &ldquo;Require status checks to pass&rdquo;</td></tr><tr><td>Visibility</td><td>Neither setting is a repository file, so this guide cannot report their state</td></tr></tbody></table></div></div>
+
+</div><div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">The cheapest three fixes on this page</span></b>Adding <code>tests/</code> to the workspace members is one line. Adding <code>#![forbid(unsafe_code)]</code> to the browser binary is one line. Checking the three branch protection switches is one page in GitHub settings. Together they close one gate, make one rule uniform, and tell you whether the other fourteen rules are real.</div>
+</div><div class="tabpanel" id="t-ops-3">
+<p>Places where two documents in the repository disagree, or where a document disagrees with the
+configuration meant to implement it. All four are small and all four are cheap to settle.</p>
+
+<div class="units"><div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> 1. <code>browser</code> ownership</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Says cross-team</td><td>Architecture &sect;1.3, the CODEOWNERS section comment, and the crate's own source comment</td></tr><tr><td>Encodes two teams</td><td>The <code>/crates/browser/</code> rule &mdash; Browser UX plus scrum-of-scrums</td></tr><tr><td>Why it matters</td><td>&sect;8 step 3 &mdash; the multi-process skeleton &mdash; lands in exactly this crate</td></tr><tr><td>Fix</td><td>Either list all ten teams on the rule, or drop &ldquo;cross-team review&rdquo; from the comment</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> 2. Where policy lives &mdash; <code>security</code> or <code>storage</code></h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Architecture &sect;1.3</td><td><code>storage</code> is &ldquo;Storage APIs + security policy&rdquo;; <code>security</code> is &ldquo;Sandboxing, process isolation helpers, CSP&rdquo;</td></tr><tr><td>Cargo descriptions</td><td><code>security</code> claims &ldquo;cookies policy&rdquo;; <code>storage</code> claims storage APIs only</td></tr><tr><td>Source comments</td><td><code>net</code> settles it correctly &mdash; &ldquo;Cookie jar / cache policy decisions are owned by Security &amp; Storage&rdquo;</td></tr><tr><td>Impact</td><td>Low &mdash; both crates belong to one team. It costs a reader one lookup, not a blocked PR</td></tr><tr><td>Fix</td><td>Align the two Cargo descriptions with &sect;3.2</td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> 3. <code>net</code>'s own description claims cookies</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Cargo description</td><td>&ldquo;HTTP(S) networking, caching, cookies, and connection pooling&rdquo;</td></tr><tr><td>Architecture &sect;3.2</td><td>&ldquo;Security &amp; Storage team owns cookie jar and cache policy decisions&rdquo;</td></tr><tr><td>Source comment</td><td>Already correct &mdash; it defers cookie jar and cache policy to Security &amp; Storage</td></tr><tr><td>Fix</td><td>Change one word in <code>crates/net/Cargo.toml</code></td></tr></tbody></table></div></div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> 4. &sect;3.2 interfaces are decisions with no ADR</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>What &sect;3.2 states</td><td>Concrete signatures &mdash; <code>style_document</code>, <code>layout_tree</code> &mdash; plus two prose contracts</td></tr><tr><td>What &sect;7 requires</td><td>Architecture changes need a proposal, a sync discussion, three approvals and an ADR</td></tr><tr><td>The gap</td><td>Those signatures entered the document without an ADR, so it is unclear whether changing one needs the &sect;7 process or just a PR</td></tr><tr><td>Fix</td><td>Either record them as ADR 0004, or state in &sect;3.2 that the signatures are illustrative</td></tr></tbody></table></div></div>
+
+</div><div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">None of these is expensive. All four get more expensive later</span></b>Each is a sentence or a line today. Each becomes a disagreement between two teams in review once code exists on both sides of it, and the two ownership items land in exactly the crates the first vertical slice touches.</div>
+</div><div class="tabpanel" id="t-ops-4">
+<p>What each team is waiting on before it can write code that is not a stub. Ordered by how many
+other teams are blocked behind the same thing.</p>
+
+<div class="tw"><table><thead><tr><th>Blocked on</th><th>Teams waiting</th><th>Why</th></tr></thead><tbody><tr><td><b>DOM representation ADR</b> &rarr; <code>common/src/dom.rs</code> and <code>ids.rs</code></td><td>HTML, CSS, Layout &amp; Rendering, JS APIs &mdash; <b>4</b></td><td>Arena shape and <code>NodeId</code> decide the signature of <code>style_document</code>, the box tree input, and every binding</td></tr><tr><td><b>IPC format ADR</b> &rarr; <code>common/src/ipc.rs</code></td><td>Networking, Security &amp; Storage, Browser UX, Devtools &mdash; <b>4</b></td><td>Every cross-process seam is an IPC message. <code>fetch</code>, storage APIs and the DevTools protocol all cross a process boundary</td></tr><tr><td><b>Process model ADR</b></td><td>Browser UX, Layout &amp; Rendering &mdash; <b>2</b></td><td>&sect;8 step 3 &mdash; the Browser plus one Renderer skeleton &mdash; and the GPU / Compositor process split</td></tr><tr><td><b>First vertical slice agreement</b></td><td>HTML, CSS, Layout &amp; Rendering &mdash; <b>3</b></td><td>&sect;8 step 4. Without it, three teams each build to their own idea of the seam</td></tr><tr><td><b>Nothing &mdash; can start now</b></td><td>JavaScript Engine &mdash; <b>1</b></td><td>The VM, parser and bytecode are self-contained. <code>js</code> depends on <code>common</code> only for error types</td></tr></tbody></table></div>
+
+<div class="note n-finding"><b><span class="kind">Finding</span><span class="ctitle">Devtools is last in every ordering</span></b>The Devtools charter says it &ldquo;depends on hooks from nearly every other team.&rdquo; It is blocked on the IPC format like three other teams, and then blocked again on each team actually exposing a hook. Worth deciding explicitly whether Devtools works on the protocol schema in parallel, or is deliberately sequenced late &mdash; either answer is fine, drifting into the second by accident is not.</div>
+
+<div class="card"><h3 class="u g3"><span class="rail">&#9474;</span> The one team that can start today</h3><div class="tw"><table class="kv"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Team</td><td>JavaScript Engine</td></tr><tr><td>Crate</td><td><code>js</code></td></tr><tr><td>Why unblocked</td><td>&ldquo;Owns the VM and values. DOM bindings live in <code>webapis</code>, not here&rdquo; &mdash; the binding seam is the other team's problem</td></tr><tr><td>What it still needs from <code>common</code></td><td>Error types only</td></tr><tr><td>Scheduling consequence</td><td>If the ADRs slip, <code>js</code> is the only crate that keeps producing. Worth knowing before the slip, not after</td></tr></tbody></table></div></div>
+</div><div class="tabpanel" id="t-ops-5">
+<p>Each item is a single action with a named file or setting. Checked against this guide's own
+findings, not against a generic checklist.</p>
+
+<ul class="todo">
+<li><input class="cb" type="checkbox" id="td-1"><label for="td-1"><span class="tn">1</span><span class="tt">Add <code>&quot;tests&quot;</code> to <code>members</code> in <code>Cargo.toml</code> so <code>cargo test --workspace</code> can reach integration tests</span></label></li>
+<li><input class="cb" type="checkbox" id="td-2"><label for="td-2"><span class="tn">2</span><span class="tt">Add <code>#![forbid(unsafe_code)]</code> to <code>crates/browser/src/main.rs</code></span></label></li>
+<li><input class="cb" type="checkbox" id="td-3"><label for="td-3"><span class="tn">3</span><span class="tt">Check branch protection on <code>main</code>: require code-owner review, require the CI check, block direct pushes</span></label></li>
+<li><input class="cb" type="checkbox" id="td-4"><label for="td-4"><span class="tn">4</span><span class="tt">Open <code>docs/adr/0001-process-model.md</code> from the template</span></label></li>
+<li><input class="cb" type="checkbox" id="td-5"><label for="td-5"><span class="tn">5</span><span class="tt">Open <code>docs/adr/0002-ipc-format.md</code> from the template</span></label></li>
+<li><input class="cb" type="checkbox" id="td-6"><label for="td-6"><span class="tn">6</span><span class="tt">Open <code>docs/adr/0003-dom-representation.md</code> from the template</span></label></li>
+<li><input class="cb" type="checkbox" id="td-7"><label for="td-7"><span class="tn">7</span><span class="tt">Write <code>CONTRIBUTING.md</code> &mdash; clone, branch name, <code>make lint</code>, <code>make test</code>, PR, review fan-out</span></label></li>
+<li><input class="cb" type="checkbox" id="td-8"><label for="td-8"><span class="tn">8</span><span class="tt">Add <code>.github/pull_request_template.md</code> with the cross-team reviewer checklist from &sect;4.1</span></label></li>
+<li><input class="cb" type="checkbox" id="td-9"><label for="td-9"><span class="tn">9</span><span class="tt">Pick a commit message format and record it in <code>CONTRIBUTING.md</code></span></label></li>
+<li><input class="cb" type="checkbox" id="td-10"><label for="td-10"><span class="tn">10</span><span class="tt">Add <code>rust-toolchain.toml</code> pinning the current stable</span></label></li>
+<li><input class="cb" type="checkbox" id="td-11"><label for="td-11"><span class="tn">11</span><span class="tt">Add <code>macos-latest</code> and <code>windows-latest</code> to the CI job matrix</span></label></li>
+<li><input class="cb" type="checkbox" id="td-12"><label for="td-12"><span class="tn">12</span><span class="tt">Add <code>--locked</code> to the CI cargo invocations</span></label></li>
+<li><input class="cb" type="checkbox" id="td-13"><label for="td-13"><span class="tn">13</span><span class="tt">Decide whether <code>/crates/browser/</code> gets all ten teams on its CODEOWNERS rule, or the comment loses &ldquo;cross-team review&rdquo;</span></label></li>
+<li><input class="cb" type="checkbox" id="td-14"><label for="td-14"><span class="tn">14</span><span class="tt">Fix the cookies wording in <code>crates/net/Cargo.toml</code> and the policy wording in <code>crates/storage/Cargo.toml</code></span></label></li>
+<li><input class="cb" type="checkbox" id="td-15"><label for="td-15"><span class="tn">15</span><span class="tt">Create a GitHub team for experienced engineers, so the four approval thresholds become checkable</span></label></li>
+</ul>
+
+<div class="note n-note"><b><span class="kind">Note</span><span class="ctitle">Provenance of this guide</span></b>Every statement above was read off files in the repository on disk. The copy inspected has no <code>.git</code> directory, so no commit, branch, tag, pull request or GitHub setting was examined &mdash; which is why branch protection appears as an item to check rather than a finding. Nothing here is inferred from the project's history.</div>
+</div></section></main>

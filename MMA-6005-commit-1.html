@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6005 — Commit 1: Surface public-event data in state</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+}
+main { max-width: 880px; margin-inline: auto; padding: 72px clamp(16px, 4vw, 40px) 80px; }
+h1 { font-size: clamp(24px, 5vw, 34px); line-height: 1.2; margin: 0 0 6px; }
+h2 { font-size: clamp(19px, 3.5vw, 24px); margin: 0 0 14px; }
+h3 { font-size: clamp(16px, 3vw, 18px); margin: 0 0 8px; }
+p { max-width: 68ch; }
+code, a { overflow-wrap: anywhere; }
+code {
+  background: #23282e; border: 1px solid var(--border); border-radius: 6px;
+  padding: 1px 6px; font-size: .88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+a { color: var(--accent); }
+pre { overflow-x: auto; max-width: 100%; }
+.kicker { color: var(--faint); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 10px; }
+.subtitle { color: var(--muted); margin: 0 0 34px; }
+section { margin-bottom: 42px; scroll-margin-top: 20px; }
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow);
+}
+.card + .card { margin-top: 14px; }
+.onesentence { border-left: 4px solid var(--accent); font-size: clamp(16px, 3vw, 19px); }
+.onesentence p { margin: 0; max-width: none; }
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; border-radius: 999px; padding: 3px 10px; margin-bottom: 10px;
+}
+.badge.must { background: var(--accent-soft); color: var(--accent); border: 1px solid #2c5a41; }
+.badge.important { background: var(--warn-soft); color: var(--warn); border: 1px solid #5a4620; }
+ul { padding-left: 20px; margin: 8px 0; }
+li { margin: 5px 0; }
+li::marker { color: var(--faint); }
+.filechip {
+  display: inline-block; background: #23282e; border: 1px solid var(--border);
+  border-radius: 8px; padding: 3px 9px; margin: 2px 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px;
+  color: var(--muted); overflow-wrap: anywhere; max-width: 100%;
+}
+.step { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+.step:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.step .stepname { font-weight: 700; }
+.step .purpose { color: var(--muted); font-size: 14px; margin: 2px 0 8px; }
+.pager { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.pager a {
+  text-decoration: none; background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 16px; color: var(--muted); transition: .15s;
+}
+.pager a:hover { border-color: var(--accent); color: var(--accent); }
+.navlabel { color: var(--faint); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 10px 4px; }
+.skipto {
+  position: fixed; top: 50%; left: 18px; transform: translateY(-50%);
+  z-index: 60; display: flex; flex-direction: column; gap: 5px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 12px 13px; box-shadow: var(--shadow);
+  width: 172px;
+}
+.skipto a {
+  text-decoration: none; color: var(--muted); font-size: 13px;
+  padding: 6px 10px; border-radius: 8px; transition: .15s;
+}
+.skipto a:hover { background: var(--bg); color: var(--accent); }
+.skipto a.current { color: var(--accent); }
+.skipto-toggle {
+  display: none; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0; background: none; border: 0;
+  color: var(--muted); cursor: pointer; border-radius: 9px;
+}
+.skipto-toggle:hover { color: var(--accent); background: var(--bg); }
+.skipto-toggle svg { transition: .15s; }
+.skipto-menu { display: flex; flex-direction: column; gap: 5px; }
+@media (max-width: 1180px) {
+  .skipto { top:10px; left:10px; transform:none; width:auto; padding:5px; border-radius:12px; }
+  .skipto-toggle { display:flex; }
+  .skipto-menu { display:none; padding:4px 6px 8px; min-width:172px; }
+  .skipto:hover .skipto-menu, .skipto:focus-within .skipto-menu,
+  .skipto.open .skipto-menu { display:flex; }
+  .skipto:hover .skipto-toggle svg, .skipto:focus-within .skipto-toggle svg,
+  .skipto.open .skipto-toggle svg { transform:rotate(180deg); }
+  section { scroll-margin-top: 80px; }
+}
+@media (max-width: 720px) { .card { padding: 14px 16px; } }
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <button class="skipto-toggle" aria-label="Skip to section menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">This page</div>
+    <a href="#step11">1.1 UiState + events</a>
+    <a href="#step12">1.2 Mapping</a>
+    <a href="#step13">1.3 Placeholders</a>
+    <a href="#step14">1.4 Tests</a>
+    <a href="#watch">Watch Out For</a>
+    <div class="navlabel">Pages</div>
+    <a href="MMA-6005-preliminary-plan.html">Overview</a>
+    <a href="MMA-6005-commit-1.html" class="current">Commit 1 — State</a>
+    <a href="MMA-6005-commit-2.html">Commit 2 — UI</a>
+    <a href="MMA-6005-commit-3.html">Commit 3 — Samples</a>
+  </div>
+</nav>
+
+<main>
+
+<p class="kicker">MMA-6005 · Page 2 of 4 · Commit 1 of 3</p>
+<h1>Commit 1 — Surface public-event data in state</h1>
+<p class="subtitle">Pure logic: UiState, use-case mapping, placeholder events, unit tests. Compiles and passes its gates with no UI change.</p>
+
+<section id="goal">
+  <div class="card onesentence">
+    <p>The use case stops discarding <code>isPublic</code> / <code>photoPath</code> / <code>audience</code> / <code>link</code>, and the ViewModel learns the three "not built yet" events — all locked by tests before any rendering exists.</p>
+  </div>
+</section>
+
+<section id="step11">
+  <h2>Step 1.1 — Extend UiState and events</h2>
+  <span class="badge must">Must Know</span>
+  <div class="card">
+    <div class="purpose" style="color:var(--muted); margin-bottom:8px;">Carry public fields + placeholder events.</div>
+    <span class="filechip">…/calendar/detail/EventDetailsUiState.kt</span>
+    <ul>
+      <li>Add <code>isPublic: Boolean = false</code></li>
+      <li>Add <code>photoUrl: String? = null</code></li>
+      <li>Add <code>audienceText: String? = null</code></li>
+      <li>Add <code>webLinkUrl: String? = null</code> — KDoc says the Q4 gate lives in the use case</li>
+      <li>New events: <code>QrCodeClicked</code>, <code>DuplicateClicked</code>, <code>RsvpClicked</code></li>
+      <li><strong>No dialog field and no dismiss event</strong> — <code>dialogFlow</code> already exists on the UiState and handles this</li>
+    </ul>
+  </div>
+</section>
+
+<section id="step12">
+  <h2>Step 1.2 — Map the new fields</h2>
+  <span class="badge must">Must Know</span>
+  <div class="card">
+    <div class="purpose" style="color:var(--muted); margin-bottom:8px;">Use case stops discarding public fields.</div>
+    <span class="filechip">…/calendar/detail/GetEventDetailsUiStateUseCase.kt</span>
+    <ul>
+      <li><code>isPublic</code> maps straight through</li>
+      <li><code>photoUrl</code> = <code>photoPath</code> when public, blank→null</li>
+      <li><code>audienceText</code>: parse with <code>enumValueOfOrNull&lt;EventAudience&gt;()</code> (drop unknowns), format each as <code>"Group - Audience"</code> via <code>AudienceGroup</code>, <code>EVERYONE</code> bare, resolve labels via injected <code>stringResources</code>, join with the bullet, null when not public</li>
+      <li><strong>Neither the bullet nor the dash is a Kotlin constant</strong> — both come from string resources; see the separator note below</li>
+      <li><code>webLinkUrl</code> = <code>link</code> when public, else null</li>
+      <li><code>TODO(Q4)</code> comment marks the single flip point for the gate</li>
+    </ul>
+    <p style="color:var(--muted); font-size:14px;">Reuse: both <code>EventAudience.labelRes</code> and <code>AudienceGroup</code> from the edit package (<code>EventAudienceLabels.kt</code>, same module) — <code>AudienceGroup.audiences</code> gives the reverse lookup for the prefix. No new constructor params, so Koin wiring is untouched.</p>
+    <p style="color:var(--muted); font-size:14px;"><strong>Separators are localized resources, not constants.</strong> MMA-6004 set this pattern in <code>RecurrenceSummaryFormatter</code>: the resource holds the bare glyph and the code adds the surrounding spaces. Commit 1 therefore touches <code>strings.xml</code> — the rest of the string work still waits for Commit 2.</p>
+    <ul>
+      <li><code>calendar_recurrence_summary_separator</code> is <strong>renamed</strong> to <code>calendar_event_list_separator</code> ("•") and now serves both the recurrence summary and the audience row. Update the <code>RecurrenceSummaryFormatter</code> call site <em>and</em> the stub in <code>RecurrenceSummaryFormatterTest</code> — the test stubs resources by id and fails loudly if you miss it</li>
+      <li>New <code>calendar_event_audience_group</code> = <code>"%1$s - %2$s"</code> for the "Adults - Women" join. <strong>A two-placeholder format string, not a dash separator</strong> — that is how this repo joins two values (<code>calling_hyphen</code>, <code>country_currency</code>, <code>sex_age_hyphen</code> are all this shape), and it lets a locale reorder the pair instead of hardcoding group-then-audience in Kotlin. <code>feature/calendar/strings.xml</code> declares no <code>xliff:g</code> namespace, so use plain <code>%1$s</code>, not core's xliff style</li>
+      <li>Rename now rather than later: <code>feature/calendar</code> has <strong>no <code>values-*</code> locale dirs yet</strong>, so there are no translations to churn. That window closes once translation lands</li>
+    </ul>
+    <p style="color:var(--muted); font-size:14px;"><strong>There is no <code>EventAudience.fromString</code>.</strong> The enum is maltSync's and audiences round-trip as plain enum <em>names</em> (<code>EventCreateInput</code> writes <code>it.name</code>), so parse with <code>enumValueOfOrNull&lt;EventAudience&gt;()</code> from <code>org.ics.mobile.commons.ext</code> — the same helper <code>CalendarEnumConverters</code> uses on these exact strings, and <code>libs.church.mobile.commons</code> is already a direct <code>:feature:calendar</code> dependency. Server order is worth keeping as-is: the write side already canonicalizes it.</p>
+  </div>
+</section>
+
+<section id="step13">
+  <h2>Step 1.3 — Handle placeholder events</h2>
+  <div class="card">
+    <div class="purpose" style="color:var(--muted); margin-bottom:8px;">Cheap "not built yet" feedback.</div>
+    <span class="filechip">…/calendar/detail/EventDetailsViewModel.kt</span>
+    <ul>
+      <li>Add one <code>showUnderConstructionDialog()</code> helper that pushes a <code>MessageDialogUiState</code> into the existing <code>dialogUiStateFlow</code> — text <code>feature_under_construction</code>, confirm <code>ok</code>, both callbacks reusing the existing <code>dismissDialog()</code></li>
+      <li>All three Qr / Duplicate / Rsvp branches call that one helper</li>
+      <li>Each branch carries its ticket: <code>TODO(MMA-5951)</code> / <code>TODO(MMA-5944)</code> / <code>TODO(MMA-5953)</code></li>
+      <li>Mirror <code>showRemoveConfirmationDialog()</code> in the same file — exact snippet in <a href="MMA-6005-preliminary-plan.html#gotchas">Agent Gotchas</a></li>
+    </ul>
+  </div>
+</section>
+
+<section id="step14">
+  <h2>Step 1.4 — Cover the mapping and events</h2>
+  <div class="card">
+    <div class="purpose" style="color:var(--muted); margin-bottom:8px;">Lock gating semantics before UI.</div>
+    <span class="filechip">…/calendar/detail/GetEventDetailsUiStateUseCaseTest.kt</span>
+    <ul>
+      <li>Audience entries formatted <code>"Group - Audience"</code>, joined with bullets</li>
+      <li><code>EVERYONE</code> renders without a prefix</li>
+      <li>Unknown audience values dropped</li>
+      <li>Empty audience → null text</li>
+      <li><code>photoUrl</code> / <code>audienceText</code> / <code>webLinkUrl</code> all null when not public</li>
+      <li>Stub every <code>stringResources</code> label the test hits</li>
+    </ul>
+    <span class="filechip">…/calendar/detail/EventDetailsViewModelTest.kt</span>
+    <ul>
+      <li>Each placeholder event emits a non-null dialog on <code>dialogFlow</code></li>
+      <li>Confirm clears <code>dialogFlow</code> back to null</li>
+      <li>No navigation fired by placeholders</li>
+      <li>Follow the dialog assertions the review commits already added for Remove</li>
+    </ul>
+  </div>
+</section>
+
+<section id="watch">
+  <h2>Watch Out For <span class="badge important" style="vertical-align:middle; margin-left:8px;">Important</span></h2>
+  <div class="card">
+    <ul>
+      <li><strong>Read <code>EventDetails.isPublic</code>, NOT <code>EventDetailsCalendar.isPublicEventsEnabled</code>.</strong> Step 1.2 is where this mistake would happen — the calendar flag is a create-capability, not "this event is public." It compiles and can still pass tests. Full explanation in Agent Gotchas on the <a href="MMA-6005-preliminary-plan.html#gotchas">Overview</a></li>
+      <li><strong>MockK stubs:</strong> the use case test must stub every audience label resource it touches or MockK throws on the missing stub</li>
+      <li><strong>JUnit 5 + runBlocking:</strong> follow the existing test pattern in the detail package — not runTest</li>
+    </ul>
+  </div>
+</section>
+
+<div class="pager">
+  <a href="MMA-6005-preliminary-plan.html">← Overview</a>
+  <a href="MMA-6005-commit-2.html">Commit 2 — Public rows, chrome, and FAB →</a>
+</div>
+
+</main>
+
+<script>
+var nav=document.querySelector('.skipto');
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){nav.classList.toggle('open')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',function(){
+  nav.classList.remove('open');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});})});
+</script>
+
+</body>
+</html>

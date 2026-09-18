@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar QA findings, traced</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33; --g4:#C24A4A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+
+/* ---------- state inputs: CSS-only pages and tabs ---------- */
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+
+/* ---------- column ---------- */
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+
+/* ---------- head ---------- */
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em;line-height:1.18}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.6rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted);font-size:16.5px}
+@media (max-width:900px){.head{grid-template-columns:1fr}.head .lede{margin-top:1.1rem}}
+
+h2{font-size:1.3rem;line-height:1.3;margin:2.2rem 0 .55rem;font-weight:600;
+  letter-spacing:-.01em}
+h2:first-child{margin-top:.2rem}
+h3{font-size:1.02rem;margin:1.7rem 0 .4rem;font-weight:600}
+p{margin:0 0 .9rem;max-width:66ch}
+ul,ol{margin:0 0 1rem;padding-left:1.35rem}
+li{margin:0 0 .42rem}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:var(--card);border:1px solid var(--border);border-radius:4px;
+  padding:.5px 4px;overflow-wrap:anywhere;max-width:100%}
+a{color:var(--accent);overflow-wrap:anywhere}
+strong{color:var(--ink);font-weight:650}
+.loc{display:block;margin:.15rem 0 .3rem}
+.desc{margin:0 0 .5rem;color:var(--muted);font-size:14px}
+.prov{color:var(--faint);font-size:13.5px;max-width:74ch}
+
+/* ---------- floating page nav ---------- */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:700;padding:2px 10px 4px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;
+  height:40px;padding:0;background:none;border:0;color:var(--muted);cursor:pointer;
+  border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+  main{padding-top:72px}
+}
+#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+
+/* ---------- pages and tabs ---------- */
+.page{display:none}
+.tabpanel{display:none}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+
+/* page visibility + nav active */
+#r-p-over:checked ~ main #p-over{display:block}
+#r-p-039:checked ~ main #p-039{display:block}
+#r-p-096:checked ~ main #p-096{display:block}
+#r-p-010:checked ~ main #p-010{display:block}
+#r-p-over:checked ~ .skipto label[for="r-p-over"],
+#r-p-039:checked ~ .skipto label[for="r-p-039"],
+#r-p-096:checked ~ .skipto label[for="r-p-096"],
+#r-p-010:checked ~ .skipto label[for="r-p-010"]{background:var(--bg);color:var(--accent)}
+
+/* tab panels */
+#r-t-ov-scope:checked ~ main #t-ov-scope{display:block}
+#r-t-ov-order:checked ~ main #t-ov-order{display:block}
+#r-t-ov-state:checked ~ main #t-ov-state{display:block}
+#r-t-ov-todo:checked  ~ main #t-ov-todo{display:block}
+#r-t-39-state:checked ~ main #t-39-state{display:block}
+#r-t-39-test:checked  ~ main #t-39-test{display:block}
+#r-t-39-jira:checked  ~ main #t-39-jira{display:block}
+#r-t-39-def:checked   ~ main #t-39-def{display:block}
+#r-t-96-dec:checked   ~ main #t-96-dec{display:block}
+#r-t-96-fmt:checked   ~ main #t-96-fmt{display:block}
+#r-t-96-test:checked  ~ main #t-96-test{display:block}
+#r-t-96-opt2:checked  ~ main #t-96-opt2{display:block}
+#r-t-96-ver:checked   ~ main #t-96-ver{display:block}
+#r-t-96-def:checked   ~ main #t-96-def{display:block}
+#r-t-10-dec:checked   ~ main #t-10-dec{display:block}
+#r-t-10-sql:checked   ~ main #t-10-sql{display:block}
+#r-t-10-test:checked  ~ main #t-10-test{display:block}
+#r-t-10-ver:checked   ~ main #t-10-ver{display:block}
+#r-t-10-chip:checked  ~ main #t-10-chip{display:block}
+#r-t-10-def:checked   ~ main #t-10-def{display:block}
+
+/* active tab takes its group's colour, never the accent */
+#r-t-ov-scope:checked ~ main label[for="r-t-ov-scope"],
+#r-t-ov-order:checked ~ main label[for="r-t-ov-order"],
+#r-t-ov-state:checked ~ main label[for="r-t-ov-state"],
+#r-t-ov-todo:checked  ~ main label[for="r-t-ov-todo"],
+#r-t-39-state:checked ~ main label[for="r-t-39-state"]
+  {color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t-96-dec:checked ~ main label[for="r-t-96-dec"],
+#r-t-10-dec:checked ~ main label[for="r-t-10-dec"]
+  {color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t-39-test:checked ~ main label[for="r-t-39-test"],
+#r-t-39-jira:checked ~ main label[for="r-t-39-jira"],
+#r-t-96-fmt:checked  ~ main label[for="r-t-96-fmt"],
+#r-t-96-test:checked ~ main label[for="r-t-96-test"],
+#r-t-96-opt2:checked ~ main label[for="r-t-96-opt2"],
+#r-t-96-ver:checked  ~ main label[for="r-t-96-ver"],
+#r-t-10-sql:checked  ~ main label[for="r-t-10-sql"],
+#r-t-10-test:checked ~ main label[for="r-t-10-test"],
+#r-t-10-ver:checked  ~ main label[for="r-t-10-ver"],
+#r-t-10-chip:checked ~ main label[for="r-t-10-chip"]
+  {color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+#r-t-39-def:checked ~ main label[for="r-t-39-def"],
+#r-t-96-def:checked ~ main label[for="r-t-96-def"],
+#r-t-10-def:checked ~ main label[for="r-t-10-def"]
+  {color:var(--g4);border-bottom-color:var(--g4);font-weight:600}
+
+/* ---------- group headings and rails ---------- */
+.gh{font-size:1.3rem;margin:2.2rem 0 .6rem;font-weight:600}
+.gh:first-child{margin-top:.2rem}
+.gh.c1{color:var(--g1)} .gh.c2{color:var(--g2)} .gh.c3{color:var(--g3)}
+.gh.c4{color:var(--g4)}
+.rail1,.rail2,.rail3,.rail4{font-weight:400}
+.rail1{color:var(--g1)} .rail2{color:var(--g2)} .rail3{color:var(--g3)}
+.rail4{color:var(--g4)}
+
+/* ---------- block-type colours ---------- */
+.t-new{color:#2AB8C9} .t-new-g{color:#2E93DB} .t-add{color:#3DAF62}
+.t-add-g{color:#46B08C} .t-edit{color:#D98C3B} .t-replace{color:#C9705B}
+.t-replace-g{color:#C95B7A} .t-run{color:#A16BD9}
+
+/* ---------- size labels: plain small-caps, no fill, no outline ---------- */
+.sz{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;
+  white-space:nowrap;color:var(--ink)}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;max-width:100%;margin:0 0 1.2rem;border:1px solid var(--border);
+  border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 13px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--faint);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;background:var(--bg);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td code{background:none;border:0;padding:0}
+
+/* ---------- callout ---------- */
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+  padding:13px 17px;margin:0 0 1.2rem}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;margin:0 0 5px}
+.note p:last-child{margin-bottom:0}
+.stop{border-color:var(--g4);background:#2a1616}
+.stop b{color:#E58A8A}
+
+/* ---------- cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));
+  gap:14px;margin:0 0 1.3rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 17px}
+.card h4{margin:0 0 .35rem;font-size:14px;font-weight:650}
+.card p{margin:0;font-size:13.5px;color:var(--muted);max-width:none}
+
+/* ---------- code ---------- */
+.code{position:relative;margin:0 0 16px}
+.code pre{margin:0;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;overflow-x:auto;max-width:100%;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+  line-height:1.58;color:var(--ink)}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--card);
+  padding:1px 4px;border-radius:3px;pointer-events:none;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.k{color:#A25494} .ty{color:#4368A8} .add{color:#2E8B62} .rem{color:#C24A4A}
+
+/* ---------- todo ---------- */
+.todo{list-style:none;padding-left:0;margin:0 0 1.1rem}
+.todo li{display:grid;grid-template-columns:1.1rem 1fr;gap:.6rem;align-items:start;
+  margin:0 0 .55rem;font-size:14.5px}
+.todo input{appearance:none;-webkit-appearance:none;width:1.1rem;height:1.1rem;
+  margin:.2rem 0 0;border:1.5px solid var(--border-strong);border-radius:4px;
+  background:var(--card);cursor:pointer;display:grid;place-content:center;transition:.15s}
+.todo input:hover{border-color:var(--accent)}
+.todo input::before{content:"";width:.58rem;height:.3rem;border-left:2px solid var(--bg);
+  border-bottom:2px solid var(--bg);transform:rotate(-45deg) translateY(-1px);opacity:0}
+.todo input:checked{background:var(--accent);border-color:var(--accent)}
+.todo input:checked::before{opacity:1}
+.todo label{cursor:pointer}
+.todo input:checked + label{color:var(--faint);text-decoration:line-through}
+</style>
+</head>
+<body>
+
+<input class="st" type="radio" name="pg" id="r-p-over" checked>
+<input class="st" type="radio" name="pg" id="r-p-039">
+<input class="st" type="radio" name="pg" id="r-p-096">
+<input class="st" type="radio" name="pg" id="r-p-010">
+<input class="st" type="checkbox" id="navtoggle">
+
+<input class="st" type="radio" name="tov" id="r-t-ov-scope" checked>
+<input class="st" type="radio" name="tov" id="r-t-ov-order">
+<input class="st" type="radio" name="tov" id="r-t-ov-state">
+<input class="st" type="radio" name="tov" id="r-t-ov-todo">
+
+<input class="st" type="radio" name="t39" id="r-t-39-state" checked>
+<input class="st" type="radio" name="t39" id="r-t-39-test">
+<input class="st" type="radio" name="t39" id="r-t-39-jira">
+<input class="st" type="radio" name="t39" id="r-t-39-def">
+
+<input class="st" type="radio" name="t96" id="r-t-96-dec" checked>
+<input class="st" type="radio" name="t96" id="r-t-96-fmt">
+<input class="st" type="radio" name="t96" id="r-t-96-test">
+<input class="st" type="radio" name="t96" id="r-t-96-opt2">
+<input class="st" type="radio" name="t96" id="r-t-96-ver">
+<input class="st" type="radio" name="t96" id="r-t-96-def">
+
+<input class="st" type="radio" name="t10" id="r-t-10-dec" checked>
+<input class="st" type="radio" name="t10" id="r-t-10-sql">
+<input class="st" type="radio" name="t10" id="r-t-10-test">
+<input class="st" type="radio" name="t10" id="r-t-10-ver">
+<input class="st" type="radio" name="t10" id="r-t-10-chip">
+<input class="st" type="radio" name="t10" id="r-t-10-def">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-over">Overview</label>
+    <label for="r-p-039">MMA-6039 · palette</label>
+    <label for="r-p-096">MMA-6096 · time zone</label>
+    <label for="r-p-010">MMA-6010 · hidden calendar</label>
+  </div>
+</nav>
+
+<main>
+
+<!-- ===================== PAGE 1 — OVERVIEW ===================== -->
+<section class="page" id="p-over">
+
+<div class="head">
+  <h1>Calendar QA findings, traced</h1>
+  <p class="lede">Three defects Zade Maxfield filed against 5.7.0, each traced to code and
+  planned. MMA-6039 is merged; the other two wait on a decision.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-ov-scope">Scope &amp; Size</label>
+  <label class="tab" for="r-t-ov-order">Work Order</label>
+  <label class="tab" for="r-t-ov-state">Where Each Stands</label>
+  <label class="tab" for="r-t-ov-todo">TODO</label>
+</div>
+
+<!-- ---- tab: scope & size ---- -->
+<div class="tabpanel" id="t-ov-scope">
+
+<h2 class="gh c1">Scope and size</h2>
+
+<p><strong>Ordered by size, smallest first.</strong> Size is a judgement over the four columns
+to its right, not a formula — MMA-6010's SQL touches fewer files than MMA-6096 and is still the
+larger job, because its cost is the sign-off and the test matrix rather than the diff.</p>
+
+<div class="tw">
+<table>
+<thead><tr>
+  <th>Finding</th><th>Size</th><th>Gate before code lands</th><th>Files</th>
+  <th>Tests</th><th>Reach</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><a href="#p-039">MMA-6039</a> · palette button unlabelled</td>
+  <td><span class="sz">Trivial</span></td>
+  <td>None — the fix is already in <code>main</code></td>
+  <td>1</td>
+  <td>1 assertion rewritten</td>
+  <td>One control, one screen</td>
+</tr>
+<tr>
+  <td><a href="#p-096">MMA-6096</a> · Event Details uses the authored zone</td>
+  <td><span class="sz">Small</span></td>
+  <td>Pick option 1 or option 2 — recommendation written, no design review under option 1</td>
+  <td>4</td>
+  <td>2 rewritten · 2 re-stubbed</td>
+  <td>Event Details only; the five views deliberately unchanged</td>
+</tr>
+<tr>
+  <td>MMA-5973 · filter chip shows no active state</td>
+  <td><span class="sz">Small</span></td>
+  <td>None technically — but the ticket is closed and the defect is unfiled</td>
+  <td>3</td>
+  <td>4 new</td>
+  <td>One chip on one screen</td>
+</tr>
+<tr>
+  <td><a href="#p-010">MMA-6010</a> · hidden calendar still shows facility bookings</td>
+  <td><span class="sz">Moderate</span></td>
+  <td><strong>QA and design sign-off</strong> on a behaviour change to MMA-5231, shipped in 5.3.0</td>
+  <td>2</td>
+  <td>7 new DAO cases</td>
+  <td>All five calendar views, through one shared flow</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3>What each column means</h3>
+
+<ul>
+  <li><strong>Size</strong> — the overall call. Read the four columns after it to see why.</li>
+  <li><strong>Gate</strong> — what has to happen before a line of code can be written. This is
+  the column that separates MMA-6010 from the rest.</li>
+  <li><strong>Files</strong> — source files whose contents change, production and test together.</li>
+  <li><strong>Tests</strong> — tests written or rewritten, which is where MMA-6010's real
+  volume sits.</li>
+  <li><strong>Reach</strong> — how many surfaces the change is visible on, so a regression's
+  blast radius is visible before the work starts.</li>
+</ul>
+
+<div class="note">
+  <b>Why MMA-5973 is on this table</b>
+  <p>It is not one of the three findings. It is the secondary defect recorded under MMA-6010 —
+  the chip gives no sign a filter is active — and it is a separate, independently landable
+  change against a different ticket. It sits here because pricing MMA-6010 without it
+  understates the work, and pricing them together overstates the SQL fix.</p>
+</div>
+
+<p class="prov">Size labels are plain small-caps text rather than coloured pills or tags. The
+glossary reserves the pill for status and the filled rectangle for priority, and it holds no
+signal for magnitude of work — so ordering the table by size carries the comparison and no new
+colour meaning is invented.</p>
+
+</div>
+
+<!-- ---- tab: work order ---- -->
+<div class="tabpanel" id="t-ov-order">
+
+<h2 class="gh c1">Work order</h2>
+
+<p><strong>Priority order, not size order.</strong> The two nearly agree; where they differ it is
+because a cheap item is already unblocked and an expensive one is not.</p>
+
+<h3>1 · MMA-6039 — almost closed, finish it</h3>
+<ul>
+  <li>The code half is <strong>done</strong>: PR #2163 merged into <code>main</code> as
+  <code>f2547ec7a7</code> on 2026-09-10 at 18:51Z, and QA re-verified on
+  5.7.0-(108977.3381651).</li>
+  <li>What is left is one assertion and two Jira comments. No decision, no review round.</li>
+  <li>Do it alongside item 2 rather than ahead of it — nothing downstream waits on it.</li>
+</ul>
+
+<h3>2 · MMA-6096 — the only regression that has not shipped</h3>
+<ul>
+  <li>MMA-6004 introduced it inside this same 5.7.0 cycle, so fixing it now costs one argument
+  and letting it ship makes it a production regression.</li>
+  <li>Which side is wrong is already settled in writing — <code>viewsspec</code> FR-21 says the
+  device zone is authoritative — so the product decision is a confirmation, not a debate.</li>
+  <li>Start the option 1 versus option 2 conversation immediately; the code is a day's work
+  once it is answered.</li>
+</ul>
+
+<h3>3 · MMA-6010 — worst defect, least urgent</h3>
+<ul>
+  <li>Latent since 2025-03-25 (<code>0b373157de</code>, MMA-5231). MMA-6010 only made the filter
+  reachable, which exposed it.</li>
+  <li>The remedy deliberately changes MMA-5231's behaviour, so it cannot start until QA and
+  design accept the truth table on the MMA-6010 page.</li>
+  <li>Open that conversation early and let it sit while items 1 and 2 clear.</li>
+</ul>
+
+<h3>4 · MMA-5973 — file it before anything else</h3>
+<ul>
+  <li>The chip defect has <strong>no Jira ticket</strong>. Zade's MMA-6010 comment says he filed
+  it against MMA-5973, but MMA-5973 carries one comment — "Fixed" — and is Verified.</li>
+  <li>Filing costs minutes and is the only item here that can be lost entirely.</li>
+</ul>
+
+<p class="prov">The tab bar on each page is this document's outline — every step group is named
+on it, so no separate step list is repeated in the body.</p>
+
+</div>
+
+<!-- ---- tab: where each stands ---- -->
+<div class="tabpanel" id="t-ov-state">
+
+<h2 class="gh c1">Where each stands</h2>
+
+<div class="tw">
+<table>
+<thead><tr><th>Finding</th><th>Jira</th><th>Code</th><th>Blocked on</th></tr></thead>
+<tbody>
+<tr>
+  <td>MMA-6039</td>
+  <td>Verified · Fixed (Default)</td>
+  <td>Merged to <code>main</code>, <code>f2547ec7a7</code></td>
+  <td>Nothing — residual test and Jira hygiene only</td>
+</tr>
+<tr>
+  <td>MMA-6096</td>
+  <td>New · fixVersion 5.7.0 · reporter Zade Maxfield</td>
+  <td>Nothing written</td>
+  <td>Option 1 versus option 2</td>
+</tr>
+<tr>
+  <td>MMA-6010</td>
+  <td>Ready · fixVersion 5.7.0 · three QA comments</td>
+  <td>Nothing written</td>
+  <td>QA and design sign-off</td>
+</tr>
+<tr>
+  <td>MMA-5973</td>
+  <td>Verified · Fixed — closed, one "Fixed" comment</td>
+  <td>Nothing written</td>
+  <td>Has no open ticket at all</td>
+</tr>
+<tr>
+  <td>MMA-6077</td>
+  <td><strong>Ready</strong> — two Zade comments, 2026-09-10 13:27 and 13:30</td>
+  <td>Its fix is the one that merged as <code>f2547ec7a7</code></td>
+  <td>Somebody transitioning the ticket</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="note stop">
+  <b>MMA-6077 is the open ticket, not MMA-6039</b>
+  <p>MMA-6039 is an Enhancement — "update the icons for the visibility filter popup and the
+  manage subscriptions" — and it is Verified. The accessibility defect was a side finding Zade
+  raised inside his verification comment on it. The defect's ticket home is MMA-6077, whose fix
+  has merged while the ticket still sits at Ready with a comment reading "recommend reopening",
+  written before the fixed build existed.</p>
+</div>
+
+<h3>Branch facts that affect the work</h3>
+<ul>
+  <li>This worktree is <code>MMA-6082</code> at <code>149e213ffa</code>, which
+  <strong>predates the palette merge</strong> — so
+  <code>ManageCalendarsScreenTest.kt</code> does not exist here at all. MMA-6039's test fix
+  needs a branch cut from <code>main</code>.</li>
+  <li>The segmented-list padding work both solution documents described as uncommitted is now
+  committed, as <code>149e213ffa</code>. It still collides with nothing in either plan.</li>
+  <li><code>git status</code> is otherwise clean apart from three untracked in-flux schema JSONs
+  (<code>CalendarDatabase/9.json</code>, <code>MapDatabase/2.json</code>,
+  <code>MemberDatabase/49.json</code>). None of them is touched by any plan here.</li>
+  <li>All three fixes target <code>main</code> only. <code>upstream/beta</code> and
+  <code>upstream/release</code> are 5.6.0 and carry neither the palette button nor
+  <code>EventDateTimeFormatter</code>.</li>
+</ul>
+
+</div>
+
+<!-- ---- tab: todo ---- -->
+<div class="tabpanel" id="t-ov-todo">
+
+<h2 class="gh c1">TODO</h2>
+
+<p>Document-wide, in the work order on the Work Order tab. Every item is Will's to send or run;
+none of it has been done by this document.</p>
+
+<h3>MMA-6039</h3>
+<ul class="todo">
+  <li><input type="checkbox" id="td-1"><label for="td-1">Cut a branch from <code>main</code> and apply the <code>useUnmergedTree = true</code> change, with its KDoc line</label></li>
+  <li><input type="checkbox" id="td-2"><label for="td-2">Prove the negative — add a duplicate description, confirm the test now fails, revert</label></li>
+  <li><input type="checkbox" id="td-3"><label for="td-3">Transition MMA-6077 off Ready and comment on it</label></li>
+  <li><input type="checkbox" id="td-4"><label for="td-4">Answer Zade's split-it-out offer on MMA-6039</label></li>
+</ul>
+
+<h3>MMA-6096</h3>
+<ul class="todo">
+  <li><input type="checkbox" id="td-5"><label for="td-5">Get option 1 versus option 2 answered</label></li>
+  <li><input type="checkbox" id="td-6"><label for="td-6">Steps 1-5, then the module gate and the pre-PR gate</label></li>
+  <li><input type="checkbox" id="td-7"><label for="td-7">Device pass — a Mountain device against a Central unit</label></li>
+  <li><input type="checkbox" id="td-8"><label for="td-8">File the all-day storage defect as its own ticket</label></li>
+</ul>
+
+<h3>MMA-6010 and MMA-5973</h3>
+<ul class="todo">
+  <li><input type="checkbox" id="td-9"><label for="td-9">Take the truth table to QA and design; get row h acknowledged explicitly</label></li>
+  <li><input type="checkbox" id="td-10"><label for="td-10">File the chip defect — it exists in no ticket</label></li>
+  <li><input type="checkbox" id="td-11"><label for="td-11">Steps 1-4 once signed off, then <code>:database:calendar:jvmTest</code></label></li>
+  <li><input type="checkbox" id="td-12"><label for="td-12">Confirm <code>9.json</code> is still untracked after any Room run</label></li>
+</ul>
+
+<h3>Findings log</h3>
+<ul class="todo">
+  <li><input type="checkbox" id="td-13"><label for="td-13">Decide whether the MMA-6039 entry in <code>QA Reports Findings.md</code> should be re-keyed to MMA-6077, which is where the defect actually lives</label></li>
+</ul>
+
+</div>
+</section>
+
+<!-- ===================== PAGE 2 — MMA-6039 ===================== -->
+<section class="page" id="p-039">
+
+<div class="head">
+  <h1>MMA-6039 · palette button</h1>
+  <p class="lede">The fix merged on 2026-09-10 and QA has re-verified it. What is left is one
+  assertion that passes on the bug it guards, and two Jira comments.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-39-state">Where It Stands</label>
+  <label class="tab" for="r-t-39-test">Step 1 · Test</label>
+  <label class="tab" for="r-t-39-jira">Steps 2-4 · Jira &amp; QA</label>
+  <label class="tab" for="r-t-39-def">Deferred</label>
+</div>
+
+<!-- ---- 6039: state ---- -->
+<div class="tabpanel" id="t-39-state">
+
+<h2 class="gh c1">Where it stands</h2>
+
+<div class="tw">
+<table>
+<thead><tr><th>Part of the work</th><th>State</th></tr></thead>
+<tbody>
+<tr><td>MMA-6039's own icon work</td><td>Done — PR #2059, in <code>upstream/main</code></td></tr>
+<tr><td>The accessibility label</td><td>Merged — two commits, via <code>f2547ec7a7</code></td></tr>
+<tr><td>Code review</td><td>Approved and merged 2026-09-10 18:51Z</td></tr>
+<tr><td>Regression tests</td><td><strong>Merged, one is weaker than it reads</strong></td></tr>
+<tr><td>QA re-verification</td><td>Done — Zade, 5.7.0-(108977.3381651), 13:29 MDT</td></tr>
+<tr><td>Jira comment on MMA-6077</td><td>Not done — the ticket is still at Ready</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>The fix is two commits, not one</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>Commit</th><th>Date</th><th>Contents</th></tr></thead>
+<tbody>
+<tr><td><code>559bb639f0</code></td><td>2026-09-08</td><td>The fix — 3 files, +115/-1</td></tr>
+<tr><td><code>81da1c9094</code></td><td>2026-09-10</td><td>Reverses the <code>R</code> alias — 1 file, +5/-5</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>The second commit exists because HansenJI_church asked for the opposite alias direction from
+the one the first commit's message argues for: "feature R is the primary R rename core r to
+CoreR". Copilot then flagged that the PR description still described the old direction, and the
+description was edited rather than the code. Nothing in the code changed after
+<code>81da1c9094</code>.</p>
+
+<div class="note">
+  <b>Vault correction</b>
+  <p>The alias flip makes <code>MMA-6077.md</code> §16 wrong — it argues for aliasing the feature
+  <code>R</code> and leaving <code>core.strings.R</code> plain. The reviewer ruled the other way
+  and the ruling shipped. Correct §16 so the vault does not contradict <code>main</code>.</p>
+</div>
+
+<h3>The test that does not catch what it says it catches</h3>
+
+<p>Test one is sound. Test two counts on the <strong>merged</strong> semantics tree, which is
+the one tree where a duplicate description cannot appear as a second node.</p>
+
+<ul>
+  <li><code>onAllNodesWithContentDescription</code> defaults to
+  <code>useUnmergedTree = false</code> — <code>Finders.kt:89-95</code>.</li>
+  <li><code>hasContentDescription</code> matches when <strong>any</strong> entry in a node's
+  <code>ContentDescription</code> list equals the value — <code>Filters.kt:179-187</code>.</li>
+  <li><code>IconButton</code> is a merging root, so a second description in its subtree merges
+  onto the same node. Both rules still hold, so <code>hasSize(1)</code> passes on the bug.</li>
+</ul>
+
+<div class="tw">
+<table>
+<thead><tr><th>Test</th><th>Tree counted</th><th>Catches a duplicate</th></tr></thead>
+<tbody>
+<tr><td><code>manage/ManageCalendarsScreenTest.kt:83</code></td><td>merged</td><td>No</td></tr>
+<tr><td><code>core/ui/…/search/ToolsSearchBarRobolectricTest.kt:78</code></td><td>unmerged</td><td>Yes</td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="prov">Line 83 verified on <code>upstream/main</code>. The file does not exist on
+<code>MMA-6082</code>, which predates the merge.</p>
+
+</div>
+
+<!-- ---- 6039: step 1 ---- -->
+<div class="tabpanel" id="t-39-test">
+
+<h2 class="gh c3">Step 1 — Strengthen the count assertion</h2>
+
+<p>Post-merge follow-up, not a pre-merge fix. It merged as written.</p>
+
+<h3><span class="t-edit">1.1 · EDIT — Count the Unmerged Tree</span></h3>
+<code class="loc">feature/calendar/src/test/…/manage/ManageCalendarsScreenTest.kt:80-84</code>
+<p class="desc">counts the nodes that declare the description, not the one merged node</p>
+
+<ul>
+  <li><strong>Why:</strong>
+    <ul>
+      <li><strong>C</strong> — on the merged tree a duplicate merges into the same node and the
+      count stays 1, so the test passes on the bug it exists to catch</li>
+      <li><strong>B</strong> — matches <code>ToolsSearchBarRobolectricTest.kt:76-79</code>,
+      merged under MMA-6076</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="code"><span class="lang">kotlin</span><pre>@<span class="ty">Test</span>
+<span class="k">fun</span> `the palette button is announced exactly once`() {
+    setCalendarsList()
+
+<span class="rem"> -  assertThat(composeRule.onAllNodesWithContentDescription(expectedDescription).fetchSemanticsNodes()).hasSize(1)</span>
+<span class="add"> +  assertThat(</span>
+<span class="add"> +      composeRule.onAllNodesWithContentDescription(expectedDescription, useUnmergedTree = true)</span>
+<span class="add"> +          .fetchSemanticsNodes()</span>
+<span class="add"> +  ).hasSize(1)</span>
+}</pre></div>
+
+<p class="prov">The call wraps because the one-line form runs past 100 characters, which is the
+shape the merged MMA-6076 test already uses.</p>
+
+<h3><span class="t-edit">1.2 · EDIT — Correct the KDoc Above It</span></h3>
+<code class="loc">:73-78</code>
+<p class="desc">the doc claims a guarantee the merged-tree count did not give</p>
+
+<div class="code"><span class="lang">kotlin</span><pre>    <span class="k">/**</span>
+     ...
+     * carry it.
+<span class="add"> +   *</span>
+<span class="add"> +   * Counted on the unmerged tree, so this counts the nodes that *declare* the</span>
+<span class="add"> +   * description rather than the one merged node that inherits it.</span>
+     */</pre></div>
+
+<h3><span class="t-run">1.3 · RUN — The Module's Tests</span></h3>
+<code class="loc">feature/calendar/build.gradle.kts</code>
+<p class="desc">logs to a file and backgrounds, per the repo's long-build rule</p>
+
+<div class="code"><span class="lang">bash</span><pre><span class="k">./gradlew</span> <span class="ty">:feature:calendar:testDebugUnitTest</span> \
+    --tests "*ManageCalendarsScreenTest*" &gt; build.log 2&gt;&amp;1 &amp;</pre></div>
+
+<ul>
+  <li>Poll <code>build.log</code> for the real BUILD SUCCESSFUL. <code>build.log</code> is
+  disposable and is not committed.</li>
+  <li><code>feature/calendar</code> is already Robolectric-ready —
+  <code>isIncludeAndroidResources</code>, <code>robolectric</code>,
+  <code>androidx.compose.test.junit</code> and <code>androidx.compose.test.manifest</code> are
+  all declared.</li>
+</ul>
+
+<h3>1.4 — Prove the negative</h3>
+
+<p>The point of the edit is that the test now fails on a case it used to pass. Prove it:</p>
+
+<ol>
+  <li>Add a second <code>Modifier.semantics { contentDescription = … }</code> inside the
+  <code>IconButton</code>, with any string, and confirm the test now fails.</li>
+  <li>Revert <code>contentDescription</code> to <code>null</code> and confirm both tests fail.</li>
+  <li>Restore the file and re-run.</li>
+</ol>
+
+<div class="note">
+  <b>Branch it off main</b>
+  <p><code>ManageCalendarsScreenTest.kt</code> does not exist on <code>MMA-6082</code> — this
+  worktree is at <code>149e213ffa</code>, which predates <code>f2547ec7a7</code>. Cut a fresh
+  branch from <code>main</code> for this one-file change.</p>
+</div>
+
+</div>
+
+<!-- ---- 6039: jira ---- -->
+<div class="tabpanel" id="t-39-jira">
+
+<h2 class="gh c3">Steps 2-4 — Jira and QA</h2>
+
+<div class="note">
+  <b>Both Jira steps changed after the solution document was written</b>
+  <p>MMA-6039 is already <strong>Verified</strong> — Zade closed it himself at 13:29 MDT on the
+  post-merge build, so the "reply so QA does not split it" step is courtesy, not a save.
+  MMA-6077 now has <strong>two</strong> comments, not zero, and sits at <strong>Ready</strong>,
+  not Code Review.</p>
+</div>
+
+<h3>Step 2 — Answer the split-it-out offer on MMA-6039</h3>
+
+<p>Zade's verification comment ends with an explicit offer, and an unanswered offer becomes a
+second ticket:</p>
+
+<div class="code"><span class="lang">quote</span><pre>Raising it here rather than separately because the palette icon is one of the
+icons this ticket introduced — happy to split it into its own bug if preferred.
+                                                            — Zade Maxfield</pre></div>
+
+<p class="desc">the reply — names the owning ticket, the merge, and what was not lifted</p>
+
+<div class="code"><span class="lang">text</span><pre>The palette button label is owned by MMA-6077, which covers exactly this control:
+CalendarItem's trailing slot on Calendar Subscriptions. The contentDescription goes
+on the Icon, where IconButton picks it up as the button's accessible name, and the
+string is "Change color for %1$s" parameterized with the calendar name — the same
+shape as the label suggested above.
+
+It merged to main on 2026-09-10 as f2547ec7a7, which is the build you re-verified
+on. No need to split this into a separate bug — MMA-6077 owns it.
+
+The app-wide SpeakableTextPresentCheck suppression in AccessibilityTest is
+unchanged; the remaining violations stay suppressed there.</pre></div>
+
+<h3>Step 3 — Comment on MMA-6077 and move it off Ready</h3>
+
+<p>MMA-6077 is the ticket that actually owns this defect, its fix has merged, and its newest
+comment still reads "recommend reopening" because Zade wrote it at 13:27, before the fixed build
+existed.</p>
+
+<p class="desc">the comment — file, control, mechanism, and what was not lifted</p>
+
+<div class="code"><span class="lang">text</span><pre>Fixed the trailing palette button on each Calendar Subscriptions row:
+feature/calendar/.../manage/ManageCalendarsScreen.kt, CalendarItem's trailingContent.
+
+The Icon carried contentDescription = null inside an IconButton, which is a merging
+semantics root with a click action, so the node was activatable with nothing
+speakable — one ATF SpeakableTextPresentCheck violation per subscribed row. The
+description now sits on the Icon, naming the calendar so the button stands alone in
+TalkBack's focus order.
+
+Merged to main as f2547ec7a7. Verified by QA on 5.7.0-(108977.3381651).
+
+The app-wide SpeakableTextPresentCheck suppression in AccessibilityTest was NOT
+lifted.</pre></div>
+
+<ul>
+  <li>Both the comment and the transition are Will's to send. This document drafts only.</li>
+  <li>Do not re-transition MMA-6039 — it is Verified and its own feature work merged under
+  PR #2059.</li>
+</ul>
+
+<h3>Step 4 — What a screen reader should say</h3>
+
+<ul>
+  <li>On a subscribed row's trailing button: the calendar's name in an action phrase, then the
+  role — "Change color for RO-Elders Quorum, button".</li>
+  <li>The button renders only when <code>isVisibleOnAgenda</code> is true, so the count of
+  labelled buttons tracks <strong>subscribed</strong> rows, not all rows. Zade's pass saw nine.</li>
+  <li>The <code>checked disabled</code> location calendars are not a defect and Zade pre-empted
+  them in his own comment. Nothing in this fix changes them.</li>
+</ul>
+
+<p class="prov">The quote and the two comment drafts above are the three blocks on this page with
+no syntax colour. The HTML checklist fails a monochrome block, and this is a deliberate
+exception: they are prose, so colouring a word in them would assert a category the text does not
+have.</p>
+
+</div>
+
+<!-- ---- 6039: deferred ---- -->
+<div class="tabpanel" id="t-39-def">
+
+<h2 class="gh c4">Deferred</h2>
+
+<h3>1 · The app-wide ATF suppression — MMA-5972</h3>
+<code class="loc">app/src/androidTest/kotlin/AccessibilityTest.kt:72</code>
+
+<p>Stays exactly as it is. Removing it fails <code>mainNavScreensAccessibilityTest</code> on
+around 47 violations across screens this work never touches, so it can only come out when the
+whole class is finished.</p>
+
+<div class="note stop">
+  <b>MMA-5972 is not the umbrella ticket for it</b>
+  <p>MMA-5972 is "Directory list rows are clickable but expose no accessible name", and it is
+  <strong>Verified / No Fix Required</strong>. No open ticket currently owns the app-wide
+  suppression. If the suppression is meant to be somebody's job, that ticket does not exist yet.</p>
+</div>
+
+<h3>2 · The other twelve unlabelled clickables</h3>
+
+<p>Inventoried in <code>a11y-unlabeled-clickables-sweep.md</code> — twelve sites in eleven
+files, ranked by blast radius, still filed nowhere. Two of them are the
+<code>feature/calendar</code> sites MMA-6077 §13 and §14 deferred, both blocked on open naming
+questions rather than on effort.</p>
+
+<h3>3 · The commit message on <code>81da1c9094</code></h3>
+
+<p>"corrected core string resource import alias" carries neither the <code>MMA-6077</code>
+prefix the workflow guide asks for nor a conventional-commit type. Recommended left alone: it is
+already merged, and <code>main</code> carries unprefixed peers — <code>8779416383</code>,
+<code>1d98e0001d</code>, <code>4a02db8a81</code>.</p>
+
+</div>
+</section>
+
+<!-- ===================== PAGE 3 — MMA-6096 ===================== -->
+<section class="page" id="p-096">
+
+<div class="head">
+  <h1>MMA-6096 · time zone split</h1>
+  <p class="lede">Event Details formats in the event's authored zone while all five views use the
+  device's, so one instant reads as two clock times. One argument causes it.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-96-dec">Decision · Option 1 vs 2</label>
+  <label class="tab" for="r-t-96-fmt">Steps 1-3 · Formatter</label>
+  <label class="tab" for="r-t-96-test">Steps 4-5 · Tests</label>
+  <label class="tab" for="r-t-96-opt2">Step 6 · Option-2 Delta</label>
+  <label class="tab" for="r-t-96-ver">Step 7 · Verify</label>
+  <label class="tab" for="r-t-96-def">Deferred</label>
+</div>
+
+<!-- ---- 6096: decision ---- -->
+<div class="tabpanel" id="t-96-dec">
+
+<h2 class="gh c2">Decision — option 1, and what it hinges on</h2>
+
+<div class="note">
+  <b>Open — nobody has chosen</b>
+  <p>Option 1 is a recommendation with its deciding reason, not a sign-off. Steps 1-5 are
+  written for it; step 6 is the whole option-2 delta.</p>
+</div>
+
+<p><strong>Recommended: option 1</strong> — drop <code>timeZoneId</code> from
+<code>EventDateTimeFormatter.date</code> and <code>.time</code>, and keep the zone label row.</p>
+
+<p>The deciding reason is not diff size. Option 1 is a <strong>restoration</strong>, not a new
+design: the pre-MMA-6004 detail screen called the 4-arg overload with the same two flag constants
+for both rows, recovered from the deleting commit <code>1d06768645</code>.</p>
+
+<code class="loc">GetCalendarEventUiStateUseCase.kt — deleted in <code>1d06768645</code></code>
+<p class="desc">what the screen did in every build up to 5.6</p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="ty">CalendarEventUiModel</span>.<span class="ty">Details</span>(
+    ...
+    date = { <span class="ty">DateUtils</span>.formatDateRange(it, startMs, endMs, <span class="ty">DateUtil</span>.DEFAULT_EVENT_DATE_WITH_DAY_FLAGS) },
+    time = { <span class="ty">DateUtils</span>.formatDateRange(it, startMs, endMs, <span class="ty">DateUtil</span>.DEFAULT_EVENT_TIME_FLAGS) },
+    ...
+)</pre></div>
+
+<div class="tw">
+<table>
+<thead><tr><th>Hinges on</th><th>Option 1 wins if</th><th>Option 2 wins if</th></tr></thead>
+<tbody>
+<tr><td>Does the user need the authored clock time?</td>
+    <td>No — the zone <em>label</em> already names the zone</td>
+    <td>Yes — out-of-zone leaders schedule on the unit's clock</td></tr>
+<tr><td>Who must sign off</td>
+    <td>Nobody. FR-21 already settles it</td>
+    <td>Design, on wording and row shape</td></tr>
+<tr><td>Localization cost</td>
+    <td>Zero new strings</td>
+    <td>One new 3-arg string across roughly 57 locales</td></tr>
+<tr><td>Ships in 5.7.0</td>
+    <td>Yes, no gate</td>
+    <td>Only if design turns it around inside the cycle</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>The date row moves with the time row</h3>
+
+<p>Not optional and not scope creep. <code>dateText</code> goes through the same zone-aware call
+at <code>GetEventDetailsUiStateUseCase.kt:111</code>, so a fix touching only <code>:116</code>
+leaves a shifted <strong>day</strong> behind.</p>
+
+<p>An event authored 12:30 AM Sep 11 Central sits under <strong>Sep 10</strong> in every view —
+device-zone bucketing at <code>CalendarRepository.kt:88</code> — and reads <strong>"Friday,
+September 11"</strong> on Details. Sep 10 2026 is a Thursday, so the two surfaces disagree on the
+weekday word, not just the clock.</p>
+
+<h3>What must not change</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>Call site</th><th>Zone</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td><code>views/GetScheduleUiStateUseCase.kt:180</code></td><td>device</td><td>Correct, no change</td></tr>
+<tr><td><code>views/GetCalendarGridUiStateUseCase.kt:44, 145-146</code></td><td>device</td><td>Correct, no change</td></tr>
+<tr><td><code>repo/calendar/…/CalendarRepository.kt:88</code></td><td>device</td><td>Correct, no change</td></tr>
+<tr><td><code>edit/EventDetailsFormMapper.kt:50-53</code></td><td><strong>authored</strong></td><td><strong>Must not change</strong> — round-trips to the server</td></tr>
+<tr><td><code>edit/EventEditScreen.kt:514</code></td><td>authored</td><td><strong>Must not change</strong></td></tr>
+<tr><td><code>detail/CalendarIntents.kt:43-44</code></td><td>none — raw epoch millis</td><td>Correct, no change</td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="prov">Recurrence text, reminders and widgets were swept and are unaffected — a
+<code>LocalDate</code> carries no instant, Details renders no reminder, and no widget or
+notification renders an event time. <code>EventDateTimeFormatter</code> has exactly one
+production consumer.</p>
+
+</div>
+
+<!-- ---- 6096: formatter ---- -->
+<div class="tabpanel" id="t-96-fmt">
+
+<h2 class="gh c3">Steps 1-3 — The formatter and its call sites</h2>
+
+<h3><span class="t-edit">1.1 · EDIT — Drop the Zone From <code>date</code></span></h3>
+<code class="loc">feature/calendar/…/detail/EventDateTimeFormatter.kt:21-22</code>
+<p class="desc">the public date entry point loses its third parameter</p>
+
+<ul>
+  <li><strong>Why:</strong>
+    <ul>
+      <li><strong>B</strong> — <code>viewsspec</code> FR-21: all events render in the device's
+      current timezone</li>
+      <li><strong>C</strong> — the date row is the day shift; fixing only the time row leaves it</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">open class</span> <span class="ty">EventDateTimeFormatter</span>(
+    <span class="k">private val</span> application: <span class="ty">Application</span>,
+) {
+<span class="rem"> -  fun date(start: Instant, end: Instant, timeZoneId: String?): String =</span>
+<span class="rem"> -      formatRange(start, end, DateUtil.DEFAULT_EVENT_DATE_WITH_DAY_FLAGS, timeZoneId)</span>
+<span class="add"> +  fun date(start: Instant, end: Instant): String =</span>
+<span class="add"> +      formatRange(start, end, DateUtil.DEFAULT_EVENT_DATE_WITH_DAY_FLAGS)</span>
+    ...
+}</pre></div>
+
+<h3><span class="t-edit">1.2 · EDIT — Drop the Zone From <code>time</code></span></h3>
+<code class="loc">:24-25</code>
+<p class="desc">the public time entry point loses its third parameter</p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">open class</span> <span class="ty">EventDateTimeFormatter</span>(
+    ...
+) {
+    ...
+<span class="rem"> -  fun time(start: Instant, end: Instant, timeZoneId: String?): String =</span>
+<span class="rem"> -      formatRange(start, end, DateUtil.DEFAULT_EVENT_TIME_FLAGS, timeZoneId)</span>
+<span class="add"> +  fun time(start: Instant, end: Instant): String =</span>
+<span class="add"> +      formatRange(start, end, DateUtil.DEFAULT_EVENT_TIME_FLAGS)</span>
+    ...
+}</pre></div>
+
+<h3><span class="t-edit">1.3 · EDIT — Fall Back to the 4-arg <code>formatRange</code></span></h3>
+<code class="loc">:30-40</code>
+<p class="desc">the 6-arg call becomes the 4-arg one, which needs no <code>Formatter</code></p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">open class</span> <span class="ty">EventDateTimeFormatter</span>(
+    ...
+) {
+    ...
+<span class="rem"> -  private fun formatRange(start: Instant, end: Instant, flags: Int, timeZoneId: String?): String {</span>
+<span class="rem"> -      val formatter = Formatter(StringBuilder(), Locale.getDefault())</span>
+<span class="rem"> -      return DateUtils.formatDateRange(</span>
+<span class="rem"> -          application, formatter, start.toEpochMilliseconds(), end.toEpochMilliseconds(),</span>
+<span class="rem"> -          flags, timeZoneId,</span>
+<span class="rem"> -      ).toString()</span>
+<span class="rem"> -  }</span>
+<span class="add"> +  private fun formatRange(start: Instant, end: Instant, flags: Int): String =</span>
+<span class="add"> +      DateUtils.formatDateRange(</span>
+<span class="add"> +          application, start.toEpochMilliseconds(), end.toEpochMilliseconds(), flags,</span>
+<span class="add"> +      )</span>
+}</pre></div>
+
+<ul>
+  <li>The 4-arg overload returns <code>String</code>, not <code>CharSequence</code>, so
+  <code>.toString()</code> goes with it.</li>
+  <li><code>import java.util.Formatter</code> at <code>:8</code> becomes unused and must be
+  deleted or detekt fails. <code>import java.util.Locale</code> at <code>:9</code>
+  <strong>stays</strong> — <code>eventTimeZoneName</code> still uses it.</li>
+  <li><code>open class</code> at <code>:17</code> stays open;
+  <code>GetEventDetailsUiStateUseCaseTest</code> mocks the type.</li>
+</ul>
+
+<h3><span class="t-edit">Step 2 · EDIT — Stop the KDoc Claiming the Old Behaviour</span></h3>
+<code class="loc">:13-16</code>
+<p class="desc">the current wording is true only for a null zone, the one case that never diverges</p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="rem">-/**</span>
+<span class="rem"> - * Formats an event's date and time rows in the event's own IANA time zone (a null</span>
+<span class="rem"> - * time-zone id falls back to the device zone, matching the old detail screen's behavior).</span>
+<span class="rem"> - */</span>
+<span class="add">+/**</span>
+<span class="add"> + * Formats an event's date and time rows in the **device's** zone — the same zone all</span>
+<span class="add"> + * five calendar views render in (`viewsspec` FR-21), so Event Details and the views</span>
+<span class="add"> + * cannot disagree on the clock time or the calendar day. An event's own zone reaches</span>
+<span class="add"> + * the screen as a label only, through [timeZoneName] (MMA-6096).</span>
+<span class="add"> + */</span>
+ <span class="k">open class</span> <span class="ty">EventDateTimeFormatter</span>(</pre></div>
+
+<h3><span class="t-edit">3.1 · EDIT — Drop the Argument on the Date Row</span></h3>
+<code class="loc">feature/calendar/…/detail/GetEventDetailsUiStateUseCase.kt:111</code>
+<p class="desc"><code>timeZone</code> no longer reaches the date formatter</p>
+
+<div class="code"><span class="lang">kotlin</span><pre>    ): <span class="ty">EventDetailsUiState</span> = <span class="ty">EventDetailsUiState</span>(
+        ...
+<span class="rem"> -      dateText = eventDateTimeFormatter.date(start, end, timeZone),</span>
+<span class="add"> +      dateText = eventDateTimeFormatter.date(start, end),</span>
+        ...
+    )</pre></div>
+
+<h3><span class="t-edit">3.2 · EDIT — Drop the Argument on the Time Row</span></h3>
+<code class="loc">:113-117</code>
+<p class="desc">only the non-all-day branch changes; the "All Day" literal is untouched</p>
+
+<div class="code"><span class="lang">kotlin</span><pre>        timeText = <span class="k">if</span> (allDay) {
+            stringResources.getString(<span class="ty">CoreR</span>.string.event_all_day)
+        } <span class="k">else</span> {
+<span class="rem"> -          eventDateTimeFormatter.time(start, end, timeZone)</span>
+<span class="add"> +          eventDateTimeFormatter.time(start, end)</span>
+        },</pre></div>
+
+<ul>
+  <li><code>timeZoneText</code> at <code>:118</code> is <strong>not</strong> touched —
+  <code>timeZoneName(start, timeZone)</code> keeps the zone id, which is what renders the label.</li>
+  <li><code>EventDetails.timeZone</code> stays on the read model.
+  <code>EventDetailsMapper.kt:38</code> still populates it and the editor still consumes it.</li>
+</ul>
+
+</div>
+
+<!-- ---- 6096: tests ---- -->
+<div class="tabpanel" id="t-96-test">
+
+<h2 class="gh c3">Steps 4-5 — The tests</h2>
+
+<div class="note stop">
+  <b>This file currently asserts the bug</b>
+  <p>Both tests in <code>EventDateTimeFormatterRobolectricTest.kt:28-38</code> state that the
+  event's zone drives the output. They pass today and <strong>will fail</strong> after step 1.
+  They are the regression guard and must be rewritten, not deleted. The findings note does not
+  mention them.</p>
+</div>
+
+<h3><span class="t-add">4.1 · ADD — Pin the Device Zone in a Fixture</span></h3>
+<code class="loc">feature/calendar/src/test/…/detail/EventDateTimeFormatterRobolectricTest.kt:20-26</code>
+<p class="desc">save and restore the JVM default zone around each test</p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> <span class="ty">EventDateTimeFormatterRobolectricTest</span> {
+
+    <span class="k">private val</span> formatter = <span class="ty">EventDateTimeFormatter</span>(<span class="ty">ApplicationProvider</span>.getApplicationContext&lt;<span class="ty">Application</span>&gt;())
+<span class="add"> +  private lateinit var defaultZone: TimeZone</span>
+<span class="add"> +</span>
+<span class="add"> +  @Before</span>
+<span class="add"> +  fun setUp() {</span>
+<span class="add"> +      defaultZone = TimeZone.getDefault()</span>
+<span class="add"> +      TimeZone.setDefault(TimeZone.getTimeZone("America/Denver"))</span>
+<span class="add"> +  }</span>
+    ...
+}</pre></div>
+
+<ul>
+  <li>Add the matching <code>@After</code> restoring <code>defaultZone</code>. The
+  save-and-restore-a-JVM-global shape is already in this package for <code>Locale</code> —
+  <code>EventDateTimeFormatterTest.kt:27-37</code>.</li>
+  <li><code>@Before</code> and <code>@After</code> here are <strong>JUnit 4</strong>
+  (<code>org.junit.Before</code>), not Jupiter. The file runs under
+  <code>@RunWith(AndroidJUnit4::class)</code>. This is the one place the repo's JUnit-5-always
+  rule does not apply, and the existing file is the precedent.</li>
+</ul>
+
+<h3><span class="t-edit">4.2 · EDIT — Rewrite the Date Test</span></h3>
+<code class="loc">:28-32</code>
+<p class="desc">the day shift as an assertion: the device weekday, not the authored one</p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> <span class="ty">EventDateTimeFormatterRobolectricTest</span> {
+    ...
+<span class="rem"> -  @Test</span>
+<span class="rem"> -  fun `the date renders in the event's zone, not the device's`() {</span>
+<span class="rem"> -      assertThat(formatter.date(start, end, "America/New_York"))</span>
+<span class="rem"> -          .isNotEqualTo(formatter.date(start, end, "America/Denver"))</span>
+<span class="rem"> -  }</span>
+<span class="add"> +  @Test</span>
+<span class="add"> +  fun `the date renders in the device zone, matching the calendar views`() {</span>
+<span class="add"> +      assertThat(formatter.date(dayBoundary, dayBoundary)).contains("Thursday")</span>
+<span class="add"> +      assertThat(formatter.date(dayBoundary, dayBoundary)).doesNotContain("Friday")</span>
+<span class="add"> +  }</span>
+    ...
+}</pre></div>
+
+<ul>
+  <li><code>dayBoundary = Instant.parse("2026-09-11T05:30:00Z")</code> — 12:30 AM
+  <strong>Friday</strong> Sep 11 in Chicago, 11:30 PM <strong>Thursday</strong> Sep 10 in
+  Denver. Sep 10 2026 is a Thursday.</li>
+  <li>Asserting the weekday <em>word</em> rather than the whole formatted string is deliberate.
+  The pattern <code>DateUtils</code> emits is locale- and platform-dependent; the weekday is
+  not, and it is the part that shifts.</li>
+  <li>Start and end are the same instant so the range cannot straddle midnight in one zone and
+  not the other, which would make the expected value a range.</li>
+</ul>
+
+<h3><span class="t-edit">4.3 · EDIT — Rewrite the Time Test</span></h3>
+<code class="loc">:34-38</code>
+<p class="desc">the clock digits, which do not depend on the framework's pattern</p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> <span class="ty">EventDateTimeFormatterRobolectricTest</span> {
+    ...
+<span class="rem"> -  @Test</span>
+<span class="rem"> -  fun `the time renders in the event's zone, not the device's`() {</span>
+<span class="rem"> -      assertThat(formatter.time(start, end, "America/New_York"))</span>
+<span class="rem"> -          .isNotEqualTo(formatter.time(start, end, "America/Denver"))</span>
+<span class="rem"> -  }</span>
+<span class="add"> +  @Test</span>
+<span class="add"> +  fun `the time renders in the device zone, matching the calendar views`() {</span>
+<span class="add"> +      assertThat(formatter.time(dayBoundary, dayBoundary)).contains("11:30")</span>
+<span class="add"> +      assertThat(formatter.time(dayBoundary, dayBoundary)).doesNotContain("12:30")</span>
+<span class="add"> +  }</span>
+}</pre></div>
+
+<p class="prov">The four <code>timeZoneName</code> tests in
+<code>EventDateTimeFormatterTest.kt:39-59</code> are untouched — nothing about the label changes,
+including the unparseable-id case at <code>:44-47</code>.</p>
+
+<h3><span class="t-edit">Step 5 · EDIT — Re-arity the Mocked Stubs</span></h3>
+<code class="loc">feature/calendar/src/test/…/detail/GetEventDetailsUiStateUseCaseTest.kt:93-94</code>
+<p class="desc">two stubs lose their third matcher; the <code>timeZoneName</code> stub is unchanged</p>
+
+<div class="code"><span class="lang">kotlin</span><pre>    @<span class="ty">BeforeEach</span>
+    <span class="k">fun</span> setUp() {
+        ...
+<span class="rem"> -      every { eventDateTimeFormatter.date(any(), any(), any()) } returns "date-text"</span>
+<span class="rem"> -      every { eventDateTimeFormatter.time(any(), any(), any()) } returns "time-text"</span>
+<span class="add"> +      every { eventDateTimeFormatter.date(any(), any()) } returns "date-text"</span>
+<span class="add"> +      every { eventDateTimeFormatter.time(any(), any()) } returns "time-text"</span>
+        every { eventDateTimeFormatter.timeZoneName(any(), any()) } returns "zone-text"
+        ...
+    }</pre></div>
+
+<ul>
+  <li>No new test belongs here. Anything asserting a zone through a mock pins the stub, not the
+  behaviour. The real guard is 12.</li>
+  <li><strong>No screenshot golden covers Event Details.</strong>
+  <code>feature/calendar/src/screenshotTestDebug</code> holds 228 reference PNGs across seven
+  packages and there is no <code>detail</code> directory, so nothing needs regenerating.</li>
+  <li><code>EventDetailsScreenTest.kt</code> drives the hoisted composable with literal
+  pre-formatted strings, so option 1 does not touch it. Option 2 does.</li>
+</ul>
+
+</div>
+
+<!-- ---- 6096: option 2 ---- -->
+<div class="tabpanel" id="t-96-opt2">
+
+<h2 class="gh c3">Step 6 — Option-2 delta</h2>
+
+<p>Skip entirely under option 1. Option 2 keeps steps 1-5 as written — the device zone still
+becomes the primary value on both rows — and adds the authored half. It is a superset, not an
+alternative.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>#</th><th>Work</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td>6.1</td><td>One new 3-arg string, English plus roughly 57 locale files</td><td><code>feature/calendar/…/values/strings.xml</code>, after <code>:190</code></td></tr>
+<tr><td>6.2</td><td><code>EventDateTimeFormatter</code> gains <code>StringResources</code></td><td>constructor at <code>:17-19</code>; no Koin edit needed</td></tr>
+<tr><td>6.3</td><td>Offset-equality gate plus the unparseable guard</td><td>inside <code>time</code>, keyed on <code>eventTimeZoneName</code> returning null</td></tr>
+<tr><td>6.4</td><td>Time row's supporting line stops being <code>Time zone: …</code></td><td><code>EventDetailsScreen.kt:294-301</code></td></tr>
+<tr><td>6.5</td><td>Rewrite the row-shape assertions</td><td><code>EventDetailsScreenTest.kt:230-235</code></td></tr>
+<tr><td>6.6</td><td>New tests for both branches — offsets differ, offsets match</td><td><code>EventDateTimeFormatterRobolectricTest.kt</code></td></tr>
+<tr><td>6.7</td><td>Design nod on wording and row length</td><td>not a code step</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3><span class="t-add">6.1 · ADD — The Dual-Zone String</span></h3>
+<code class="loc">feature/calendar/src/main/res/values/strings.xml (after :190)</code>
+<p class="desc">one value in two zones on one line, the authored zone named</p>
+
+<div class="code"><span class="lang">xml</span><pre><span class="add">+&lt;string name="calendar_event_time_both_zones"</span>
+<span class="add">+    comment="Event Details time row when the event's own time zone differs from the</span>
+<span class="add">+    device's. %1$s is the time in the device's zone; %2$s is the time in the event's</span>
+<span class="add">+    zone; %3$s is the event zone's name"&gt;%1$s your time / %2$s %3$s&lt;/string&gt;</span></pre></div>
+
+<p>Shaped on the house precedent for a dual-value string,
+<code>core/strings/…/values/strings.xml:3258</code> — <code>%1$s mi / %2$s km</code>, consumed at
+<code>AllTemplesListScreen.kt:172</code>.</p>
+
+<h3>The row shape it produces</h3>
+
+<div class="code"><span class="lang">text</span><pre>6:30 PM your time / 7:30 PM Central Daylight Time   ← headline, offsets differ
+Thursday, September 10, 2026                        ← date row, device zone always</pre></div>
+
+<p class="prov">That block carries no syntax colour, which the HTML checklist fails. Deliberate:
+it is rendered output, not source, so a keyword colour in it would name a category the two lines
+do not have.</p>
+
+<h3>The three traps</h3>
+
+<ul>
+  <li><strong>Offset equality, never id equality.</strong> The condition is offset equality at
+  the event's own instant — <code>America/Denver</code> and <code>US/Mountain</code> are one zone
+  under two names.</li>
+  <li><strong>When the offsets match, render the device value alone</strong> and leave the
+  supporting row as today's label. Never "7:30 PM Central / 7:30 PM Central".</li>
+  <li><strong>All-day events get no dual value.</strong> <code>timeText</code> is already the
+  "All Day" literal and <code>timeZoneText</code> is already null.</li>
+</ul>
+
+<p class="prov">The "Time zone: …" row is absorbed, not deleted: it stops being a bare label and
+becomes the authored value plus its zone, reverting to today's form when the offsets match.
+Under option 2 an unparseable zone <em>does</em> need a guard — the in-repo precedent is
+<code>EventDetailsFormMapper.kt:50</code>.</p>
+
+</div>
+
+<!-- ---- 6096: verify ---- -->
+<div class="tabpanel" id="t-96-ver">
+
+<h2 class="gh c3">Step 7 — Verify</h2>
+
+<h3><span class="t-run">7.1 · RUN — The Module Gate, Then the Pre-PR Gate</span></h3>
+<code class="loc">./verify.sh — from the repo root</code>
+<p class="desc">both write to a log because either can exceed the 120s tool timeout</p>
+
+<div class="code"><span class="lang">bash</span><pre><span class="k">./verify.sh</span> --module <span class="ty">:feature:calendar</span> &gt; /tmp/verify-calendar.log 2&gt;&amp;1 &amp;
+# poll the log; then, once green:
+<span class="k">./verify.sh</span> --pre-pr &gt; /tmp/verify-prepr.log 2&gt;&amp;1 &amp;</pre></div>
+
+<ul>
+  <li>The module gate runs <code>:feature:calendar:compileDebugKotlin</code>,
+  <code>detektDebug</code>, <code>testDebugUnitTest</code> and
+  <code>validateDebugScreenshotTest</code> — <code>verify.sh:68-74</code>.</li>
+  <li>Recompile after any lint or format auto-fix. Stripping a <code>!!</code> can break
+  compilation even when the earlier build was green.</li>
+</ul>
+
+<div class="note">
+  <b>validateDebugScreenshotTest is already red on plain main</b>
+  <p>23 diffs, all in <code>LocationScreenshotTest</code> (16) and
+  <code>ManageEventsScreenshotTest</code> (7). Confirm the failure set is <em>unchanged</em>
+  rather than treating it as caused by this branch.</p>
+</div>
+
+<h3>7.2 — The negative check</h3>
+
+<p>Before opening the PR, revert step 1 and confirm both rewritten tests in step 4 fail. A test
+that passes on the unfixed formatter is not a guard.</p>
+
+<h3>7.3 — The device pass</h3>
+
+<p>A Mountain-zone device against a Central unit is the only configuration that reproduces the
+defect. Check both rows and the label together: the clock time, the weekday word on the date row,
+and the zone label still naming the authored zone.</p>
+
+</div>
+
+<!-- ---- 6096: deferred ---- -->
+<div class="tabpanel" id="t-96-def">
+
+<h2 class="gh c4">Deferred</h2>
+
+<p>Found while sweeping for this fix. Cut from this branch, recorded only.</p>
+
+<h3>1 · All-day events are stored as instants, not dates</h3>
+<code class="loc">repo/calendar/…/CalendarEventMapper.kt:46-49</code>
+<p class="desc">all-day events get synthetic 00:00 / 23:59:59 wall times in the event's zone</p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> <span class="ty">DtoEvent</span>.toCalendarEvent(month: <span class="ty">YearMonth</span>, proxy: <span class="ty">Boolean</span>): <span class="ty">CalendarEvent</span>? {
+    ...
+    <span class="k">val</span> startInstant = toEventInstant(startDate ?: <span class="k">return null</span>, startTime ?: "00:00", zone) ?: <span class="k">return null</span>
+    <span class="k">val</span> endInstant = toEventInstant(endDate ?: <span class="k">return null</span>, endTime ?: "23:59:59", zone) ?: <span class="k">return null</span>
+    ...
+}</pre></div>
+
+<p>An all-day Sep 11 Central event is stored as <code>2026-09-11T05:00Z</code>, which is 11:00 PM
+<strong>Sep 10</strong> in Denver. A date-only concept has no instant, so no zone conversion of it
+is correct.</p>
+
+<ul>
+  <li><strong>Blast radius is wider than Details</strong> — the views bucket all-day events by
+  the same device-zone conversion, so an all-day event authored east of the device already lands
+  on the wrong day in all five views.</li>
+  <li><strong>Needs a schema change</strong>, not a formatting change: a nullable
+  <code>LocalDate</code> pair alongside the instants, or an all-day discriminator the readers
+  honour.</li>
+  <li>Not filed. Worth its own ticket before somebody reports it as a second timezone bug.</li>
+</ul>
+
+<div class="note">
+  <b>Why all-day events are not exempted from the fix</b>
+  <p>Keeping them in the authored zone would reintroduce exactly the inconsistency this ticket is
+  about — Details saying Sep 11 while all five views say Sep 10. The fix belongs on the storage
+  side.</p>
+</div>
+
+<h3>2 · The authored day on the option-2 row</h3>
+
+<p>If option 2 lands and the authored zone's <em>date</em> differs from the device's, the
+dual-zone time row discloses the other clock time but not the other day. Whether the authored
+half should carry its own date is an open question that rides with option 2's wording
+conversation rather than blocking it.</p>
+
+<h3>3 · The TestRail note, only under option 3</h3>
+
+<p>The findings note asks for a note on the TestRail Calendar cases so out-of-zone testers stop
+re-finding the divergence. That is only owed under option 3, which FR-21 contradicts. Under
+options 1 and 2 the divergence is gone and the note would document behaviour that no longer
+exists.</p>
+
+</div>
+</section>
+
+<!-- ===================== PAGE 4 — MMA-6010 ===================== -->
+<section class="page" id="p-010">
+
+<div class="head">
+  <h1>MMA-6010 · hidden calendar</h1>
+  <p class="lede">Hiding a calendar leaves its facility-booked events on screen, because the
+  agenda query joins with an OR. Six months latent, and the fix needs sign-off.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-10-dec">Decision · Semantics</label>
+  <label class="tab" for="r-t-10-sql">Step 1 · SQL</label>
+  <label class="tab" for="r-t-10-test">Steps 2-3 · DAO Tests</label>
+  <label class="tab" for="r-t-10-ver">Step 4 · Verify</label>
+  <label class="tab" for="r-t-10-chip">MMA-5973 · Steps 1-4</label>
+  <label class="tab" for="r-t-10-def">Deferred</label>
+</div>
+
+<!-- ---- 6010: decision ---- -->
+<div class="tabpanel" id="t-10-dec">
+
+<h2 class="gh c2">Decision — the semantics, not signed off</h2>
+
+<div class="note stop">
+  <b>Nothing in steps 1-4 is safe to write yet</b>
+  <p>This is the open question, not a settled decision. QA and design have to accept the
+  behaviour change in this section first, because it changes how MMA-5231 — shipped in 5.3.0 —
+  behaves.</p>
+</div>
+
+<code class="loc">database/calendar/…/event/CalendarEventDao.kt:64-70</code>
+<p class="desc">the query as it stands today; all five views ride it</p>
+
+<div class="code"><span class="lang">sql</span><pre><span class="k">SELECT DISTINCT</span> Event.*
+    <span class="k">FROM</span> Event
+    <span class="k">JOIN</span> Calendar <span class="k">ON</span> (Event.calendarId = Calendar.id
+                   <span class="k">OR</span> (Event.locationId = Calendar.locationId <span class="k">AND</span> Event.locationId <span class="k">IS NOT NULL</span>))
+                  <span class="k">AND</span> Calendar.displayed = 1
+    <span class="k">ORDER BY</span> Event.dateStart</pre></div>
+
+<p>Hiding a calendar sets <code>displayed = 0</code> on that one row, so the left arm fails. If
+the event books a facility the right arm still matches the <strong>building</strong> calendar
+row, <code>DISTINCT</code> collapses the join back to one row, and the event renders as if
+nothing was hidden.</p>
+
+<h3>The exact change QA and design must accept</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th></th><th>Rule for whether an event is visible</th></tr></thead>
+<tbody>
+<tr><td>MMA-5231 today</td><td><strong>Any</strong> calendar it touches is displayed</td></tr>
+<tr><td>After this fix</td><td><strong>Its own</strong> calendar is displayed</td></tr>
+<tr><td>After this fix, fallback</td><td>Its building calendar is displayed, <strong>and</strong> its own calendar is not one the user can hide at all</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>What a user loses.</strong> Subscribing to a meetinghouse no longer shows bookings made
+by wards that same user has hidden. Bookings by units the user is not subscribed to still
+appear.</p>
+
+<h3>Truth table — the evidence for the decision</h3>
+
+<p>"Mine" means the calendar appears in the show-or-hide sheet, so the user could have hidden it.
+Rows a-d are Zade's four Sep 8 events.</p>
+
+<div class="tw">
+<table>
+<thead><tr>
+  <th>#</th><th>Case</th><th><code>locationId</code></th><th>Owning calendar</th>
+  <th>Building calendar</th><th>Today</th><th>After</th>
+</tr></thead>
+<tbody>
+<tr><td>a</td><td>Location Desc Test</td><td>null</td><td>mine, hidden</td><td>—</td><td>hidden ✓</td><td>hidden ✓</td></tr>
+<tr><td>b</td><td>Loc Addr Test</td><td>null</td><td>mine, hidden</td><td>—</td><td>hidden ✓</td><td>hidden ✓</td></tr>
+<tr><td>c</td><td>Loc Fac Test</td><td>set</td><td>mine, hidden</td><td>displayed</td><td><span class="rem">shown — defect</span></td><td>hidden ✓</td></tr>
+<tr><td>d</td><td>Test 1, books a building</td><td>set</td><td>mine, hidden</td><td>displayed</td><td><span class="rem">shown — defect</span></td><td>hidden ✓</td></tr>
+<tr><td>e</td><td>Foreign unit books my building</td><td>set</td><td>not mine, hidden</td><td>displayed</td><td>shown ✓</td><td>shown ✓</td></tr>
+<tr><td>f</td><td>Owning calendar row absent</td><td>set</td><td>no row at all</td><td>displayed</td><td>shown ✓</td><td>shown ✓</td></tr>
+<tr><td>g</td><td>Facility has no building calendar</td><td>set</td><td>mine, hidden</td><td>none</td><td>hidden ✓</td><td>hidden ✓</td></tr>
+<tr><td>h</td><td>Own calendar shown, building hidden</td><td>set</td><td>mine, displayed</td><td>hidden</td><td>shown</td><td>shown — unchanged</td></tr>
+<tr><td>i</td><td>Both displayed</td><td>set</td><td>mine, displayed</td><td>displayed</td><td>shown ✓</td><td>shown ✓</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>Rows e and f are the regression the OR exists to prevent, and both survive.</strong>
+Row e is the building-calendar use case, and only the location arm can admit it — which it does,
+because that calendar is not one the user could have hidden. Row f is the case the DAO's own KDoc
+already documents: "a building-calendar event can legitimately have no calendar row".</p>
+
+<p><strong>Row h is the residual asymmetry.</strong> Hide wins on the <em>owning</em> calendar
+only, so hiding a BUILDING calendar does not remove a booking whose owning calendar is still
+displayed. Unchanged from today, and the one thing a tester exercising "hide Sunstone Building"
+will notice. State it explicitly when asking for sign-off.</p>
+
+<h3>The findings note's predicate is too narrow</h3>
+
+<p>The note says the location arm should admit events whose <code>calendarId</code> matches no
+<strong>subscribed</strong> Calendar row. <code>subscribed != 0</code> alone is the wrong
+predicate.</p>
+
+<code class="loc">database/calendar/…/calendar/CalendarDao.kt:57</code>
+<p class="desc">the set the sheet lists, and therefore the set the user can hide</p>
+
+<div class="code"><span class="lang">sql</span><pre><span class="k">SELECT</span> * <span class="k">FROM</span> Calendar <span class="k">WHERE</span> subscribed != 0 <span class="k">OR</span> subscribable = 0 <span class="k">ORDER BY</span> unitId, name</pre></div>
+
+<p>A non-subscribable calendar has <code>subscribed = 0</code> and is still on the sheet with a
+working toggle. Under the note's wording, hiding such a calendar would still leak its
+facility-booked events through the location arm — the same defect, one row narrower. The
+predicate in step 1 uses the sheet's own disjunction so the two can never disagree.</p>
+
+<h3>One query, two consumers — the whole surface</h3>
+
+<p><strong>No sibling query carries the OR join.</strong> A repo-wide grep for
+<code>Calendar.locationId</code> returns two hits: the query itself at
+<code>CalendarEventDao.kt:67</code> and a KDoc mention at <code>CalendarEvent.kt:36</code>.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>Reader</th><th>Path</th><th>Filtered?</th></tr></thead>
+<tbody>
+<tr><td>Schedule</td><td><code>GetScheduleUiStateUseCase.kt:66</code> → <code>findAllAgendaEventsFlow</code></td><td>Yes, this query</td></tr>
+<tr><td>Day · Week · 3-Day · Month</td><td><code>GetCalendarGridUiStateUseCase.kt:50</code> → the same flow</td><td>Yes, this query</td></tr>
+<tr><td>Month bars and chips</td><td>derived from <code>eventsByDateFlow</code>, the same flow</td><td>Yes, inherited</td></tr>
+<tr><td>Event Details</td><td><code>CalendarEventRepository.kt:202</code> → <code>findWithCalendarByIdFlow</code></td><td><strong>No, by design</strong></td></tr>
+<tr><td>Manage Events</td><td><code>GetManageEventsUiStateUseCase.kt:50-51</code> — drafts and recent</td><td><strong>No, by design</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>There is no second agenda query, no <code>PagingSource</code>, no <code>COUNT</code>, no
+has-events-on-date check and no per-day badge query — so a one-line fix would not have missed a
+sibling. The two unfiltered readers are correct as they are: Event Details resolves one event by
+id, so a deep link must still open an event on a hidden calendar.</p>
+
+</div>
+
+<!-- ---- 6010: sql ---- -->
+<div class="tabpanel" id="t-10-sql">
+
+<h2 class="gh c3">Step 1 — Rewrite <code>findAllByDisplayedCalendarFlow</code></h2>
+
+<p>Do not start until the Decision tab is signed off. Two sub-blocks because the whole string
+exceeds one block; 1.2 grows what 1.1 wrote.</p>
+
+<h3><span class="t-edit">1.1 · EDIT — Replace the Join With the Owning-Calendar <code>EXISTS</code></span></h3>
+<code class="loc">database/calendar/…/event/CalendarEventDao.kt:64-70</code>
+<p class="desc">drops the disjunctive join and the <code>DISTINCT</code> it forced</p>
+
+<div class="code"><span class="lang">kotlin</span><pre>@<span class="ty">Query</span>("""
+<span class="rem"> -  SELECT DISTINCT Event.*</span>
+<span class="rem"> -      FROM Event</span>
+<span class="rem"> -      JOIN Calendar ON (Event.calendarId = Calendar.id OR (Event.locationId =</span>
+<span class="rem"> -          Calendar.locationId AND Event.locationId IS NOT NULL)) AND Calendar.displayed = 1</span>
+<span class="add"> +  SELECT Event.* FROM Event</span>
+<span class="add"> +  WHERE EXISTS (SELECT 1 FROM Calendar Own</span>
+<span class="add"> +                WHERE Own.id = Event.calendarId AND Own.displayed = 1)</span>
+    ORDER BY Event.dateStart
+    """)
+<span class="k">fun</span> findAllByDisplayedCalendarFlow(): <span class="ty">Flow</span>&lt;<span class="ty">List</span>&lt;<span class="ty">CalendarEvent</span>&gt;&gt;</pre></div>
+
+<p class="prov">The real file holds the join on one long line at <code>:67</code>; it is wrapped
+here to stay readable and must not be re-wrapped in the source.</p>
+
+<h3><span class="t-edit">1.2 · EDIT — Add the Foreign-Facility Arm</span></h3>
+<code class="loc">:64-70</code>
+<p class="desc">readmits a booking only when its own calendar is not one the user can hide</p>
+
+<ul>
+  <li><strong>What:</strong>
+    <ul>
+      <li><code>Mine</code> is the not-hideable guard, <code>Bldg</code> is the
+      building-visibility check</li>
+    </ul>
+  </li>
+  <li><strong>Why:</strong>
+    <ul>
+      <li><strong>B</strong> — MMA-5231 must keep working for foreign bookings on a subscribed
+      meetinghouse</li>
+      <li><strong>C</strong> — without the <code>Mine</code> guard, <code>Bldg</code> alone
+      reproduces the original defect</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="code"><span class="lang">sql</span><pre>    WHERE EXISTS (SELECT 1 FROM Calendar Own
+                  WHERE Own.id = Event.calendarId AND Own.displayed = 1)
+<span class="add"> +     OR (Event.locationId IS NOT NULL</span>
+<span class="add"> +         AND NOT EXISTS (SELECT 1 FROM Calendar Mine</span>
+<span class="add"> +                         WHERE Mine.id = Event.calendarId</span>
+<span class="add"> +                           AND (Mine.subscribed != 0 OR Mine.subscribable = 0))</span>
+<span class="add"> +         AND EXISTS (SELECT 1 FROM Calendar Bldg</span>
+<span class="add"> +                     WHERE Bldg.locationId = Event.locationId</span>
+<span class="add"> +                       AND Bldg.displayed = 1))</span>
+    ORDER BY Event.dateStart</pre></div>
+
+<ul>
+  <li><code>Event.locationId IS NOT NULL</code> is <strong>redundant</strong> under SQL NULL
+  semantics — <code>Bldg.locationId = Event.locationId</code> is already never true when either
+  side is NULL. It is kept because the query it replaces carried it, and dropping it invites a
+  reviewer to re-derive the NULL rule.</li>
+  <li>Rewrite the function's KDoc in the same edit. <code>CalendarEventDao.kt:26-30</code>
+  describes the old OR — "the agenda query also matches <code>locationId</code>" — and that
+  sentence becomes wrong the moment 1.2 lands.</li>
+</ul>
+
+<h3>Why <code>EXISTS</code> and not a rewritten <code>JOIN</code></h3>
+
+<div class="cards">
+  <div class="card">
+    <h4>Two of three subqueries hit the primary key</h4>
+    <p><code>Calendar.id</code> is a rowid lookup per event. Only the <code>Bldg.locationId</code>
+    subquery scans, and <code>Calendar</code> is tens of rows per unit.</p>
+  </div>
+  <div class="card">
+    <h4><code>DISTINCT</code> goes away</h4>
+    <p>The OR join can match an event twice, which is what forced it — and <code>DISTINCT</code>
+    over <code>Event.*</code> builds a temp b-tree keyed on a roughly 50-column row.</p>
+  </div>
+  <div class="card">
+    <h4>No index is added</h4>
+    <p><code>Calendar</code> declares no indices at all. An index would need a schema change, for
+    a table small enough to scan.</p>
+  </div>
+</div>
+
+<h3>Query-only — no entity change, no migration</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>Fact</th><th>Consequence</th></tr></thead>
+<tbody>
+<tr><td>The change is one string inside <code>@Query</code></td><td>No <code>@Entity</code>, no <code>@Database</code>, no version bump</td></tr>
+<tr><td><code>CalendarDatabase.kt:47</code> is <code>version = 9</code></td><td>Stays 9. No <code>CalendarMigration10</code></td></tr>
+<tr><td><code>schemas/…/9.json</code> is <strong>untracked</strong></td><td>In-flux — not committed, not altered</td></tr>
+<tr><td>DAO stays <code>Flow</code>-returning</td><td>Satisfies Room 3's non-blocking rule and <code>konsist/room/DaoTest</code></td></tr>
+</tbody>
+</table>
+</div>
+
+</div>
+
+<!-- ---- 6010: dao tests ---- -->
+<div class="tabpanel" id="t-10-test">
+
+<h2 class="gh c3">Steps 2-3 — The DAO tests</h2>
+
+<p>The existing helpers hard-code exactly the values the new cases need to vary.</p>
+
+<h3><span class="t-edit">2.1 · EDIT — Give <code>calendar()</code> Its Six Parameters</span></h3>
+<code class="loc">database/calendar/…/event/CalendarEventDaoTest.kt:234-252</code>
+<p class="desc">today it is parameterless, with <code>id = 12L</code> and everything displayed</p>
+
+<div class="code"><span class="lang">kotlin</span><pre> ~  <span class="k">private fun</span> calendar(
+<span class="add"> +      id: Long = 12L,</span>
+<span class="add"> +      locationId: Long? = null,</span>
+<span class="add"> +      displayed: Boolean = true,</span>
+<span class="add"> +      subscribed: Boolean = true,</span>
+<span class="add"> +      subscribable: Boolean = true,</span>
+<span class="add"> +      type: CalendarType = CalendarType.UNIT,</span>
+ ~  ) = <span class="ty">Calendar</span>(
+<span class="rem"> -      id = 12L,</span>
+<span class="add"> +      id = id,</span>
+        ...
+    )</pre></div>
+
+<ul>
+  <li>The two <code>~</code> lines are the old one-liner
+  <code>private fun calendar() = Calendar(</code> split in two.</li>
+  <li>Every existing call is <code>calendar()</code> with no arguments, so the defaults keep all
+  six current tests green. Confirm that before adding a case.</li>
+  <li>Substitute the parameter for the literal on <code>locationId</code>,
+  <code>displayed</code>, <code>subscribed</code>, <code>subscribable</code> and
+  <code>type</code> as well. Only <code>id</code> is shown, as the pattern.</li>
+</ul>
+
+<h3><span class="t-edit">2.2 · EDIT — Give <code>event()</code> Two Parameters</span></h3>
+<code class="loc">:326-331</code>
+<p class="desc"><code>calendarId</code> and <code>locationId</code> are hard-coded in the body today</p>
+
+<div class="code"><span class="lang">kotlin</span><pre>    <span class="k">private fun</span> event(
+        id: <span class="ty">Long</span>,
+        name: <span class="ty">String</span> = "Event $id",
+        ...
+<span class="add"> +      calendarId: Long = 12L,</span>
+<span class="add"> +      locationId: Long? = null,</span>
+    ) = <span class="ty">CalendarEvent</span>(
+        ...
+    )</pre></div>
+
+<h3><span class="t-edit">2.3 · EDIT — Wire the Two <code>event()</code> Assignments</span></h3>
+<code class="loc">:334, 343</code>
+<p class="desc">the constructor call in the same function body</p>
+
+<div class="code"><span class="lang">kotlin</span><pre>    ) = <span class="ty">CalendarEvent</span>(
+        id = id,
+<span class="rem"> -      calendarId = 12L,</span>
+<span class="add"> +      calendarId = calendarId,</span>
+        ...
+<span class="rem"> -      locationId = null,</span>
+<span class="add"> +      locationId = locationId,</span>
+        ...
+    )</pre></div>
+
+<h3>Step 3 — Add the DAO cases</h3>
+
+<p>One <code>@Test</code> per truth-table row, named after the behaviour rather than the row
+letter.</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>#</th><th>Test</th><th>Row</th></tr></thead>
+<tbody>
+<tr><td>3.1</td><td>a hidden calendar's non-facility event does not emit</td><td>a · b</td></tr>
+<tr><td>3.2</td><td>a hidden calendar's facility-booked event does not emit</td><td><strong>c · d — the defect</strong></td></tr>
+<tr><td>3.3</td><td>a displayed building calendar still emits an unsubscribed calendar's booking</td><td><strong>e — the MMA-5231 guard</strong></td></tr>
+<tr><td>3.4</td><td>a displayed building calendar still emits a booking with no owning row</td><td>f</td></tr>
+<tr><td>3.5</td><td>a hidden calendar's facility event does not emit with no building match</td><td>g</td></tr>
+<tr><td>3.6</td><td>a displayed calendar's event emits exactly once when both rows match</td><td>i — proves <code>DISTINCT</code> was safe to drop</td></tr>
+<tr><td>3.7</td><td>a non-subscribable calendar the user hid does not leak</td><td>the predicate correction</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+  <b>This harness is kotlin.test, not JUnit 5</b>
+  <p>The <code>database/*</code> modules are KMP and use <code>kotlin.test.Test</code>,
+  <code>@BeforeTest createDb</code>, a real <code>CalendarDatabaseProvider()</code> and
+  <code>runBlocking</code> — despite <code>testing.md</code>'s JUnit 5 default. Copy the file's
+  own shape, not the guide's.</p>
+</div>
+
+<ul>
+  <li>3.6 must assert the list <strong>size</strong>, not just membership. It is the only test
+  that would catch a rewrite reintroducing row multiplication.</li>
+  <li>3.7 sets <code>subscribed = false, subscribable = false, displayed = false</code> on the
+  owning calendar. It fails against the findings note's simpler predicate, which is the point of
+  writing it.</li>
+  <li>Insert calendars through <code>database.calendarDao().insert(...)</code>, as
+  <code>CalendarEventDaoTest.kt:202</code> already does.</li>
+</ul>
+
+</div>
+
+<!-- ---- 6010: verify ---- -->
+<div class="tabpanel" id="t-10-ver">
+
+<h2 class="gh c3">Step 4 — Verify</h2>
+
+<h3><span class="t-run">4 · RUN — The DAO Suite</span></h3>
+<code class="loc">database/calendar/…/event/CalendarEventDaoTest.kt</code>
+<p class="desc">the DAO suite is the whole gate for this half</p>
+
+<div class="code"><span class="lang">bash</span><pre><span class="k">./gradlew</span> <span class="ty">:database:calendar:jvmTest</span> &gt; /tmp/mma6010.log 2&gt;&amp;1 &amp;</pre></div>
+
+<ul>
+  <li>Poll the log for the real <code>BUILD SUCCESSFUL</code> — a killed run reports a
+  misleading exit code.</li>
+  <li>Detekt does <strong>not</strong> analyze <code>database/*</code> — it is configured for
+  <code>src/main/kotlin</code> and these modules are <code>src/commonMain/kotlin</code>. A green
+  detekt run says nothing about this change.</li>
+  <li>Confirm <code>git status</code> still shows <code>9.json</code> untracked afterwards. A
+  Room run can regenerate it, and it must not be staged.</li>
+</ul>
+
+<div class="note">
+  <b>No mocked repository test for the SQL fix</b>
+  <p><code>CalendarRepository.findAllAgendaEventsFlow</code> reads the DAO through a MockK mock,
+  so a repository test would stub the very query under test. The SQL contract is pinned in step 3
+  against real SQLite. MockK and Turbine earn their place on the MMA-5973 half instead.</p>
+</div>
+
+</div>
+
+<!-- ---- 6010: chip ---- -->
+<div class="tabpanel" id="t-10-chip">
+
+<h2 class="gh c3">MMA-5973 — Steps 1-4, the filter chip</h2>
+
+<div class="note stop">
+  <b>This half has no open ticket</b>
+  <p>It is filed against MMA-5973, which is <strong>Verified / Fixed</strong> and carries one
+  comment reading "Fixed". Zade's MMA-6010 comment says he filed the chip defect there, but no
+  such comment or issue exists. File it before writing any of this. TestRail
+  <strong>C2815294 step 3</strong> expects the active indication.</p>
+</div>
+
+<p>Independently landable — it shares no file with steps 1-4 above, and its steps are numbered
+separately because MMA-5973 is a different ticket. This is a UiState change, not a flag flip: <code>CalendarsFilterUiState</code> carries no "is anything hidden" value for the chip
+to read.</p>
+
+<h3><span class="t-add">Step 1 · ADD — Add the Hidden Signal to <code>CalendarsFilterUiState</code></span></h3>
+<code class="loc">feature/calendar/…/views/filter/CalendarsFilterUiState.kt:11-13</code>
+<p class="desc">a third field the chip binds <code>selected</code> to</p>
+
+<ul>
+  <li><strong>Why:</strong>
+    <ul>
+      <li><strong>C</strong> — the class KDoc currently ends "this only needs to surface the chip
+      + the bottom sheet", which is the assumption being corrected; update it in the same edit</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">data class</span> <span class="ty">CalendarsFilterUiState</span>(
+    <span class="k">val</span> bottomSheetUiStateFlow: <span class="ty">StateFlow</span>&lt;<span class="ty">DisplayCalendarsUiState</span>?&gt;,
+<span class="add"> +  /** True when at least one calendar on the sheet is hidden, so the chip reads as active. */</span>
+<span class="add"> +  val anyCalendarHiddenFlow: StateFlow&lt;Boolean&gt;,</span>
+    <span class="k">val</span> onChipClick: () -&gt; <span class="ty">Unit</span>,
+)</pre></div>
+
+<h3><span class="t-edit">Step 2 · EDIT — Derive the Signal in the Grid Use Case</span></h3>
+<code class="loc">feature/calendar/…/views/GetCalendarGridUiStateUseCase.kt:82-102</code>
+<p class="desc">maps the same list the sheet renders, so the two can never disagree</p>
+
+<ul>
+  <li><strong>Why:</strong>
+    <ul>
+      <li><strong>B</strong> — the chip must report the state of the rows the sheet actually
+      shows (C2815294)</li>
+      <li><strong>C</strong> — <code>getAllSubscribedCalendarsFlow</code> is already
+      <code>subscribed != 0 OR subscribable = 0</code>, so deriving from the mapped list inherits
+      that filter for free</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="code"><span class="lang">kotlin</span><pre>    <span class="k">private fun</span> buildCalendarsFilter(coroutineScope: <span class="ty">CoroutineScope</span>): <span class="ty">CalendarsFilterUiState</span> {
+        <span class="k">val</span> calendarsFlow = calendarRepository.getAllSubscribedCalendarsFlow()
+            .mapLatest { list -&gt; list.toSectionedDisplayCalendars() }
+            .stateInDefault(coroutineScope, emptyList())
+<span class="add"> +      val anyHiddenFlow = calendarsFlow</span>
+<span class="add"> +          .mapLatest { models -&gt;</span>
+<span class="add"> +              models.any { it is DisplayCalendarUiModel.Calendar &amp;&amp; !it.displayed }</span>
+<span class="add"> +          }</span>
+<span class="add"> +          .stateInDefault(coroutineScope, false)</span>
+        ...
+    }</pre></div>
+
+<ul>
+  <li>Pass <code>anyCalendarHiddenFlow = anyHiddenFlow</code> into the
+  <code>CalendarsFilterUiState(...)</code> constructor at <code>:98-101</code>.</li>
+  <li>The <code>Header</code> entries in the same list carry no <code>displayed</code>, which is
+  why the predicate type-checks the element before reading it.</li>
+</ul>
+
+<h3><span class="t-edit">Step 3 · EDIT — Bind the Chip in <code>CalendarScreen</code></span></h3>
+<code class="loc">feature/calendar/…/CalendarScreen.kt:314-324</code>
+<p class="desc"><code>selected</code> is hardcoded <code>false</code> at <code>:318</code></p>
+
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">private fun</span> CalendarsFilterChip(filter: <span class="ty">CalendarsFilterUiState</span>) {
+<span class="add"> +  val anyHidden by filter.anyCalendarHiddenFlow.collectAsStateWithLifecycle()</span>
+    <span class="ty">ToolsFilterChip</span>(
+        state = <span class="ty">FilterChipState</span>(
+            showDropdown = <span class="k">true</span>,
+<span class="rem"> -          selected = false,</span>
+<span class="add"> +          selected = anyHidden,</span>
+            ...
+        )
+    )
+}</pre></div>
+
+<ul>
+  <li><code>FilterChipState.selected</code> feeds Material's
+  <code>FilterChip(selected = ...)</code> directly — <code>ToolsFilterChip.kt:19</code> — so the
+  container tint and the leading check are the affordance. No new icon is needed.</li>
+  <li>No new imports. <code>collectAsStateWithLifecycle</code> is already imported at
+  <code>:37</code> and <code>androidx.compose.runtime.getValue</code> at <code>:25</code>, so the
+  <code>by</code> delegate resolves as written.</li>
+</ul>
+
+<h3>Step 4 — Test it</h3>
+
+<div class="tw">
+<table>
+<thead><tr><th>#</th><th>Test</th><th>File</th></tr></thead>
+<tbody>
+<tr><td>4.1</td><td>reports nothing hidden when every calendar is displayed</td><td><code>views/GetCalendarGridUiStateUseCaseTest.kt</code></td></tr>
+<tr><td>4.2</td><td>reports hidden when one calendar is hidden</td><td>same</td></tr>
+<tr><td>4.3</td><td>a <code>Header</code> row alone never reports hidden</td><td>same</td></tr>
+<tr><td>4.4</td><td>the chip renders selected when the flow is true</td><td><code>CalendarScreenTest.kt</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<ul>
+  <li>The fixtures for 4.1-4.3 already exist —
+  <code>GetCalendarGridUiStateUseCaseTest.kt:173-181</code> has a
+  <code>calendar(displayed = ...)</code> helper, a <code>displayed = false</code> fixture at
+  <code>:253</code> and the matching assertion at <code>:261</code>.</li>
+  <li><code>CalendarScreenTest.kt</code> builds a <code>CalendarsFilterUiState</code> at
+  <code>:152</code> and is Robolectric with <code>@Config(sdk = [34])</code>. It needs the new
+  field either way, so 14.4 is nearly free.</li>
+  <li>Verify with <code>./gradlew :feature:calendar:testDebugUnitTest</code>.</li>
+</ul>
+
+</div>
+
+<!-- ---- 6010: deferred ---- -->
+<div class="tabpanel" id="t-10-def">
+
+<h2 class="gh c4">Deferred</h2>
+
+<h3>1 · Hiding a BUILDING calendar still shows bookings from visible calendars</h3>
+
+<p>Truth-table row h. A tester who hides <em>Sunstone Building</em> and expects its bookings to
+vanish will still see the ones owned by calendars they display.</p>
+
+<p>The strict alternative — make the building check mandatory too, so a facility-booked event
+needs <strong>both</strong> its own calendar and its building calendar displayed — is not
+recommended:</p>
+
+<div class="tw">
+<table>
+<thead><tr><th></th><th>Consequence</th></tr></thead>
+<tbody>
+<tr><td>Strict intersection</td><td>Every facility-booked event vanishes for a user not subscribed to that meetinghouse</td></tr>
+<tr><td>Collateral</td><td>That includes events on the user's own displayed ward calendar</td></tr>
+<tr><td>Blast radius</td><td>Larger than the defect — most users subscribe to units, not buildings</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Recommendation: state row h explicitly when asking for sign-off, and let QA decide whether it
+is a second ticket. Do not fold it into this fix.</p>
+
+<h3>2 · The location arm does not restrict to <code>type = 'BUILDING'</code></h3>
+
+<p><code>Calendar.locationId</code> is nullable on a row of any type, and the location arm matches
+on <code>locationId</code> alone. <code>CalendarDao.kt:35-40</code> — the facility picker —
+restricts to <code>type = 'BUILDING'</code> for the same lookup, so the two disagree about what a
+location row is.</p>
+
+<p>Adding <code>AND Bldg.type = 'BUILDING'</code> would align them, and today it is almost
+certainly a no-op. It is left out because it is a second behaviour change riding a query that
+already needs sign-off, and because "almost certainly" is not a claim this document can verify
+against server data.</p>
+
+<h3>3 · The <code>Calendar</code> table has no indices at all</h3>
+
+<p><code>9.json</code> reports <code>Calendar indices: []</code>, so
+<code>Calendar.locationId</code> and <code>Calendar.displayed</code> are both unindexed.
+<code>Event.calendarId</code> is the only index in play. Adding one would need a schema change on
+an in-flux version, for a table of tens of rows — so nothing is added here, and the
+<code>EXISTS</code> shape is chosen partly because it keys on the primary key instead.</p>
+
+</div>
+</section>
+
+<p class="prov">Sources: <code>MMA-6039-impl.md</code>, <code>MMA-6096-impl.md</code>,
+<code>MMA-6010-impl.md</code> and <code>QA Reports Findings.md</code> in the MMA vault. Every
+line number re-verified against <code>MMA-6082</code> at <code>149e213ffa</code>, except
+<code>ManageCalendarsScreenTest.kt</code>, verified against <code>upstream/main</code> because
+the file does not exist on this branch. Jira state read 2026-09-10. No questioning pass ran, so
+nothing here was elicited from Will. Four group colours are in use — Overview, Decisions, Steps,
+Deferred — which is one past the three the palette is verified for; the fourth is carried over
+from the two markdown solution documents rather than invented here. In shell blocks the command
+invoked is keyword-coloured and its named target type-coloured, the same two roles those colours
+carry in the Kotlin blocks. Two long lines inside code blocks run past 100 characters because
+they quote real source at its real width; they scroll inside their own block, never the page.</p>
+
+<p class="prov"><strong>Step numbers restart at 1 on every page</strong>, and MMA-5973's four
+steps are numbered separately from MMA-6010's because they are a different ticket. The three
+markdown solution documents use one continuous sequence per document instead, in which the
+Decisions occupy 1 through 7 and the steps therefore begin at 8, 9 and 7 — so a step number does
+not carry across from a markdown document to this one. Substep numbers follow their own step:
+MMA-6096's <code>1.1</code> here is <code>9.1</code> in <code>MMA-6096-impl.md</code>.</p>
+
+</main>
+</body>
+</html>

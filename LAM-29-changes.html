@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAM-29 — Containerize for Portable Deployment</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  /* code palette */
+  --code-bg:#12151a; --code-ink:#c8d3dc;
+  --c-cm:#6a9955; --c-st:#ce9178; --c-kw:#569cd6; --c-ty:#4ec9b0;
+  --c-fn:#dcdcaa; --c-nu:#b5cea8; --c-va:#9cdcfe;
+  --c-add:#7ec699; --c-del:#e08a8a;
+  --c-add-bg:rgba(108,195,148,.09); --c-del-bg:rgba(224,138,138,.09);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+main{max-width:900px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:56px 96px}
+h1{font-size:clamp(24px,5vw,34px);line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:clamp(18px,3.4vw,22px);margin:32px 0 12px;letter-spacing:-.01em}
+h3{font-size:clamp(15px,2.6vw,17px);margin:0 0 12px}
+p{margin:0 0 14px;max-width:70ch}
+.sub{color:var(--faint);font-size:14px;margin:0 0 28px}
+a{color:var(--accent);overflow-wrap:anywhere}
+code{overflow-wrap:anywhere}
+p code,li code,td code{background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:1.5px 5px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#c8d3dc}
+
+/* code blocks */
+pre{overflow-x:auto;max-width:100%;background:var(--code-bg);border:1px solid var(--border);
+  border-radius:10px;padding:14px 0;font-size:12.8px;line-height:1.65;margin:0 0 16px}
+pre code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--code-ink);
+  background:none;border:0;padding:0}
+.ln{display:block;padding:0 16px}
+.ln.add{background:var(--c-add-bg);box-shadow:inset 2px 0 0 var(--c-add)}
+.ln.del{background:var(--c-del-bg);box-shadow:inset 2px 0 0 var(--c-del)}
+.ln.add .mk{color:var(--c-add);font-weight:700}
+.ln.del .mk{color:var(--c-del);font-weight:700}
+.cm{color:var(--c-cm);font-style:italic}
+.st{color:var(--c-st)}
+.kw{color:var(--c-kw)}
+.ty{color:var(--c-ty)}
+.fn{color:var(--c-fn)}
+.nu{color:var(--c-nu)}
+.va{color:var(--c-va)}
+.langtag{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 6px}
+
+/* nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto a{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto a:hover{background:var(--bg);color:var(--accent)}
+.skipto a.active{background:var(--accent-soft);color:var(--accent)}
+.navlabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding:0 10px 5px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media(max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,.skipto.open .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  .skipto.open .skipto-toggle svg{transform:rotate(180deg)}
+  .skipto.closed .skipto-menu{display:none}
+  .skipto.closed .skipto-toggle svg{transform:none}
+  main{padding-top:72px}
+}
+
+/* pages + tabs */
+.page{display:none}.page.active{display:block}
+.tabpanel{display:none}.tabpanel.active{display:block}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;border-bottom:1px solid var(--border)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;transition:.15s;font-family:inherit}
+.tab:hover{color:var(--ink);background:var(--card)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* cards + change blocks */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 22px;margin:0 0 18px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));margin:0 0 18px}
+.one-sentence{background:var(--accent-soft);border:1px solid #2b5540;border-radius:var(--radius);
+  padding:18px 22px;margin:0 0 28px}
+.one-sentence .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin:0 0 7px}
+.one-sentence p{margin:0;font-size:16.5px;line-height:1.55;max-width:none}
+.chg{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
+  padding:20px 22px;margin:0 0 20px;box-shadow:var(--shadow)}
+.chg.flag{border-color:#5a4520;background:linear-gradient(var(--warn-soft),var(--card) 60px)}
+.chg-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:0 0 3px}
+.chg-n{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.chg.flag .chg-n{color:var(--warn)}
+.file{display:block;font-size:12.4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#9fb3c4;overflow-wrap:anywhere;max-width:100%;margin:0 0 3px}
+.lines{display:inline-block;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:var(--faint);margin:0 0 12px}
+.mini{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);
+  margin:16px 0 7px;font-weight:700}
+ul{margin:0 0 12px;padding-left:20px}
+li{margin:0 0 6px}
+li::marker{color:var(--faint)}
+.why b{color:var(--accent);font-weight:700}
+.pri{display:inline-block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;border:1px solid var(--border-strong);color:var(--muted);
+  margin:0 0 10px;overflow-wrap:anywhere;max-width:100%}
+.pri.must{background:var(--accent-soft);border-color:#2b5540;color:var(--accent)}
+.pri.imp{background:var(--warn-soft);border-color:#5a4520;color:var(--warn)}
+.pri.opt{background:#1a1d21}
+.newfile{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);
+  background:var(--warn-soft);border:1px solid #5a4520;border-radius:5px;padding:2px 7px;margin-left:6px}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tablewrap{overflow-x:auto;margin:0 0 18px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700}
+td code{white-space:nowrap}
+
+.todo{list-style:none;padding:0;margin:0}
+.todo li{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border);margin:0}
+.todo li:last-child{border-bottom:0}
+.todo input{margin-top:4px;width:15px;height:15px;accent-color:var(--accent);flex-shrink:0}
+.todo label{cursor:pointer}
+.todo input:checked+label{color:var(--faint);text-decoration:line-through}
+.warn-box{background:var(--warn-soft);border:1px solid #5a4520;border-left-width:3px;
+  border-radius:var(--radius);padding:16px 20px;margin:0 0 18px}
+.warn-box .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--warn);
+  margin:0 0 7px;font-weight:700}
+.warn-box p:last-child{margin-bottom:0}
+.dec{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
+  padding:18px 20px;margin:0 0 16px;box-shadow:var(--shadow)}
+.dec h3{margin:0 0 10px;font-size:16px;color:var(--accent)}
+.dec .alt{border-top:1px solid var(--border);margin-top:14px;padding-top:12px}
+.dec .alt .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--warn);margin:0 0 5px;font-weight:700}
+.dec .alt p{margin:0;color:var(--muted);font-size:14.2px}
+@media(max-width:720px){.card,.chg{padding:15px 16px}main{padding-block:36px 72px}.ln{padding:0 12px}}
+</style>
+</head>
+<body>
+<nav class="skipto" aria-label="Pages">
+  <button class="skipto-toggle" aria-label="Page menu"><svg width="18" height="18"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <a data-page="p-overview" class="active">Overview</a>
+    <a data-page="p-changes">Changes</a>
+    <a data-page="p-decisions">Decisions</a>
+    <a data-page="p-verify">Verify &amp; TODO</a>
+  </div>
+</nav>
+<main>
+<section class="page active" id="p-overview">
+  <h1>LAM-29 — Containerize for Portable Deployment</h1>
+  <p class="sub"><code>LAM-29-B</code> → <b>LAM-28-B</b> · PR #8 · commit <code>071d017</code> · 11 files, +668 / −2</p>
+
+  <div class="one-sentence">
+    <div class="lbl">One-Sentence Version</div>
+    <p>A three-stage image builds the frontend, cross-compiles the Go binaries for both
+      architectures without emulation, and ships them on distroless with no shell — verified
+      by CI, because Docker isn't installed on this machine.</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="q-warn">Read First</button>
+    <button class="tab" data-tab="q-what">What's Here</button>
+    <button class="tab" data-tab="q-pri">Priority Levels</button>
+  </div>
+
+  <div class="tabpanel active" id="q-warn">
+    <div class="warn-box">
+      <div class="lbl">1 · Based on LAM-28-B, not the epic branch</div>
+      <p>You said you'd merged both LAM-28 PRs, but GitHub still reports backend #7 and
+        frontend #2 as <code>state=OPEN, merged=null</code>, and neither epic branch contains
+        them.</p>
+      <p>LAM-29 needs LAM-28's <code>web/dist</code> embedding to build at all, so I stacked on
+        <code>LAM-28-B</code> rather than merging your PRs for you. <b>Merge #7 and #2 first</b> —
+        GitHub will retarget #8 to the epic branch.</p>
+    </div>
+
+    <div class="warn-box">
+      <div class="lbl">2 · Docker is not installed on this machine</div>
+      <p><code>docker: command not found</code>. The image was never built or run locally.</p>
+      <p>CI is the verification. Both repos are public, so it checks out the frontend, builds
+        both architectures, and runs the image against real Postgres. The Verify page separates
+        exactly what is proven from what isn't.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-what">
+    <span class="pri must">Must Know</span>
+    <h2>Three stages, one artifact</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="mini">Stage 1 — frontend</div>
+        <p>Builds the bundle from a BuildKit <b>named context</b>, so the separate repo needs no
+          clone, no network, no credentials.</p>
+      </div>
+      <div class="card">
+        <div class="mini">Stage 2 — Go</div>
+        <p>Cross-compiles for <code>$TARGETARCH</code> from a native builder. <b>Nothing runs
+          under QEMU</b> — arm64 costs what amd64 does.</p>
+      </div>
+      <div class="card">
+        <div class="mini">Stage 3 — ship</div>
+        <p>Distroless, nonroot. No shell, no package manager, no libc. Three binaries and the
+          embedded bundle.</p>
+      </div>
+    </div>
+
+    <h3>Two things that are easy to miss</h3>
+    <ul>
+      <li><b><code>/migrate</code> and <code>/reindex</code> ship with the server.</b> Not a
+        convenience — a database built before LAM-10 needs <code>migrate baseline</code> before
+        the server will start, and there's no shell here to fetch a binary with.</li>
+      <li><b>The binary healthchecks itself.</b> Distroless has no curl, so
+        <code>/laminarflow healthcheck</code> asks the server over loopback. It answers before
+        config loads, so it never needs <code>DATABASE_URL</code>.</li>
+    </ul>
+  </div>
+
+  <div class="tabpanel" id="q-pri">
+    <h2>Priority Levels</h2>
+    <div class="card">
+      <span class="pri must">Must Know</span>
+      <ul style="margin-bottom:0">
+        <li>Merge LAM-28's two PRs before this one</li>
+        <li>I never ran <code>docker build</code> — build it once yourself</li>
+        <li>A bare <code>docker build .</code> fails; use <code>scripts/build-image.sh</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="pri imp">Important</span>
+      <ul style="margin-bottom:0">
+        <li><code>APP_BIND</code> defaults to <code>127.0.0.1</code> — Tailscale reaches it, a LAN doesn't</li>
+        <li><code>MIGRATE_ON_STARTUP</code> is <code>true</code> in the deploy stack only</li>
+        <li>CI pins <code>FRONTEND_REF: E-LAM-0001-F</code> — change to <code>main</code> once the epic lands</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="pri opt">Optional</span>
+      <ul style="margin-bottom:0">
+        <li>Swapping distroless for Alpine if you want a shell — one line</li>
+        <li>Adding <code>BASE_URL</code> before anything needs it</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="page" id="p-changes">
+  <h1>Changes</h1>
+  <p class="sub">17 numbered changes across 11 files</p>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="q-docker">Dockerfile</button>
+    <button class="tab" data-tab="q-bin">Binary</button>
+    <button class="tab" data-tab="q-script">Build Script</button>
+    <button class="tab" data-tab="q-deploy">Deploy Stack</button>
+    <button class="tab" data-tab="q-ci">CI</button>
+    <button class="tab" data-tab="q-docs">Docs</button>
+  </div>
+
+  <div class="tabpanel active" id="q-docker">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0001</span><span class="newfile">new file</span></div>
+      <span class="file">Dockerfile</span><span class="lines">:17-18</span>
+      <pre><code data-lang="dockerfile">+ ARG NODE_VERSION=26
++ ARG GO_VERSION=1.27</code></pre>
+      <div class="mini">What</div>
+      <ul><li>take the toolchain versions as build arguments</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — <code>.nvmrc</code> and <code>go.mod</code> already own these versions</li>
+        <li><b>C</b> — hardcoding them would make the Dockerfile a third place a version has to be kept in step</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0002</span></div>
+      <span class="file">Dockerfile</span><span class="lines">:27-38</span>
+      <pre><code data-lang="dockerfile">+ FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-alpine AS frontend
++ WORKDIR /src
++ COPY --from=frontendsrc . .
++ RUN rm -rf node_modules dist \
++     && npm ci \
++     && npm run build</code></pre>
+      <div class="mini">What</div>
+      <ul>
+        <li>build from a BuildKit <b>named context</b>, not a clone</li>
+        <li>delete <code>node_modules</code> and <code>dist</code> before installing</li>
+      </ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the frontend is a separate repo; a named context keeps them independent with no network or credentials at build time</li>
+        <li><b>C</b> — copying the checkout wholesale drags in a <code>node_modules</code> built for the host's OS and architecture, and the named context has no <code>.dockerignore</code> to rely on</li>
+        <li><b>C</b> — <code>$BUILDPLATFORM</code> pins this to the build machine: the output is plain JS/CSS with no architecture, so emulating the target would cost minutes and buy nothing</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0003</span></div>
+      <span class="file">Dockerfile</span><span class="lines">:46-71</span>
+      <pre><code data-lang="dockerfile">+ FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine AS build
++ COPY go.mod go.sum ./
++ RUN go mod download
++ COPY . .
++ COPY --from=frontend /src/dist ./web/dist
++ ARG TARGETARCH
++ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
++         go build -trimpath -ldflags="-s -w" -o /out/laminarflow .</code></pre>
+      <div class="mini">What</div>
+      <ul>
+        <li>cross-compile for <code>$TARGETARCH</code> from a native-platform builder</li>
+        <li>place the bundle where <code>web/embed.go</code> expects it</li>
+      </ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — step 2 wants amd64 and arm64 from one build</li>
+        <li><b>C</b> — Go cross-compiles for free, so <b>nothing runs under QEMU</b></li>
+        <li><b>C</b> — <code>CGO_ENABLED=0</code> makes the binary static, which is what lets the final stage have no libc at all</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0004</span></div>
+      <span class="file">Dockerfile</span><span class="lines">:81-100</span>
+      <pre><code data-lang="dockerfile">+ FROM gcr.io/distroless/static-debian12:nonroot
++ COPY --from=build /out/laminarflow /laminarflow
++ COPY --from=build /out/migrate /migrate
++ COPY --from=build /out/reindex /reindex
++ USER nonroot:nonroot
++ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
++     CMD ["/laminarflow", "healthcheck"]</code></pre>
+      <div class="mini">What</div>
+      <ul><li>ship on distroless, as nonroot, with the operator tools alongside the server</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — a service exposed to a tailnet should have no shell and no package manager</li>
+        <li><b>C</b> — <code>/migrate</code> is <b>not optional</b>: a pre-LAM-10 database needs <code>baseline</code> before the server starts, and there's no shell to fetch a binary with</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0005</span><span class="newfile">new file</span></div>
+      <span class="file">.dockerignore</span><span class="lines">:10-13</span>
+      <pre><code data-lang="txt">+ web/dist/*
++ !web/dist/.gitkeep</code></pre>
+      <div class="mini">What</div>
+      <ul><li>exclude the local bundle but keep the directory marker</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — the frontend stage supplies the real bundle; the marker keeps <code>go:embed</code> compiling if that stage is ever skipped</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-bin">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0006</span></div>
+      <span class="file">main.go</span><span class="lines">:34-36</span>
+      <pre><code data-lang="go">+ if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
++ 	os.Exit(healthcheck())
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>dispatch the healthcheck before anything else in <code>main</code></li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — handled first so it never opens a database connection or reads config it has no business requiring</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0007</span></div>
+      <span class="file">main.go</span><span class="lines">:158-183</span>
+      <pre><code data-lang="go">+ func healthcheck() int {
++ 	port := os.Getenv("PORT")
++ 	if port == "" { port = config.DefaultPort }
++ 	client := &http.Client{Timeout: healthcheckTimeout}
++ 	resp, err := client.Get("http://127.0.0.1:" + port + "/healthz")
++ 	...
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>ask the running server over loopback and return a process exit code</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — a distroless image has no curl to run a <code>HEALTHCHECK</code> with</li>
+        <li><b>C</b> — hits <code>/healthz</code>, not <code>/healthz/db</code>: a database blip should not make a supervisor restart a healthy process</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0008</span></div>
+      <span class="file">internal/config/config.go</span><span class="lines">:29-32</span>
+      <pre><code data-lang="go">+ // DefaultPort is the port used when PORT is unset.
++ const DefaultPort = "8080"</code></pre>
+      <div class="mini">What</div>
+      <ul><li>export the port default</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — the healthcheck needs it without calling <code>config.Load()</code>, which would demand a <code>DATABASE_URL</code> it does not use</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-script">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0009</span><span class="newfile">new file</span></div>
+      <span class="file">scripts/build-image.sh</span><span class="lines">:35-45</span>
+      <pre><code data-lang="sh">+ NODE_VERSION=$(tr -d ' \t\nv' < "$FRONTEND_REPO/.nvmrc")
++ GO_VERSION=$(awk '/^go /{split($2,v,"."); print v[1]"."v[2]; exit}' go.mod)</code></pre>
+      <div class="mini">What</div>
+      <ul><li>read the toolchain versions from the files that declare them</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — <code>.nvmrc</code> is already the single source of truth CI uses</li>
+        <li><b>C</b> — <code>go.mod</code> says <code>go 1.27.0</code> but the golang image tag wants <code>1.27</code></li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0010</span></div>
+      <span class="file">scripts/build-image.sh</span><span class="lines">:56-66</span>
+      <pre><code data-lang="sh">+ case "$PLATFORMS" in
++     *,*)
++         echo "==> multi-platform build (${PLATFORMS}) - not loaded locally"
++         ;;
++     *) set -- "$@" --load ;;
++ esac</code></pre>
+      <div class="mini">What</div>
+      <ul><li>skip <code>--load</code> when more than one platform is requested</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — the local image list holds one architecture per tag, so a multi-platform <code>--load</code> fails; without this the script would break on exactly the command the ticket asks for</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-deploy">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0011</span><span class="newfile">new file</span></div>
+      <span class="file">deploy/docker-compose.yml</span><span class="lines">:21, :26-31</span>
+      <pre><code data-lang="yaml">+ depends_on:
++   db:
++     condition: service_healthy
++ environment:
++   DATABASE_URL: postgres://...@db:5432/...
++   MIGRATE_ON_STARTUP: ${MIGRATE_ON_STARTUP:-true}</code></pre>
+      <div class="mini">What</div>
+      <ul>
+        <li>wait for the database's healthcheck, not just its container</li>
+        <li>default migrations to on in the deployed stack only</li>
+      </ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — the server refuses to start against an unreachable database, so starting it first would crash-loop until Postgres caught up</li>
+        <li><b>B</b> — an operator pulling a new image expects the schema to follow; the binary still defaults to off, so nothing else inherits this</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0012</span></div>
+      <span class="file">deploy/docker-compose.yml</span><span class="lines">:36 and the db service</span>
+      <pre><code data-lang="yaml">+ - "${APP_BIND:-127.0.0.1}:${APP_PORT:-8080}:${APP_PORT:-8080}"</code></pre>
+      <div class="mini">What</div>
+      <ul><li>publish the app on loopback by default; publish no database port at all</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — Tailscale routes to loopback, a LAN does not, so this is reachable over the tailnet without being exposed locally</li>
+        <li><b>C</b> — there is no reason to put Postgres on the tailnet; <code>docker compose exec db psql</code> covers access</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-ci">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0014</span></div>
+      <span class="file">.github/workflows/ci.yml</span><span class="lines">:54-72</span>
+      <pre><code data-lang="yaml">+ image:
++   env:
++     FRONTEND_REF: E-LAM-0001-F
++   steps:
++     - uses: actions/checkout@v7
++       with: { path: backend }
++     - uses: actions/checkout@v7
++       with:
++         repository: Willpatbarr/LaminarFlow-Frontend
++         ref: ${{ env.FRONTEND_REF }}
++         path: frontend</code></pre>
+      <div class="mini">What</div>
+      <ul><li>check out both repos so the named context has a source</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — <b>this is the only verification available</b>, since Docker is not installed locally</li>
+        <li><b>C</b> — both repos are public, so the default token suffices — no PAT needed</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0015</span></div>
+      <span class="file">.github/workflows/ci.yml</span><span class="lines">:99, :116-117</span>
+      <pre><code data-lang="yaml">+ platforms: linux/amd64,linux/arm64
++ push: false
++ ---
++ platforms: linux/amd64
++ load: true</code></pre>
+      <div class="mini">What</div>
+      <ul><li>build both architectures, then a loadable single-arch image</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — multi-platform images cannot be loaded, so proving they build and proving one runs are necessarily two steps</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0016</span></div>
+      <span class="file">.github/workflows/ci.yml</span><span class="lines">:124-180</span>
+      <pre><code data-lang="sh">+ curl -sf localhost:8080/healthz | grep -q '"status":"ok"'
++ curl -sf localhost:8080/ | grep -qi '<!doctype html'
++ test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8080/assets/nope-STALE.js)" = "404"
++ docker exec lf-app /laminarflow healthcheck
++ test "$(docker inspect -f '{{.Config.User}}' laminarflow:ci)" = "nonroot:nonroot"</code></pre>
+      <div class="mini">What</div>
+      <ul><li>run the built image against real Postgres and assert its behaviour</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — a Dockerfile that builds but produces a broken image would otherwise pass</li>
+        <li><b>C</b> — covers the LAM-28 behaviours too, so the container path and the local path cannot diverge</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-docs">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0013</span><span class="newfile">new file</span></div>
+      <span class="file">docs/deploy.md</span><span class="lines">:150-177</span>
+      <pre><code data-lang="txt">+ ## Portability audit
++ | Value | Where it comes from | Default |
++ | Listen port | PORT | 8080 |
++ | Database connection | DATABASE_URL | none — refuses to start |
++ ...
++ Not present, and deliberately so: no BASE_URL, no storage path.</code></pre>
+      <div class="mini">What</div>
+      <ul><li>the step 5 audit, plus what is deliberately absent</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — ticket step 5 asks to confirm nothing assumes this machine</li>
+        <li><b>C</b> — naming the <em>absent</em> settings matters as much as the present ones, so the next reader does not add them speculatively</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0017</span></div>
+      <span class="file">COMMANDS.md · README.md</span><span class="lines">COMMANDS.md :23-38</span>
+      <pre><code data-lang="sh">+ ## Build the container image
++     ./scripts/build-image.sh
++     PLATFORMS=linux/amd64,linux/arm64 ./scripts/build-image.sh
++ ## Adopt a hand-built database inside the container
++     docker compose -f deploy/docker-compose.yml run --rm app /migrate baseline</code></pre>
+      <div class="mini">What</div>
+      <ul><li>document the image build and the in-container adoption step</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — a bare <code>docker build</code> here fails on the named context with a message that does not explain itself</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="mini">Also written</div>
+      <p style="margin-bottom:0"><code>docs/deploy.md</code> (177 lines) — image contents, building,
+        moving without a registry, first run, upgrading, debugging without a shell, then the Pi
+        and home-server host sections and the Tailscale setup both share.
+        <code>deploy/.env.example</code> — every knob with a comment explaining the default.</p>
+    </div>
+  </div>
+</section>
+<section class="page" id="p-decisions">
+  <h1>Decisions I Made</h1>
+  <p class="sub">You were away, so I decided these myself. Each one with the alternative, in case you want it changed.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="q-dimg">Image Shape</button>
+    <button class="tab" data-tab="q-drun">Runtime &amp; Deploy</button>
+    <button class="tab" data-tab="q-dproc">Process</button>
+  </div>
+
+  <div class="tabpanel active" id="q-dimg">
+    <div class="dec">
+      <h3>2 · Distroless base image</h3>
+      <p><code>gcr.io/distroless/static-debian12:nonroot</code>. No shell, no package manager, no
+        libc — only CA certificates, timezone data, and a nonroot user.</p>
+      <p style="margin-bottom:0"><b>Why:</b> the service is exposed to a tailnet. A shell in the
+        image is attack surface that buys convenience you can get other ways.</p>
+      <div class="alt"><div class="lbl">Alternative</div>
+        <p><code>alpine:3</code> if you want <code>docker exec sh</code>. It is one line in the
+          final stage. <code>docs/deploy.md</code> documents debugging without a shell —
+          logs, <code>psql</code> in the db container, <code>/migrate status</code> — so read
+          that before switching.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>3 · BuildKit named context for the frontend</h3>
+      <p>The frontend arrives as <code>--build-context frontendsrc=../LaminarFlow-Frontend</code>
+        rather than being cloned during the build.</p>
+      <p style="margin-bottom:0"><b>Why:</b> repos stay independent, and the build needs no network
+        access and no credentials — which matters if either repo ever goes private.</p>
+      <div class="alt"><div class="lbl">Alternatives</div>
+        <p>Clone the repo in-build (needs network, and auth for a private repo), or require
+          <code>build-frontend.sh</code> to have run first (the image build stops being
+          self-contained).</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>4 · Ship <code>/migrate</code> and <code>/reindex</code> in the image</h3>
+      <p>Three binaries, not one.</p>
+      <p style="margin-bottom:0"><b>Why:</b> a database built before LAM-10 needs
+        <code>migrate baseline</code> before the server will start. With a shell-less image and
+        no <code>/migrate</code>, that would be impossible from the container.</p>
+      <div class="alt"><div class="lbl">Alternative</div>
+        <p>Server-only image, running migrations from outside the container. Smaller image,
+          but the operator needs a matching binary on the host.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>12 · <code>rm -rf node_modules dist</code> before <code>npm ci</code></h3>
+      <p>The frontend stage copies the whole checkout, then deletes the build artifacts before
+        installing.</p>
+      <p style="margin-bottom:0"><b>Why:</b> named contexts have no <code>.dockerignore</code> of
+        their own, so a host <code>node_modules</code> — built for macOS arm64 — would otherwise
+        poison a Linux build.</p>
+      <div class="alt"><div class="lbl">Alternative</div>
+        <p>Add a <code>.dockerignore</code> to the frontend repo and copy selectively. Better
+          layer caching, but it is a second PR in the other repo, and a new top-level file there
+          would silently stop being copied.</p></div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-drun">
+    <div class="dec">
+      <h3>5 · <code>healthcheck</code> subcommand on the binary</h3>
+      <p><code>HEALTHCHECK CMD ["/laminarflow", "healthcheck"]</code> — the binary asks itself over
+        loopback.</p>
+      <p style="margin-bottom:0"><b>Why:</b> distroless has no curl. It also answers before config
+        loads, so it needs no <code>DATABASE_URL</code>, and it hits <code>/healthz</code> not
+        <code>/healthz/db</code> — a database blip should not restart a healthy process.</p>
+      <div class="alt"><div class="lbl">Alternatives</div>
+        <p>No <code>HEALTHCHECK</code> at all, or an Alpine base with curl available.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>6 · Separate <code>deploy/docker-compose.yml</code></h3>
+      <p>The repo-root compose file still starts only Postgres for development.</p>
+      <p style="margin-bottom:0"><b>Why:</b> a developer running <code>docker compose up</code>
+        should not accidentally start a server, and an operator reading the deploy file should not
+        wade through dev-only settings.</p>
+      <div class="alt"><div class="lbl">Alternative</div>
+        <p>One file with compose profiles. Fewer files, but every reader has to know which
+          profile they are in.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>7 · <code>APP_BIND</code> defaults to <code>127.0.0.1</code></h3>
+      <p>The published port binds loopback unless you say otherwise.</p>
+      <p style="margin-bottom:0"><b>Why:</b> Tailscale routes to loopback; a LAN does not. So the
+        app is reachable over the tailnet without being exposed to whatever else is on the local
+        network.</p>
+      <div class="alt"><div class="lbl">Alternative</div>
+        <p><code>0.0.0.0</code> if you want LAN access by default. It is one line in
+          <code>deploy/.env</code>, no image rebuild.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>8 · Postgres publishes no host port</h3>
+      <p>The app reaches it over the compose network only.</p>
+      <p style="margin-bottom:0"><b>Why:</b> there is no reason to put a database on the tailnet.
+        <code>docker compose exec db psql</code> covers the access you actually need.</p>
+      <div class="alt"><div class="lbl">Alternative</div>
+        <p>Publish 5432 if you want to connect a GUI client from your laptop over Tailscale.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>9 · <code>MIGRATE_ON_STARTUP=true</code> in the deploy stack only</h3>
+      <p>The binary still defaults to off; the compose file turns it on.</p>
+      <p style="margin-bottom:0"><b>Why:</b> an operator pulling a new image expects the schema to
+        follow. Nothing else inherits the setting, so a dev run is unaffected.</p>
+      <div class="alt"><div class="lbl">Alternative</div>
+        <p>Keep it off everywhere and run <code>/migrate up</code> as a deliberate step. Safer,
+          two-step upgrades over Tailscale.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>11 · No <code>BASE_URL</code> or storage-path config</h3>
+      <p>The ticket's step 3 lists them, but neither exists in the code yet.</p>
+      <p style="margin-bottom:0"><b>Why:</b> nothing builds an absolute URL — same-origin serving
+        means relative paths — and there are no file uploads. An unused setting is one more thing
+        that can be wrong. This is written down in the portability audit rather than left silent.</p>
+      <div class="alt"><div class="lbl">Alternative</div>
+        <p>Add the slots now so the shape is reserved. I would add them with the first feature
+          that reads them.</p></div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-dproc">
+    <div class="dec">
+      <h3>1 · Branched off <code>LAM-28-B</code>, not the epic branch</h3>
+      <p>You said you had merged LAM-28, but GitHub reports both PRs still open and neither epic
+        branch contains them.</p>
+      <p style="margin-bottom:0"><b>Why:</b> LAM-29 cannot build without LAM-28's
+        <code>web/dist</code> embedding. Stacking was the option that neither blocked the work nor
+        merged your PRs on your behalf.</p>
+      <div class="alt"><div class="lbl">What to do</div>
+        <p>Merge backend #7 and frontend #2, then #8 retargets to <code>E-LAM-0001-B</code>
+          automatically. If you would rather I had merged them, say so and I will next time.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>10 · CI pins <code>FRONTEND_REF: E-LAM-0001-F</code></h3>
+      <p>The image job checks out the frontend at the epic branch, not <code>main</code>.</p>
+      <p style="margin-bottom:0"><b>Why:</b> <code>main</code> on the frontend is still the initial
+        commit and has no <code>package.json</code> — building against it would fail outright.</p>
+      <div class="alt"><div class="lbl">What to do</div>
+        <p>Change the one <code>env:</code> line to <code>main</code> once the epic lands there.
+          It is commented in the workflow so it is findable.</p></div>
+    </div>
+
+    <div class="dec">
+      <h3>Not a decision — a limitation</h3>
+      <p><b>Docker is not installed on this machine</b>, so I never built or ran the image. Every
+        Dockerfile claim in this document rests on CI, not on local execution.</p>
+      <p style="margin-bottom:0">The first thing worth doing is
+        <code>./scripts/build-image.sh</code> on your Mac — that is also the first real test of the
+        Apple Silicon path, which CI does not cover.</p>
+    </div>
+  </div>
+</section>
+<section class="page" id="p-verify">
+  <h1>Verify &amp; TODO</h1>
+  <p class="sub">Split honestly: what I proved here, and what only CI could prove</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="q-local">Proven Locally</button>
+    <button class="tab" data-tab="q-cicov">CI Coverage</button>
+    <button class="tab" data-tab="q-todo">TODO</button>
+  </div>
+
+  <div class="tabpanel active" id="q-local">
+    <span class="pri imp">Important</span>
+    <h2>Docker was never run on this machine</h2>
+    <p>Everything below is what could be checked without it. The Dockerfile itself is on the
+      next tab.</p>
+    <div class="tablewrap">
+      <table>
+        <tr><th>Check</th><th>Result</th></tr>
+        <tr><td><code>./scripts/test.sh</code> — full gate</td><td>green</td></tr>
+        <tr><td>Static cross-compile <code>linux/amd64</code></td><td><code>ELF 64-bit LSB executable, x86-64</code></td></tr>
+        <tr><td>Static cross-compile <code>linux/arm64</code></td><td><code>ELF 64-bit LSB executable, ARM aarch64</code></td></tr>
+        <tr><td><code>healthcheck</code> with no server</td><td>exit 1, names the refused connection</td></tr>
+        <tr><td><code>healthcheck</code> against a live server</td><td>exit 0</td></tr>
+        <tr><td><code>healthcheck</code> with <code>DATABASE_URL</code> unset</td><td>exit 0 — needs no database config</td></tr>
+        <tr><td><code>healthcheck</code> port default</td><td>falls back to 8080</td></tr>
+        <tr><td>Version parsing → real tags</td><td><code>node:26-alpine</code>, <code>golang:1.27-alpine</code></td></tr>
+        <tr><td>CI workflow YAML</td><td>parses — 2 jobs, 7 steps in <code>image</code></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <p style="margin-bottom:0">The <code>DATABASE_URL</code>-unset row is the one that mattered
+        most: if the healthcheck had needed full config, the container's <code>HEALTHCHECK</code>
+        would have failed on every start and looked like an unhealthy app.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-cicov">
+    <span class="pri must">Must Know</span>
+    <h2>CI image job: passed</h2>
+    <p>Both repos are public, so CI checks out the frontend and builds the real thing. This is
+      the only execution the Dockerfile has had.</p>
+
+    <div class="card">
+      <div class="mini">Step 1 — both architectures build</div>
+      <pre><code data-lang="yaml">platforms: linux/amd64,linux/arm64
+push: false</code></pre>
+      <p style="margin-bottom:0">No QEMU involved — both stages pin <code>$BUILDPLATFORM</code>
+        and Go cross-compiles.</p>
+    </div>
+
+    <div class="card">
+      <div class="mini">Step 2 — the loadable amd64 image actually runs</div>
+      <ul style="margin-bottom:0">
+        <li><code>/healthz</code> → <code>{"status":"ok"}</code></li>
+        <li><code>/healthz/db</code> → ok, so startup migrations applied</li>
+        <li><code>/</code> serves the <b>embedded</b> frontend</li>
+        <li><code>/projects/42</code> → 200, SPA fallback works in the container</li>
+        <li><code>/assets/nope-STALE.js</code> → 404, not HTML</li>
+        <li><code>/api/nope</code> → <code>{"error":"not found"}</code></li>
+        <li><code>/laminarflow healthcheck</code> runs inside the container</li>
+        <li><code>/migrate status</code> runs inside the container</li>
+        <li><code>Config.User</code> is <code>nonroot:nonroot</code></li>
+      </ul>
+    </div>
+
+    <div class="warn-box">
+      <div class="lbl">Still not covered</div>
+      <p>The <b>arm64 image was built but never run</b> — CI has no arm64 runner, and running it
+        under emulation would prove less than it costs. The Pi is the first place that image
+        executes.</p>
+      <p>The <b>Apple Silicon build path</b> is also untested: CI builds on amd64, so
+        <code>scripts/build-image.sh</code> on your Mac is a genuinely new path.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="q-todo">
+    <h2>TODO</h2>
+    <ul class="todo">
+      <li><input type="checkbox" id="d1"><label for="d1"><b>Merge LAM-28 first</b> — backend #7 and frontend #2, both green and still open</label></li>
+      <li><input type="checkbox" id="d2"><label for="d2">Then merge #8; it retargets to <code>E-LAM-0001-B</code> automatically</label></li>
+      <li><input type="checkbox" id="d3"><label for="d3">Set LAM-29 → Done</label></li>
+      <li><input type="checkbox" id="d4"><label for="d4"><b>Build the image once yourself</b> — <code>./scripts/build-image.sh</code>. First real test on Apple Silicon</label></li>
+      <li><input type="checkbox" id="d5"><label for="d5">Adopt the dev database — <code>migrate baseline &amp;&amp; migrate up</code> (outstanding since LAM-10)</label></li>
+      <li><input type="checkbox" id="d6"><label for="d6">Change <code>FRONTEND_REF</code> to <code>main</code> once E-LAM-0001-F lands there</label></li>
+      <li><input type="checkbox" id="d7"><label for="d7">Deploy to the Pi and confirm the arm64 image runs</label></li>
+      <li><input type="checkbox" id="d8"><label for="d8"><code>gh auth switch --user willbarr_church</code></label></li>
+    </ul>
+
+    <div class="card" style="margin-top:20px">
+      <div class="mini">Epic status</div>
+      <p style="margin-bottom:0">LAM-29 was the last ticket in <b>E-LAM-0001 — Architecture &amp;
+        Tech Stack</b>. With LAM-28 and LAM-29 merged, every ticket in the epic is Done, and the
+        next work is E-LAM-0002 (repo structure) or E-LAM-0003 (the fourteen schema tickets that
+        LAM-10 unblocked).</p>
+    </div>
+  </div>
+</section>
+</main>
+<script>
+// Syntax highlighter: escape first, then one master regex pass per language so
+// nothing is ever re-tokenized inside an existing span.
+(function () {
+  var esc = function (s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  };
+
+  var GO_KW = 'func|package|import|type|struct|interface|map|chan|const|var|return|if|else|for|range|switch|case|default|break|continue|defer|go|select|fallthrough';
+  var GO_TYPE = 'string|bool|error|byte|rune|int|int64|float64|any|nil|true|false';
+  var TS_KW = 'import|from|export|default|const|let|var|function|return|if|else|for|while|class|extends|new|async|await|type|interface|as|of|in';
+
+  var GRAMMARS = {
+    go: [
+      ['cm', /\/\/[^\n]*/],
+      ['st', /`[^`]*`|"(?:\\.|[^"\\\n])*"/],
+      ['kw', new RegExp('\\b(?:' + GO_KW + ')\\b')],
+      ['ty', new RegExp('\\b(?:' + GO_TYPE + ')\\b')],
+      ['fn', /\b[A-Za-z_]\w*(?=\()/],
+      ['nu', /\b\d[\d_.]*\b/]
+    ],
+    ts: [
+      ['cm', /\/\/[^\n]*/],
+      ['st', /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`[^`]*`/],
+      ['kw', new RegExp('\\b(?:' + TS_KW + ')\\b')],
+      ['ty', /\b(?:true|false|null|undefined)\b/],
+      ['fn', /\b[A-Za-z_]\w*(?=\()/],
+      ['nu', /\b\d[\d_.]*\b/]
+    ],
+    sh: [
+      ['cm', /#[^\n]*/],
+      ['st', /'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/],
+      ['kw', /\b(?:if|then|else|elif|fi|for|in|do|done|set|exit|echo|cd|mkdir|rm|cp|touch|npm|go)\b/],
+      ['va', /\$\{?[A-Za-z_]\w*\}?/],
+      ['nu', /\b\d+\b/]
+    ],
+    dockerfile: [
+      ['cm', /#[^\n]*/],
+      ['kw', /^\s*(?:FROM|RUN|COPY|ADD|ARG|ENV|USER|WORKDIR|HEALTHCHECK|ENTRYPOINT|CMD|EXPOSE|LABEL|VOLUME|AS)\b/m],
+      ['ty', /\b(?:AS|as)\b/],
+      ['va', /\$\{?[A-Za-z_][\w]*\}?/],
+      ['st', /"(?:\\.|[^"\\\n])*"/],
+      ['nu', /\b\d[\d.]*\b/]
+    ],
+    yaml: [
+      ['cm', /#[^\n]*/],
+      ['va', /\$\{[^}]*\}/],
+      ['kw', /^\s*-?\s*[A-Za-z_][\w.-]*(?=\s*:)/m],
+      ['st', /'(?:[^']|'')*'|"(?:\\.|[^"\\\n])*"/],
+      ['ty', /\b(?:true|false|null)\b/],
+      ['nu', /\b\d[\d.]*\b/]
+    ],
+    txt: [['cm', /#[^\n]*/]]
+  };
+
+  function tokenize(src, grammar) {
+    var parts = grammar.map(function (g) { return '(' + g[1].source + ')'; });
+    var master = new RegExp(parts.join('|'), 'g');
+    var out = '', last = 0, m;
+    while ((m = master.exec(src)) !== null) {
+      out += esc(src.slice(last, m.index));
+      for (var i = 1; i < m.length; i++) {
+        if (m[i] !== undefined) { out += '<span class="' + grammar[i - 1][0] + '">' + esc(m[i]) + '</span>'; break; }
+      }
+      last = m.index + m[0].length;
+      if (m[0] === '') master.lastIndex++;
+    }
+    return out + esc(src.slice(last));
+  }
+
+  function render(code, lang) {
+    var grammar = GRAMMARS[lang] || GRAMMARS.txt;
+    return code.split('\n').map(function (line) {
+      var cls = '', body = line;
+      // Lines the change blocks mark as added or removed.
+      if (/^\+( |$)/.test(line)) { cls = 'add'; }
+      else if (/^-( |$)/.test(line) && !/^--/.test(line)) { cls = 'del'; }
+      if (cls) {
+        var mark = line.slice(0, 1);
+        body = line.slice(1);
+        return '<span class="ln ' + cls + '"><span class="mk">' + mark + '</span>' + tokenize(body, grammar) + '</span>';
+      }
+      return '<span class="ln">' + tokenize(body, grammar) + '</span>';
+    }).join('\n');
+  }
+
+  document.querySelectorAll('pre code[data-lang]').forEach(function (el) {
+    el.innerHTML = render(el.textContent, el.getAttribute('data-lang'));
+  });
+})();
+document.querySelectorAll('.tabs .tab').forEach(function(b){
+  b.addEventListener('click',function(){
+    var page=b.closest('.page');
+    page.querySelectorAll('.tab, .tabpanel').forEach(function(el){el.classList.remove('active')});
+    b.classList.add('active');
+    page.querySelector('#'+b.dataset.tab).classList.add('active');
+  });
+});
+document.querySelectorAll('.skipto a[data-page]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.page, .skipto a').forEach(function(el){el.classList.remove('active')});
+    a.classList.add('active');
+    document.getElementById(a.dataset.page).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+var nav=document.querySelector('.skipto');
+var menu=nav.querySelector('.skipto-menu');
+function closeMenu(){nav.classList.remove('open');nav.classList.add('closed');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});}
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){
+  if(getComputedStyle(menu).display!=='none'){closeMenu();}
+  else{nav.classList.remove('closed');nav.classList.add('open');}
+});
+nav.addEventListener('mouseleave',function(){nav.classList.remove('closed')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',closeMenu)});
+</script>
+</body>
+</html>

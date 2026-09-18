@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6005 — Commit 2: Public rows, chrome, and FAB</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+}
+main { max-width: 880px; margin-inline: auto; padding: 72px clamp(16px, 4vw, 40px) 80px; }
+h1 { font-size: clamp(24px, 5vw, 34px); line-height: 1.2; margin: 0 0 6px; }
+h2 { font-size: clamp(19px, 3.5vw, 24px); margin: 0 0 14px; }
+h3 { font-size: clamp(16px, 3vw, 18px); margin: 0 0 8px; }
+p { max-width: 68ch; }
+code, a { overflow-wrap: anywhere; }
+code {
+  background: #23282e; border: 1px solid var(--border); border-radius: 6px;
+  padding: 1px 6px; font-size: .88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+a { color: var(--accent); }
+pre { overflow-x: auto; max-width: 100%; }
+.kicker { color: var(--faint); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 10px; }
+.subtitle { color: var(--muted); margin: 0 0 34px; }
+section { margin-bottom: 42px; scroll-margin-top: 20px; }
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow);
+}
+.card + .card { margin-top: 14px; }
+.onesentence { border-left: 4px solid var(--accent); font-size: clamp(16px, 3vw, 19px); }
+.onesentence p { margin: 0; max-width: none; }
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; border-radius: 999px; padding: 3px 10px; margin-bottom: 10px;
+}
+.badge.must { background: var(--accent-soft); color: var(--accent); border: 1px solid #2c5a41; }
+.badge.important { background: var(--warn-soft); color: var(--warn); border: 1px solid #5a4620; }
+ul { padding-left: 20px; margin: 8px 0; }
+li { margin: 5px 0; }
+li::marker { color: var(--faint); }
+.filechip {
+  display: inline-block; background: #23282e; border: 1px solid var(--border);
+  border-radius: 8px; padding: 3px 9px; margin: 2px 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px;
+  color: var(--muted); overflow-wrap: anywhere; max-width: 100%;
+}
+.pager { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.pager a {
+  text-decoration: none; background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 16px; color: var(--muted); transition: .15s;
+}
+.pager a:hover { border-color: var(--accent); color: var(--accent); }
+.navlabel { color: var(--faint); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 10px 4px; }
+.skipto {
+  position: fixed; top: 50%; left: 18px; transform: translateY(-50%);
+  z-index: 60; display: flex; flex-direction: column; gap: 5px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px 12px 13px; box-shadow: var(--shadow);
+  width: 172px;
+}
+.skipto a {
+  text-decoration: none; color: var(--muted); font-size: 13px;
+  padding: 6px 10px; border-radius: 8px; transition: .15s;
+}
+.skipto a:hover { background: var(--bg); color: var(--accent); }
+.skipto a.current { color: var(--accent); }
+.skipto-toggle {
+  display: none; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0; background: none; border: 0;
+  color: var(--muted); cursor: pointer; border-radius: 9px;
+}
+.skipto-toggle:hover { color: var(--accent); background: var(--bg); }
+.skipto-toggle svg { transition: .15s; }
+.skipto-menu { display: flex; flex-direction: column; gap: 5px; }
+@media (max-width: 1180px) {
+  .skipto { top:10px; left:10px; transform:none; width:auto; padding:5px; border-radius:12px; }
+  .skipto-toggle { display:flex; }
+  .skipto-menu { display:none; padding:4px 6px 8px; min-width:172px; }
+  .skipto:hover .skipto-menu, .skipto:focus-within .skipto-menu,
+  .skipto.open .skipto-menu { display:flex; }
+  .skipto:hover .skipto-toggle svg, .skipto:focus-within .skipto-toggle svg,
+  .skipto.open .skipto-toggle svg { transform:rotate(180deg); }
+  section { scroll-margin-top: 80px; }
+}
+@media (max-width: 720px) { .card { padding: 14px 16px; } }
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <button class="skipto-toggle" aria-label="Skip to section menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">This page</div>
+    <a href="#step21">2.1 Dependency + strings</a>
+    <a href="#step22">2.2 Rendering</a>
+    <a href="#step23">2.3 Previews</a>
+    <a href="#step24">2.4 Screen tests</a>
+    <a href="#watch">Watch Out For</a>
+    <div class="navlabel">Pages</div>
+    <a href="MMA-6005-preliminary-plan.html">Overview</a>
+    <a href="MMA-6005-commit-1.html">Commit 1 — State</a>
+    <a href="MMA-6005-commit-2.html" class="current">Commit 2 — UI</a>
+    <a href="MMA-6005-commit-3.html">Commit 3 — Samples</a>
+  </div>
+</nav>
+
+<main>
+
+<p class="kicker">MMA-6005 · Page 3 of 4 · Commit 2 of 3</p>
+<h1>Commit 2 — Public rows, chrome, and FAB</h1>
+<p class="subtitle">All rendering: hero, audience and web rows, QR icon, Duplicate item, RSVP FAB, under-construction dialog — plus previews and Robolectric tests.</p>
+
+<section id="goal">
+  <div class="card onesentence">
+    <p>Every public branch from Commit 1 becomes visible: plain unstyled rows for content, <code>isPublic</code>-gated chrome, and a shared stopgap dialog behind the three dead-end entry points.</p>
+  </div>
+</section>
+
+<section id="step21">
+  <h2>Step 2.1 — Dependency and strings</h2>
+  <div class="card">
+    <div style="color:var(--muted); margin-bottom:8px;">Unlock Coil + new labels.</div>
+    <span class="filechip">feature/calendar/build.gradle.kts</span>
+    <ul>
+      <li>Add <code>implementation(libs.coil.compose)</code> — <code>materialIconsExtended</code> is already present, so <code>Icons.Rounded.Rsvp</code> / <code>QrCode</code> just work</li>
+    </ul>
+    <span class="filechip">feature/calendar/…/values/strings.xml</span>
+    <ul>
+      <li><code>calendar_event_duplicate</code> — "Duplicate Event" (overflow item)</li>
+      <li><code>calendar_event_qr_code</code> — QR app-bar action content description</li>
+      <li><code>calendar_event_rsvp</code> — RSVP FAB content description</li>
+      <li><code>calendar_event_photo</code> — hero image content description</li>
+      <li>Each gets a <code>comment</code> attribute, matching the <code>calendar_event_*</code> siblings</li>
+      <li>Reused, do not re-declare: <code>calendar_event_audience</code> (feature) plus <code>view_calendar_event_link</code>, <code>view_calendar_event_caption</code>, <code>feature_under_construction</code> (core:strings)</li>
+      <li>Already added in Commit 1, do not re-declare: <code>calendar_event_list_separator</code> (the renamed recurrence bullet) and <code>calendar_event_audience_group</code></li>
+    </ul>
+    <p style="color:var(--muted); font-size:14px;">Feature-local, not core — these are calendar-specific and the screen's existing strings (<code>calendar_event_remove_title</code>, <code>calendar_event_organizer_header</code>) already live there. The Jira ticket implied core:strings; feature-local wins on consistency.</p>
+  </div>
+</section>
+
+<section id="step22">
+  <h2>Step 2.2 — Render the additions</h2>
+  <span class="badge must">Must Know</span>
+  <div class="card">
+    <div style="color:var(--muted); margin-bottom:8px;">Unstyled public rows + gated chrome.</div>
+    <span class="filechip">…/calendar/detail/EventDetailsScreen.kt</span>
+    <h3 style="margin-top:14px;">Content rows</h3>
+    <ul>
+      <li>Hero <code>AsyncImage</code> first in the content Column — crop, <code>fillMaxWidth</code>, <code>aspectRatio(2f)</code>, gated <code>photoUrl?.let</code> (TemplePhoto precedent)</li>
+      <li>Audience <code>ListItem</code> after the location row — headline = <code>"Adults - Women • Youth - Young Men"</code>-style joined text, supporting = "Audience"</li>
+      <li>Web row after description via <code>webLinkUrl?.let</code> — reuses the two <code>view_calendar_event_*</code> strings, trailing <code>Icons.Rounded.Language</code>, tap → <code>LinkClicked</code> (existing analytics for free)</li>
+    </ul>
+    <h3>Chrome</h3>
+    <ul>
+      <li><code>menuItems</code>: QR icon when <code>isPublic && editable</code> — Share + QR = 2 on-bar icons, safely under the limit</li>
+      <li>Insert <strong>inside the existing <code>buildList</code></strong> — the function takes a nullable <code>EventDetailsUiState?</code> and early-returns <code>emptyList()</code> on <code>uiState == null || uiState.notFound</code>, and two tests pin that</li>
+      <li>Duplicate overflow item between Edit and Remove, gated <code>isPublic && editable</code></li>
+      <li>Add-to-device-calendar stays last, ungated</li>
+      <li>RSVP FAB via <code>ScreenScaffold(floatingActionButton)</code>, <code>Icons.Rounded.Rsvp</code>, public only, fires <code>RsvpClicked</code></li>
+    </ul>
+    <h3>Dialog — nothing to do here</h3>
+    <ul>
+      <li>The screen already calls <code>HandleDialogUiState(uiState.dialogFlow)</code>; the ViewModel supplies the under-construction dialog in Commit 1. <strong>No dialog composable in this file.</strong></li>
+      <li>Extend the file-top <code>TODO(MMA-6004)</code> unstyled comment to cover the public rows</li>
+    </ul>
+  </div>
+</section>
+
+<section id="step23">
+  <h2>Step 2.3 — Preview states</h2>
+  <div class="card">
+    <div style="color:var(--muted); margin-bottom:8px;">Previews exercise every new branch.</div>
+    <span class="filechip">…/detail/EventDetailsUiStatePreviewParameterProvider.kt</span>
+    <ul>
+      <li>Add a public + editable kitchen-sink state — hero, audience, web row, QR, Duplicate, FAB all on</li>
+      <li>Flip the existing read-only state to public with no photo — FAB without edit chrome, no hero region</li>
+      <li>The provider now yields <code>EventDetailsUiState?</code> — the not-yet-loaded case is a literal <code>null</code> entry, not a <code>loading = true</code> copy</li>
+    </ul>
+  </div>
+</section>
+
+<section id="step24">
+  <h2>Step 2.4 — Screen tests</h2>
+  <div class="card">
+    <div style="color:var(--muted); margin-bottom:8px;">Lock row/chrome gating in Compose (Robolectric, real strings).</div>
+    <span class="filechip">…/calendar/detail/EventDetailsScreenTest.kt</span>
+    <ul>
+      <li>FAB: shown public + fires <code>RsvpClicked</code>; absent non-public</li>
+      <li>Web row: shown + tap fires <code>LinkClicked</code>; absent when not public; absent without link</li>
+      <li>Audience row: <code>"Group - Audience"</code> entries joined + "Audience" secondary</li>
+      <li>Hero: asserted via content description (Coil composes without loading in Robolectric)</li>
+      <li>QR + Duplicate gated <code>isPublic && editable</code>; Duplicate ordered between Edit and Remove</li>
+      <li>Regression: non-public editable keeps exactly Edit / Remove</li>
+      <li>Placeholder tap shows the under-construction dialog (rendered by the existing <code>HandleDialogUiState</code>)</li>
+      <li>Regression: the not-yet-loaded (<code>uiState = null</code>) and not-found states still show no actions — two tests from the review commits already cover this</li>
+    </ul>
+  </div>
+</section>
+
+<section id="watch">
+  <h2>Watch Out For <span class="badge important" style="vertical-align:middle; margin-left:8px;">Important</span></h2>
+  <div class="card">
+    <ul>
+      <li><strong>photoPath shape:</strong> DTO docs say absolute URL, but the repo KDoc hints <code>proxy</code> may matter for on-device resolution — verify against one real synced public event; a fix stays confined to the use case</li>
+      <li><strong>AppBarMenu itemLimit = 3:</strong> Share + QR = 2 on-bar icons is safe; a third icon would silently demote into overflow — the screen test locks this in</li>
+      <li><strong>No <code>loading</code> flag exists.</strong> <code>de7b880bb3</code> deleted it — the state is nullable and <code>null</code> means not loaded yet. Every preview state, screen test, and UiState copy uses <code>null</code> where you'd reach for <code>loading = true</code>. Full note on the <a href="MMA-6005-preliminary-plan.html#gotchas">Overview</a></li>
+      <li><strong>Gate on <code>EventDetails.isPublic</code>, never <code>EventDetailsCalendar.isPublicEventsEnabled</code></strong> — the latter is a calendar capability flag; using it compiles and can still pass tests. See Agent Gotchas on the <a href="MMA-6005-preliminary-plan.html#gotchas">Overview</a></li>
+    </ul>
+  </div>
+</section>
+
+<div class="pager">
+  <a href="MMA-6005-commit-1.html">← Commit 1 — State</a>
+  <a href="MMA-6005-commit-3.html">Commit 3 — Samples + gates →</a>
+</div>
+
+</main>
+
+<script>
+var nav=document.querySelector('.skipto');
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){nav.classList.toggle('open')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',function(){
+  nav.classList.remove('open');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});})});
+</script>
+
+</body>
+</html>

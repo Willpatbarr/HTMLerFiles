@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR save path simplified</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
+  --ok:#2E8B62; --bad:#C24A4A;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.62}
+main{max-width:none;margin-inline:0;padding:4.5rem 32px 5rem}
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.1rem}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media (max-width:900px){.head{grid-template-columns:1fr}
+  .head .lede{margin-top:1.1rem}}
+
+.index{font-size:13px;color:var(--faint);margin:0 0 1.7rem;
+  padding:0 0 1.3rem;border-bottom:1px solid var(--border)}
+.index b{font-weight:600}
+.i1{color:var(--g1)} .i2{color:var(--g2)} .i3{color:var(--g3)}
+
+h2{font-size:1.3rem;font-weight:600;margin:0 0 .35rem;letter-spacing:-.01em}
+h3{font-size:1rem;font-weight:600;margin:1.9rem 0 .5rem;color:var(--ink)}
+p{margin:0 0 .9rem}
+.sub{color:var(--muted);font-size:14px;margin:0 0 1.5rem}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+.tabpanel{display:none}
+#r1:checked ~ main #t1,#r2:checked ~ main #t2,#r3:checked ~ main #t3,
+#r4:checked ~ main #t4,#r5:checked ~ main #t5,#r6:checked ~ main #t6,
+#r7:checked ~ main #t7{display:block}
+#r1:checked ~ main label[for=r1],#r2:checked ~ main label[for=r2],
+#r3:checked ~ main label[for=r3]{color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r4:checked ~ main label[for=r4],#r5:checked ~ main label[for=r5]
+{color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r6:checked ~ main label[for=r6],#r7:checked ~ main label[for=r7]
+{color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 4px}
+@media (max-width:720px){.pair{grid-template-columns:1fr}}
+.side{min-width:0}
+.sidelab{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
+  color:var(--faint);margin:0 0 6px}
+.sidelab.before{color:var(--bad)} .sidelab.after{color:var(--ok)}
+
+.code{position:relative;margin:0 0 16px}
+.code pre{margin:0;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:13px 15px;overflow-x:auto;max-width:100%;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.7px;line-height:1.62}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--card);
+  padding:1px 4px;border-radius:3px;pointer-events:none;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;
+  overflow-wrap:anywhere}
+a{color:var(--accent);overflow-wrap:anywhere}
+.k{color:#A25494} .ty{color:#4368A8} .cm{color:var(--faint)} .ad{color:#2E8B62}
+
+.why{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:1.5rem 0 0}
+@media (max-width:720px){.why{grid-template-columns:1fr}}
+.why .box{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:15px 17px}
+.why .box b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 7px;font-weight:700}
+.why .box p{margin:0;font-size:14.5px}
+
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+  padding:13px 17px;margin:1.5rem 0 0}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;margin:0 0 5px}
+.note p{margin:0;font-size:14.5px}
+
+.tw{overflow-x:auto;margin:0 0 1.2rem}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--faint);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  font-weight:700}
+td code{font-size:12.5px}
+.plus{color:var(--ok)} .minus{color:var(--bad)}
+</style>
+</head>
+<body>
+
+<input class="st" type="radio" name="tb" id="r1" checked>
+<input class="st" type="radio" name="tb" id="r2">
+<input class="st" type="radio" name="tb" id="r3">
+<input class="st" type="radio" name="tb" id="r4">
+<input class="st" type="radio" name="tb" id="r5">
+<input class="st" type="radio" name="tb" id="r6">
+<input class="st" type="radio" name="tb" id="r7">
+
+<main>
+<div class="head">
+  <h1>QR save path simplified</h1>
+  <p class="lede">Six changes on <code>MMA-5878-slim</code>. The save stops carrying a
+  bitmap across the file-picker trip and reads the shared state instead.</p>
+</div>
+
+<p class="index"><b>Groups</b> &nbsp; <span class="i1">Save correctness</span> &nbsp;&middot;&nbsp;
+<span class="i2">Tests</span> &nbsp;&middot;&nbsp; <span class="i3">Housekeeping</span></p>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r1">1 &middot; Flow sharing</label>
+  <label class="tab" for="r2">2 &middot; Capture removed</label>
+  <label class="tab" for="r3">3 &middot; Save awaits</label>
+  <label class="tab" for="r4">4 &middot; Launcher hoisted</label>
+  <label class="tab" for="r5">5 &middot; Test guards</label>
+  <label class="tab" for="r6">6 &middot; Comments</label>
+  <label class="tab" for="r7">7 &middot; Files and checks</label>
+</div>
+
+<!-- 1 -->
+<div class="tabpanel" id="t1">
+<h2>Flow sharing</h2>
+<p class="sub"><code>qr/GetEventQrUiStateUseCase.kt:72</code></p>
+
+<div class="pair">
+  <div class="side"><p class="sidelab before">Before</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> statusFlow = combine(encodeInputFlow, retryFlow) { content, _ -&gt; content }
+    .transformLatest { ... }
+    .stateIn(coroutineScope, <span class="ty">SharingStarted</span>.WhileSubscribed(STOP_TIMEOUT_MS), <span class="ty">EventQrStatus</span>.Loading)</pre></div></div>
+
+  <div class="side"><p class="sidelab after">After</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> statusFlow = combine(encodeInputFlow, retryFlow) { content, _ -&gt; content }
+    .transformLatest { ... }
+    .stateIn(coroutineScope, <span class="ad"><span class="ty">SharingStarted</span>.Lazily</span>, <span class="ty">EventQrStatus</span>.Loading)</pre></div></div>
+</div>
+
+<div class="why">
+  <div class="box"><b>Why the change was needed</b><p>The screen is the only collector.
+  Opening the file picker drops it, so <code>WhileSubscribed</code> stopped the flow and
+  re-seeded it to <code>Loading</code>. A save that wrote the file correctly then reported
+  failure.</p></div>
+  <div class="box"><b>What the change does</b><p>Keeps the flow alive for the life of the
+  view model, so the rendered code is still there when the picker returns and nothing
+  re-encodes on the way back.</p></div>
+</div>
+</div>
+
+<!-- 2 -->
+<div class="tabpanel" id="t2">
+<h2>Capture removed</h2>
+<p class="sub"><code>qr/EventQrUiState.kt:52-60</code> &nbsp;&middot;&nbsp;
+<code>qr/EventQrViewModel.kt:48, 62-69</code></p>
+
+<div class="pair">
+  <div class="side"><p class="sidelab before">Before</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">sealed interface</span> <span class="ty">EventQrEvent</span> {
+    <span class="k">data object</span> Close : <span class="ty">EventQrEvent</span>
+    <span class="k">data object</span> Retry : <span class="ty">EventQrEvent</span>
+    <span class="k">data object</span> ShareClicked : <span class="ty">EventQrEvent</span>
+    <span class="k">data class</span> SaveClicked(<span class="k">val</span> code: <span class="ty">EventQrStatus</span>.Loaded) : <span class="ty">EventQrEvent</span>
+    <span class="k">data class</span> SaveToDocument(<span class="k">val</span> uri: <span class="ty">Uri</span>) : <span class="ty">EventQrEvent</span>
+    <span class="k">data object</span> SaveCancelled : <span class="ty">EventQrEvent</span>
+}</pre></div></div>
+
+  <div class="side"><p class="sidelab after">After</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">sealed interface</span> <span class="ty">EventQrEvent</span> {
+    <span class="k">data object</span> Close : <span class="ty">EventQrEvent</span>
+    <span class="k">data object</span> Retry : <span class="ty">EventQrEvent</span>
+    <span class="k">data object</span> ShareClicked : <span class="ty">EventQrEvent</span>
+    <span class="k">data class</span> SaveToDocument(<span class="k">val</span> uri: <span class="ty">Uri</span>) : <span class="ty">EventQrEvent</span>
+}</pre></div></div>
+</div>
+
+<div class="pair">
+  <div class="side">
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">private var</span> pendingSave: <span class="ty">EventQrStatus</span>.Loaded? = <span class="k">null</span>
+
+<span class="k">fun</span> onEvent(event: <span class="ty">EventQrEvent</span>) {
+    <span class="k">when</span> (event) {
+        ...
+        <span class="k">is</span> <span class="ty">EventQrEvent</span>.SaveClicked -&gt; pendingSave = event.code
+        <span class="k">is</span> <span class="ty">EventQrEvent</span>.SaveToDocument -&gt; save(event.uri)
+        <span class="ty">EventQrEvent</span>.SaveCancelled -&gt; pendingSave = <span class="k">null</span>
+    }
+}</pre></div></div>
+
+  <div class="side">
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> onEvent(event: <span class="ty">EventQrEvent</span>) {
+    <span class="k">when</span> (event) {
+        ...
+        <span class="k">is</span> <span class="ty">EventQrEvent</span>.SaveToDocument -&gt; save(event.uri)
+    }
+}</pre></div></div>
+</div>
+
+<div class="why">
+  <div class="box"><b>Why the change was needed</b><p>Once the flow stays alive, nothing has
+  to be carried across the picker trip. <code>SaveClicked</code>, <code>SaveCancelled</code>
+  and <code>pendingSave</code> existed only to route a value around a window that no longer
+  exists.</p></div>
+  <div class="box"><b>What the change does</b><p>Deletes one view-model field and two event
+  types, and makes save read the same state share already reads.</p></div>
+</div>
+</div>
+
+<!-- 3 -->
+<div class="tabpanel" id="t3">
+<h2>Save awaits</h2>
+<p class="sub"><code>qr/EventQrViewModel.kt:97-112</code></p>
+
+<div class="pair">
+  <div class="side"><p class="sidelab before">Before</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">private fun</span> save(documentUri: <span class="ty">Uri</span>) {
+    <span class="k">val</span> loaded = pendingSave
+    pendingSave = <span class="k">null</span>
+    <span class="k">if</span> (loaded == <span class="k">null</span>) {
+        showSnackbar(R.string.calendar_event_qr_save_failed)
+        <span class="k">return</span>
+    }
+    viewModelScope.launch {
+        <span class="k">val</span> saved = saveQrCodeToDocumentUseCase(loaded.bitmap, documentUri)
+        ...
+    }
+}</pre></div></div>
+
+  <div class="side"><p class="sidelab after">After</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">private fun</span> save(documentUri: <span class="ty">Uri</span>) {
+    viewModelScope.launch {
+        <span class="ad"><span class="k">val</span> loaded = uiState.statusFlow
+            .first { it != <span class="ty">EventQrStatus</span>.Loading } <span class="k">as?</span> <span class="ty">EventQrStatus</span>.Loaded</span>
+        <span class="k">if</span> (loaded == <span class="k">null</span>) {
+            showSnackbar(R.string.calendar_event_qr_save_failed)
+            <span class="k">return@launch</span>
+        }
+        <span class="k">val</span> saved = saveQrCodeToDocumentUseCase(loaded.bitmap, documentUri)
+        ...
+    }
+}</pre></div></div>
+</div>
+
+<div class="why">
+  <div class="box"><b>Why the change was needed</b><p>The picker is a separate app, so a
+  low-memory device can kill this one while it is open. The result then reaches a brand-new
+  view model whose code has not finished re-encoding, and the user is left the empty file
+  the picker already created.</p></div>
+  <div class="box"><b>What the change does</b><p>Waits for the state to resolve instead of
+  sampling it once. Nothing is stored: the code is rebuilt from the event's link, which is a
+  local database row the restarted app reads back.</p></div>
+</div>
+
+<div class="note"><b>Note</b><p>This gap was present in every earlier version of the branch
+too. The change closes it rather than preserving it.</p></div>
+</div>
+
+<!-- 4 -->
+<div class="tabpanel" id="t4">
+<h2>Launcher hoisted</h2>
+<p class="sub"><code>qr/EventQrScreen.kt:49-65, 76-82</code></p>
+
+<div class="pair">
+  <div class="side"><p class="sidelab before">Before</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">internal fun</span> EventQrScreen(
+    uiState: <span class="ty">EventQrUiState</span>,
+    snackbarHostState: <span class="ty">SnackbarHostState</span>,
+    onEvent: (<span class="ty">EventQrEvent</span>) -&gt; <span class="ty">Unit</span>,
+    modifier: <span class="ty">Modifier</span> = <span class="ty">Modifier</span>,
+) {
+    <span class="k">val</span> createDocument = rememberLauncherForActivityResult(
+        <span class="ty">ActivityResultContracts</span>.CreateDocument(QR_MIME_TYPE),
+    ) { uri -&gt; uri?.let { onEvent(<span class="ty">EventQrEvent</span>.SaveToDocument(it)) } }
+    ...
+}</pre></div></div>
+
+  <div class="side"><p class="sidelab after">After</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">internal fun</span> EventQrScreen(
+    uiState: <span class="ty">EventQrUiState</span>,
+    snackbarHostState: <span class="ty">SnackbarHostState</span>,
+    onEvent: (<span class="ty">EventQrEvent</span>) -&gt; <span class="ty">Unit</span>,
+    <span class="ad">onSaveClick: (<span class="ty">String</span>) -&gt; <span class="ty">Unit</span>,</span>
+    modifier: <span class="ty">Modifier</span> = <span class="ty">Modifier</span>,
+) {
+    ...
+}</pre></div></div>
+</div>
+
+<div class="why">
+  <div class="box"><b>Why the change was needed</b><p>The picker launched from inside the
+  hoisted composable, so a test could not observe the Save tap. Save was the one app-bar
+  action with no click test, and three separate mutations of it passed the whole
+  suite.</p></div>
+  <div class="box"><b>What the change does</b><p>Moves the launcher up to the wrapper that
+  owns the view model, so the internal composable is fully drivable and a spy lambda can
+  assert which file name reaches the picker.</p></div>
+</div>
+</div>
+
+<!-- 5 -->
+<div class="tabpanel" id="t5">
+<h2>Test guards</h2>
+<p class="sub"><code>qr/GetEventQrUiStateUseCaseTest.kt:167-206</code></p>
+
+<div class="pair">
+  <div class="side"><p class="sidelab before">Before</p>
+  <div class="code"><span class="lang">kotlin</span><pre>statusFlow.test {
+    assertThat(awaitItem()).isEqualTo(<span class="ty">EventQrStatus</span>.Loading)
+    assertThat(awaitItem()).isInstanceOf(<span class="ty">EventQrStatus</span>.Loaded::<span class="k">class</span>)
+    cancelAndIgnoreRemainingEvents()
+}
+
+assertThat(statusFlow.value).isInstanceOf(<span class="ty">EventQrStatus</span>.Loaded::<span class="k">class</span>)
+coVerify(exactly = 1) { encodeQrCodeUseCase(LINK) }</pre></div></div>
+
+  <div class="side"><p class="sidelab after">After</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> onScreen = sharingScope.launch { statusFlow.collect { } }
+scheduler.advanceUntilIdle()
+
+onScreen.cancel()
+<span class="ad">scheduler.advanceTimeBy(PICKER_TRIP_MS)</span>
+
+<span class="ad"><span class="k">val</span> backOnScreen = sharingScope.launch { statusFlow.collect { } }</span>
+scheduler.advanceUntilIdle()
+
+coVerify(exactly = 1) { encodeQrCodeUseCase(LINK) }</pre></div></div>
+</div>
+
+<div class="why">
+  <div class="box"><b>Why the change was needed</b><p>The first version of this test ran in
+  8&nbsp;ms against a 5,000&nbsp;ms stop timeout and never re-subscribed, so the flow never
+  actually stopped. Reverting <code>Lazily</code> to <code>WhileSubscribed</code> left all
+  39 QR tests green.</p></div>
+  <div class="box"><b>What the change does</b><p>Drives a virtual clock past the timeout and
+  re-subscribes, which is what makes the upstream restart. The encode count is the assertion
+  that discriminates, because the state keeps its last value either way.</p></div>
+</div>
+
+<div class="note"><b>Verified</b><p>Both new guards were run against the code they describe.
+Reverting <code>Lazily</code> fails this test on the encode count; reverting the awaited save
+fails the process-death test. Two other guards were restored in the same pass: the snackbar
+flow pass-through, and the encoder's 512&nbsp;px default asserted as a literal.</p></div>
+</div>
+
+<!-- 6 -->
+<div class="tabpanel" id="t6">
+<h2>Comments</h2>
+<p class="sub"><code>qr/SaveQrCodeToDocumentUseCase.kt:10-16</code> &mdash; one of seven
+files</p>
+
+<div class="pair">
+  <div class="side"><p class="sidelab before">Before</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="cm">/**
+ * Returns whether the write succeeded, because the caller's only job
+ * with the answer is to pick which message to show. A failure here is
+ * the user's storage refusing the write; nothing is retryable without
+ * them choosing a different location.
+ */</span></pre></div></div>
+
+  <div class="side"><p class="sidelab after">After</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="cm">/**
+ * Returns whether the write succeeded: the caller's only job with the
+ * answer is to pick which message to show.
+ */</span></pre></div></div>
+</div>
+
+<div class="why">
+  <div class="box"><b>Why the change was needed</b><p>Comments ran at 29&nbsp;per&nbsp;cent
+  of the package against 1&ndash;4&nbsp;per&nbsp;cent in comparable feature packages such as
+  <code>finance/expenses/detail</code> and <code>calling/organization</code>. The volume was
+  the main reason the branch read as heavy.</p></div>
+  <div class="box"><b>What the change does</b><p>Keeps the rationale that is not inferable
+  from the code &mdash; the truncate mode, the quiet zone, the sharing strategy &mdash; and
+  drops the rest. Package comment density is now 22&nbsp;per&nbsp;cent.</p></div>
+</div>
+</div>
+
+<!-- 7 -->
+<div class="tabpanel" id="t7">
+<h2>Files and checks</h2>
+<p class="sub">Every changed file, against the working tree this branch was cut from</p>
+
+<div class="tw">
+<table>
+<thead><tr><th>Path</th><th>What it is</th><th>What the change does</th><th>Diff</th></tr></thead>
+<tbody>
+<tr><td><code>qr/GetEventQrUiStateUseCase.kt</code></td><td>the state builder</td>
+<td>Shares the flow for the view model's life, so the picker trip cannot tear it down</td>
+<td><span class="plus">+19</span> <span class="minus">&minus;33</span></td></tr>
+<tr><td><code>qr/EventQrViewModel.kt</code></td><td>the screen's view model</td>
+<td>Awaits the state on save, and holds nothing across the picker trip</td>
+<td><span class="plus">+22</span> <span class="minus">&minus;29</span></td></tr>
+<tr><td><code>qr/EventQrUiState.kt</code></td><td>the hoisted state and event surface</td>
+<td>Two event types fewer, so the save has one entry point instead of three</td>
+<td><span class="plus">+8</span> <span class="minus">&minus;28</span></td></tr>
+<tr><td><code>qr/EventQrScreen.kt</code></td><td>the Compose screen</td>
+<td>Launches the picker from the wrapper, which makes the Save tap testable</td>
+<td><span class="plus">+15</span> <span class="minus">&minus;24</span></td></tr>
+<tr><td><code>qr/EncodeQrCodeUseCase.kt</code></td><td>the ZXing encoder</td>
+<td>Comments only</td>
+<td><span class="plus">+8</span> <span class="minus">&minus;22</span></td></tr>
+<tr><td><code>qr/ExportQrCodeForShareUseCase.kt</code></td><td>the share staging writer</td>
+<td>Comments only</td>
+<td><span class="plus">+10</span> <span class="minus">&minus;16</span></td></tr>
+<tr><td><code>qr/SaveQrCodeToDocumentUseCase.kt</code></td><td>the document writer</td>
+<td>Comments only</td>
+<td><span class="plus">+3</span> <span class="minus">&minus;5</span></td></tr>
+<tr><td><code>qr/GetEventQrUiStateUseCaseTest.kt</code></td><td>state builder tests</td>
+<td>Adds a guard that fails when the sharing strategy is reverted</td>
+<td><span class="plus">+56</span> <span class="minus">&minus;4</span></td></tr>
+<tr><td><code>qr/EventQrViewModelTest.kt</code></td><td>view model tests</td>
+<td>Drops the capture tests, adds the process-death guard</td>
+<td><span class="plus">+14</span> <span class="minus">&minus;53</span></td></tr>
+<tr><td><code>qr/EventQrScreenTest.kt</code></td><td>Robolectric screen tests</td>
+<td>Drops two width assertions, restores the Save click</td>
+<td><span class="plus">+8</span> <span class="minus">&minus;64</span></td></tr>
+<tr><td><code>qr/EncodeQrCodeUseCaseTest.kt</code></td><td>encoder tests</td>
+<td>Asserts the print size as a literal rather than against its own constant</td>
+<td><span class="plus">+6</span> <span class="minus">&minus;6</span></td></tr>
+<tr><td><code>qr/EventQrScreenshotTest.kt</code></td><td>golden screenshot test</td>
+<td>Takes the new screen parameter</td>
+<td><span class="plus">+1</span> <span class="minus">&minus;4</span></td></tr>
+<tr><td colspan="3"><b>Total</b></td>
+<td><span class="plus">+170</span> <span class="minus">&minus;288</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Checks run</h3>
+<div class="code"><span class="lang">bash</span><pre><span class="k">~/.claude/skills/preflight/fast-gate.sh</span> . <span class="ty">:feature:calendar :core:ui :app</span></pre></div>
+<p><code>VERIFY: PASS</code> &mdash; 971 calendar tests, 0 failures, lint and detekt clean.
+Deferred to CI by the scoped gate: full-project lint and detekt, kover thresholds,
+<code>assembleDebug</code> packaging, dependent-module tests.</p>
+
+<h3>Not carried here</h3>
+<p>The tab set is one per change, at your instruction, rather than the report type's PR
+Review sections. The TODO tab is omitted for the same reason. Two reviewer findings sit
+outside this branch and are not tabs: the unbounded share file name, and landscape clipping
+in <code>QrCode</code>, which predates every version of the branch.</p>
+</div>
+
+</main>
+</body>
+</html>

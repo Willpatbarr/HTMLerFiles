@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR #1914 — Public Event Toggle</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="navlabel">Pages</span>
+  <a href="index.html">Overview</a>
+  <a href="pr-1915.html">1915 · Location <span class="tkt">MMA-5939</span></a>
+  <a href="pr-1913.html">1913 · Reminder <span class="tkt">MMA-5941</span></a>
+  <a href="pr-1912.html">1912 · Recurrence <span class="tkt">MMA-5938</span></a>
+  <a href="pr-1914.html" class="current">1914 · Public Evt <span class="tkt">MMA-5946</span></a>
+  <a href="pr-1820.html">1820 · CodeQL</a>
+  <span class="navlabel">Skip to</span>
+  <a href="#changed">What changed</a>
+  <a href="#files">Files</a>
+  <a href="#impact">Architecture</a>
+  <a href="#risks">Risks</a>
+  <a href="#checklist">Checklist</a>
+  <a href="#readfirst">Read first</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="kicker">PR Review · <span class="prio imp">Quick pass — already approved</span></div>
+  <h1>#1914 — MMA-5946 Public Event Toggle + Details Shell</h1>
+  <p class="sub"><a href="https://github.com/ICS-Eng/MemberTools-Android/pull/1914">Open on GitHub</a> · branch <code>MMA-5946</code> · created Jul 24</p>
+
+  <div class="card accent">
+    <h2>One-Sentence Version</h2>
+    <p class="onesent">Adds a <b>"Public event" toggle</b> and a Public Event Details section shell (R20) to the event form, with tests that <b>pin the public flag out of the write path</b> until the details work lands — already approved, so this is a sanity pass to unblock a merge.</p>
+    <div class="meta">
+      <span><b>+405 / −17</b> · 29 files</span>
+      <span>Checks: <span class="badge green">Success</span></span>
+      <span>Review: <span class="badge green">Approved (sbrewerclan)</span></span>
+    </div>
+  </div>
+
+  <div class="card" id="changed">
+    <h2>What Changed</h2>
+    <ul>
+      <li><b>PublicEventSection</b> (+106) — the toggle plus an empty details-section shell for the follow-up ticket.</li>
+      <li><b>Write-path suppression</b> — tests pin that flipping the toggle does <b>not</b> yet change what's sent to the server (<code>PublishEventUseCase</code>, <code>SaveEventDraftUseCase</code>).</li>
+      <li><b>Repo layer</b> — small additions to <code>CalendarEventRepository</code> and <code>EditableCalendar</code> (who may create public events).</li>
+      <li><b>Screenshot baseline</b> for the new section; VM/screen/use-case tests extended.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="files">
+    <h2>Files Changed (top of 29)</h2>
+    <table>
+      <tr><th>File</th><th>Δ</th></tr>
+      <tr><td><code>edit/PublicEventSection.kt</code></td><td class="num">+106</td></tr>
+      <tr><td><code>edit/EventEditViewModel.kt</code></td><td class="num">+21 / −1</td></tr>
+      <tr><td><code>repo/calendar/CalendarEventRepository.kt</code> + <code>EditableCalendar.kt</code></td><td class="num">+6 / −1</td></tr>
+      <tr><td><code>edit/PublishEventUseCase.kt</code> + <code>SaveEventDraftUseCase.kt</code></td><td class="num">+9 / −5</td></tr>
+      <tr><td>Tests (screen, VM, use cases, repo)</td><td class="num">~+195</td></tr>
+    </table>
+  </div>
+
+  <div class="card" id="impact">
+    <h2>Architecture Impact</h2>
+    <ul>
+      <li>Small, shell-first slice — the intentional pattern here is <b>UI lands first, write path stays suppressed</b> until the details ticket.</li>
+      <li>Touches <code>:repo:calendar</code> lightly; everything else stays in <code>:feature:calendar</code>.</li>
+      <li>Merging this first shrinks the rebase burden for 1912/1913/1915, which all touch the same form files.</li>
+    </ul>
+  </div>
+
+  <div class="card warncard" id="risks">
+    <h2>Risks</h2>
+    <ul>
+      <li><b>Low overall.</b> Main thing to confirm: the public flag genuinely can't leak into the publish/draft payload (the pinning tests should prove this).</li>
+      <li><b>Permission gating</b> — check who sees the toggle (<code>EditableCalendar</code> change) matches the ticket's intent.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="checklist">
+    <h2>Checklist</h2>
+    <ul class="check">
+      <li><input type="checkbox"> <span>Pinning tests actually assert the flag is <i>absent</i> from the outbound DTO, not just defaulted.</span></li>
+      <li><input type="checkbox"> <span>Toggle visibility gating looks right in <code>GetEventEditUiStateUseCase</code>.</span></li>
+      <li><input type="checkbox"> <span>Nothing objectionable → approve and let it merge before the other three rebase.</span></li>
+    </ul>
+  </div>
+
+  <div class="card accent" id="readfirst">
+    <h2>What To Read First</h2>
+    <ol>
+      <li><code>PublishEventUseCase.kt</code> diff (+6/−3) — the suppression itself.</li>
+      <li><code>PublicEventSection.kt</code> — quick skim of the UI.</li>
+    </ol>
+    <p><b>Next:</b> <a href="pr-1820.html">PR #1820 — CodeQL workflow (draft) →</a></p>
+  </div>
+
+</div>
+</body>
+</html>

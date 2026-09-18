@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M1 Air Sysdiagnose — Verdict &amp; Fix Plan</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  }
+  main{max-width:880px; margin-inline:auto; padding-inline:clamp(16px,4vw,40px); padding-top:28px; padding-bottom:80px;}
+  h1{font-size:clamp(24px,5vw,34px); line-height:1.2; margin:0 0 6px; letter-spacing:-.02em;}
+  h2{font-size:clamp(19px,3.4vw,24px); line-height:1.25; margin:0 0 14px; letter-spacing:-.01em;}
+  h3{font-size:clamp(15px,2.4vw,17px); margin:0 0 8px; letter-spacing:-.005em;}
+  p{margin:0 0 12px; max-width:68ch;}
+  a{color:var(--accent); overflow-wrap:anywhere;}
+  code{
+    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    background:#12151800; border:1px solid var(--border); border-radius:6px;
+    padding:1px 6px; color:#cfe6da; overflow-wrap:anywhere;
+  }
+  pre{
+    background:#12161a; border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; overflow-x:auto; max-width:100%;
+    font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; color:#cfe6da; margin:0 0 12px;
+  }
+  pre code{border:0; padding:0; background:none;}
+  .sub{color:var(--muted); margin:0 0 26px; font-size:clamp(14px,2.4vw,16px);}
+  section{scroll-margin-top:24px; margin-bottom:34px;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:clamp(14px,3vw,22px); box-shadow:var(--shadow); margin-bottom:16px;
+  }
+  .grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));}
+  .tag{
+    display:inline-block; font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+    font-weight:650; padding:3px 9px; border-radius:999px; margin-bottom:10px;
+  }
+  .must{background:var(--warn-soft); color:var(--warn); border:1px solid #55401a;}
+  .imp{background:var(--accent-soft); color:var(--accent); border:1px solid #2b4a39;}
+  .opt{background:#20252b; color:var(--faint); border:1px solid var(--border-strong);}
+  .onesent{
+    background:linear-gradient(180deg,#1e2a24,#1a2320); border:1px solid #2f4d3d;
+    border-left:3px solid var(--accent); border-radius:var(--radius);
+    padding:clamp(16px,3vw,22px); margin-bottom:30px;
+  }
+  .onesent .lbl{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); font-weight:650; margin-bottom:8px;}
+  .onesent p{margin:0; font-size:clamp(16px,2.8vw,19px); line-height:1.5;}
+  .ok{border-left:3px solid var(--accent);}
+  .bad{border-left:3px solid var(--warn);}
+  .tablewrap{overflow-x:auto; max-width:100%; border:1px solid var(--border); border-radius:10px;}
+  table{border-collapse:collapse; width:100%; min-width:340px; font-size:14px;}
+  th,td{text-align:left; padding:9px 13px; border-bottom:1px solid var(--border);}
+  th{color:var(--faint); font-size:11px; letter-spacing:.07em; text-transform:uppercase; font-weight:650;}
+  tr:last-child td{border-bottom:0;}
+  td.num{font:13px ui-monospace,Menlo,monospace; color:#cfe6da; white-space:nowrap;}
+  ul,ol{margin:0 0 12px; padding-left:20px;}
+  li{margin-bottom:7px; max-width:66ch;}
+  li::marker{color:var(--faint);}
+  .three{counter-reset:t; list-style:none; padding:0;}
+  .three li{
+    counter-increment:t; position:relative; padding:14px 16px 14px 52px;
+    background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:10px;
+  }
+  .three li::before{
+    content:counter(t); position:absolute; left:15px; top:13px;
+    width:24px; height:24px; border-radius:50%; background:var(--accent-soft);
+    color:var(--accent); font-size:13px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; border:1px solid #2b4a39;
+  }
+  .note{color:var(--muted); font-size:14px;}
+  .step{border-top:1px solid var(--border); padding-top:16px; margin-top:16px;}
+  .step:first-of-type{border-top:0; padding-top:0; margin-top:0;}
+  .todo{list-style:none; padding:0;}
+  .todo li{
+    padding:11px 14px 11px 40px; position:relative; background:var(--card);
+    border:1px solid var(--border); border-radius:10px; margin-bottom:8px;
+  }
+  .todo li::before{
+    content:""; position:absolute; left:14px; top:15px; width:14px; height:14px;
+    border:1.5px solid var(--border-strong); border-radius:4px;
+  }
+  hr{border:0; border-top:1px solid var(--border); margin:30px 0;}
+  .navlabel{font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); font-weight:650; padding:2px 10px 5px;}
+  .skipto{
+    position:fixed; top:50%; left:18px; transform:translateY(-50%);
+    z-index:60; display:flex; flex-direction:column; gap:5px;
+    background:var(--card); border:1px solid var(--border);
+    border-radius:14px; padding:12px 12px 13px; box-shadow:var(--shadow); width:172px;
+  }
+  .skipto a{text-decoration:none; color:var(--muted); font-size:13px; padding:6px 10px; border-radius:8px; transition:.15s;}
+  .skipto a:hover{background:var(--bg); color:var(--accent);}
+  .skipto-toggle{
+    display:none; align-items:center; justify-content:center;
+    width:40px; height:40px; padding:0; background:none; border:0;
+    color:var(--muted); cursor:pointer; border-radius:9px;
+  }
+  .skipto-toggle:hover{color:var(--accent); background:var(--bg);}
+  .skipto-toggle svg{transition:.15s;}
+  .skipto-menu{display:flex; flex-direction:column; gap:5px;}
+  @media (max-width:1180px){
+    .skipto{top:10px; left:10px; transform:none; width:auto; padding:5px; border-radius:12px;}
+    .skipto-toggle{display:flex;}
+    .skipto-menu{display:none; padding:4px 6px 8px; min-width:172px;}
+    .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,.skipto.open .skipto-menu{display:flex;}
+    .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,.skipto.open .skipto-toggle svg{transform:rotate(180deg);}
+    main{padding-top:72px;}
+    section{scroll-margin-top:80px;}
+  }
+  @media (max-width:720px){
+    .grid{grid-template-columns:1fr;}
+    .card{padding:15px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <button class="skipto-toggle" aria-label="Skip to section menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">Skip to</div>
+    <a href="#healthy">What's Fine</a>
+    <a href="#disk">1. Disk Full</a>
+    <a href="#memory">2. Memory</a>
+    <a href="#ai">3. AI &amp; Spotlight</a>
+    <a href="#herring">Red Herring</a>
+    <a href="#fix">Fix Plan</a>
+    <a href="#three">Remember 3</a>
+    <a href="#next">What To Do Next</a>
+  </div>
+</nav>
+
+<main>
+
+  <h1>M1 Air Sysdiagnose — Verdict</h1>
+  <p class="sub">MacBookAir10,1 &middot; 8&nbsp;GB RAM &middot; 512&nbsp;GB SSD &middot; macOS 26.5.2 (25F84) &middot; captured 2026-08-26</p>
+
+  <div class="onesent">
+    <div class="lbl">One-Sentence Version</div>
+    <p>Nothing is broken — you have an 8&nbsp;GB machine doing iOS development on a disk with 3% headroom while macOS runs an on-device AI stack built for beefier hardware.</p>
+  </div>
+
+  <!-- ============ HEALTHY ============ -->
+  <section id="healthy">
+    <span class="tag imp">Important</span>
+    <h2>What Came Back Clean</h2>
+    <p>I checked the frightening things first. All three are fine, so you can stop worrying about hardware.</p>
+
+    <div class="grid">
+      <div class="card ok">
+        <h3>Thermals</h3>
+        <p class="note">Pressure level: <strong style="color:var(--accent)">Nominal</strong>. No throttling anywhere in the power metrics.</p>
+      </div>
+      <div class="card ok">
+        <h3>Battery</h3>
+        <p class="note">370 of 1000 cycles. Full-charge capacity still <strong style="color:var(--accent)">100%</strong> of design.</p>
+      </div>
+      <div class="card ok">
+        <h3>Stability</h3>
+        <p class="note">Zero kernel panics. Zero application crashes in the capture window.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ============ DISK ============ -->
+  <section id="disk">
+    <span class="tag must">Must Know</span>
+    <h2>1. The Disk Is 97.1% Full</h2>
+    <p>This is the root cause of most of the rest. APFS gets genuinely unhappy this close to the ceiling, and on an 8&nbsp;GB machine it's worse because swap competes for the same shrinking space.</p>
+
+    <div class="card bad">
+      <div class="tablewrap">
+        <table>
+          <tr><th>Metric</th><th>Value</th></tr>
+          <tr><td>Capacity ceiling</td><td class="num">494.4 GB</td></tr>
+          <tr><td>In use by volumes</td><td class="num">480.1 GB</td></tr>
+          <tr><td><strong>Free space</strong></td><td class="num" style="color:var(--warn)"><strong>14.1 GB</strong></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>The single biggest lever: ~114 GB of stale simulator runtimes</h3>
+    <p>Nine mounted CoreSimulator volumes. <code>iOS 21A342</code> is iOS&nbsp;17 — you are almost certainly not testing four iOS majors and three watchOS versions.</p>
+
+    <div class="tablewrap">
+      <table>
+        <tr><th>Runtime</th><th>Size</th></tr>
+        <tr><td>iOS 22A3351</td><td class="num">19.1 GB</td></tr>
+        <tr><td>iOS 23F77</td><td class="num">18.1 GB</td></tr>
+        <tr><td>iOS 23B86</td><td class="num">17.6 GB</td></tr>
+        <tr><td>iOS 21A342</td><td class="num">17.1 GB</td></tr>
+        <tr><td>watchOS 22R349</td><td class="num">10.9 GB</td></tr>
+        <tr><td>watchOS 23T570</td><td class="num">9.1 GB</td></tr>
+        <tr><td>watchOS 23S36</td><td class="num">8.9 GB</td></tr>
+        <tr><td>2 cryptex bundles</td><td class="num">13.3 GB</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ============ MEMORY ============ -->
+  <section id="memory">
+    <span class="tag must">Must Know</span>
+    <h2>2. Memory Is Genuinely Squeezed</h2>
+    <p>At capture time the machine had almost nothing left in reserve, and it was leaning hard on compression and swap to stay upright.</p>
+
+    <div class="grid">
+      <div class="card bad">
+        <h3>Unused RAM</h3>
+        <p class="note" style="font:600 22px/1.2 ui-monospace,Menlo,monospace;color:var(--warn)">582 MB</p>
+        <p class="note">Out of 8 GB total.</p>
+      </div>
+      <div class="card bad">
+        <h3>In compressor</h3>
+        <p class="note" style="font:600 22px/1.2 ui-monospace,Menlo,monospace;color:var(--warn)">1752 MB</p>
+        <p class="note">Squeezed rather than resident.</p>
+      </div>
+      <div class="card bad">
+        <h3>Swapfiles on disk</h3>
+        <p class="note" style="font:600 22px/1.2 ui-monospace,Menlo,monospace;color:var(--warn)">4 GB</p>
+        <p class="note">Eating your 14 GB of free space.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>About that jetsam kill</h3>
+      <p>At 11:36 free memory dropped to <strong>83 MB</strong> and <code>knowledgeconstructiond</code> was killed.</p>
+      <p>Worth being precise: the reason was <code>per-process-limit</code>, <strong>not</strong> a system-wide out-of-memory event. That's a self-imposed cap doing its job. It's a symptom, not a catastrophe.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ============ AI ============ -->
+  <section id="ai">
+    <span class="tag must">Must Know</span>
+    <h2>3. Apple Intelligence &amp; Spotlight Are Eating the Machine</h2>
+    <p>This is the consistent theme across every runaway process in the capture.</p>
+
+    <div class="tablewrap">
+      <table>
+        <tr><th>Process</th><th>CPU burn</th></tr>
+        <tr><td><code>IntelligencePlatformComputeService</code></td><td class="num" style="color:var(--warn)">90s over 100s (90%)</td></tr>
+        <tr><td><code>spotlightknowledged</code></td><td class="num" style="color:var(--warn)">90s over 152s (59%)</td></tr>
+        <tr><td><code>ANECompilerService</code></td><td class="num">Pegged — compiling ANE models</td></tr>
+        <tr><td><code>knowledgeconstructiond</code></td><td class="num">The one that got killed</td></tr>
+      </table>
+    </div>
+
+    <p style="margin-top:14px">Also resident: three copies of <code>TGOnDeviceInferenceProviderService</code>, plus <code>mediaanalysisd</code> and <code>shazamd</code>. Turning Apple Intelligence off silences this entire cluster at once.</p>
+
+    <div class="card">
+      <span class="tag opt">Optional</span>
+      <h3>Bonus: 41 days of uptime</h3>
+      <p class="note">Only ~37 hours of that was actually awake — the rest was lid-closed sleep, so it matters less than it looks. But the compressor state suggests a reboot would clear real cruft.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ============ RED HERRING ============ -->
+  <section id="herring">
+    <span class="tag imp">Important</span>
+    <h2>Ignore This — It's a Measurement Artifact</h2>
+    <div class="card" style="border-left:3px solid var(--border-strong)">
+      <p>The bundle contains two <code>lsregister</code> high-CPU samples that look alarming. <strong>They are sysdiagnose's own doing</strong> — the tool dumps the LaunchServices database as part of collection.</p>
+      <p class="note" style="margin:0">Don't chase this one. It is not a real problem on your machine.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ============ FIX ============ -->
+  <section id="fix">
+    <span class="tag must">Must Know</span>
+    <h2>The Fix Plan, In Order</h2>
+    <p>Order matters. Freeing the disk first is the highest leverage and partly relieves the memory pressure too.</p>
+
+    <div class="card">
+      <div class="step">
+        <h3>Step 1 — See what simulator runtimes you have</h3>
+        <pre><code>xcrun simctl runtime list</code></pre>
+      </div>
+
+      <div class="step">
+        <h3>Step 2 — Delete the ones you don't need</h3>
+        <pre><code>xcrun simctl runtime delete &lt;identifier&gt;</code></pre>
+        <p class="note">Biggest single win available. Target roughly 100 GB.</p>
+      </div>
+
+      <div class="step">
+        <h3>Step 3 — Clear Xcode build cache</h3>
+        <pre><code>rm -rf ~/Library/Developer/Xcode/DerivedData/*</code></pre>
+      </div>
+
+      <div class="step">
+        <h3>Step 4 — Reboot</h3>
+        <p class="note">Clears the compressor and 41 days of accumulated state.</p>
+      </div>
+
+      <div class="step">
+        <h3>Step 5 — Turn off Apple Intelligence</h3>
+        <p class="note">System Settings, if you don't actually use it. On an 8 GB M1 it buys very little and costs a lot of CPU, RAM, and battery.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr>
+
+  <!-- ============ THREE ============ -->
+  <section id="three">
+    <h2>Remember Only 3 Things</h2>
+    <ol class="three">
+      <li><strong>The hardware is fine.</strong> Thermals nominal, battery healthy, no crashes. Nobody needs a repair shop.</li>
+      <li><strong>The disk is the root cause.</strong> 97% full, and ~114 GB of it is simulator runtimes you don't use.</li>
+      <li><strong>8 GB is the real ceiling.</strong> After the cleanup, if it still drags, that's the constraint — not a bug.</li>
+    </ol>
+  </section>
+
+  <hr>
+
+  <!-- ============ NEXT ============ -->
+  <section id="next">
+    <h2>What To Do Next</h2>
+    <ol>
+      <li>Run <code>xcrun simctl runtime list</code> and delete every runtime you're not actively testing against.</li>
+      <li>Clear <code>DerivedData</code>, then confirm you've recovered 90&ndash;100 GB of free space.</li>
+      <li>Reboot, then decide whether to disable Apple Intelligence based on whether you actually use it.</li>
+    </ol>
+
+    <h3 style="margin-top:22px">TODO Checklist</h3>
+    <ul class="todo">
+      <li>List simulator runtimes</li>
+      <li>Delete stale iOS 17 / unused watchOS runtimes</li>
+      <li>Clear DerivedData</li>
+      <li>Verify free space is above ~100 GB</li>
+      <li>Reboot</li>
+      <li>Decide on Apple Intelligence</li>
+      <li>Re-check feel; if still slow, accept 8 GB as the ceiling</li>
+    </ul>
+  </section>
+
+</main>
+
+<script>
+var nav=document.querySelector('.skipto');
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){nav.classList.toggle('open')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',function(){
+  nav.classList.remove('open');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});})});
+</script>
+</body>
+</html>

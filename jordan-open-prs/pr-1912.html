@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR #1912 — Recurrence Picker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="navlabel">Pages</span>
+  <a href="index.html">Overview</a>
+  <a href="pr-1915.html">1915 · Location <span class="tkt">MMA-5939</span></a>
+  <a href="pr-1913.html">1913 · Reminder <span class="tkt">MMA-5941</span></a>
+  <a href="pr-1912.html" class="current">1912 · Recurrence <span class="tkt">MMA-5938</span></a>
+  <a href="pr-1914.html">1914 · Public Evt <span class="tkt">MMA-5946</span></a>
+  <a href="pr-1820.html">1820 · CodeQL</a>
+  <span class="navlabel">Skip to</span>
+  <a href="#changed">What changed</a>
+  <a href="#files">Files</a>
+  <a href="#impact">Architecture</a>
+  <a href="#risks">Risks</a>
+  <a href="#questions">Open comments</a>
+  <a href="#checklist">Checklist</a>
+  <a href="#readfirst">Read first</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="kicker">PR Review · <span class="prio must">Must review</span></div>
+  <h1>#1912 — MMA-5938 Recurrence Picker</h1>
+  <p class="sub"><a href="https://github.com/ICS-Eng/MemberTools-Android/pull/1912">Open on GitHub</a> · branch <code>MMA-5938</code> · created Jul 23 · the biggest of the four</p>
+
+  <div class="card accent">
+    <h2>One-Sentence Version</h2>
+    <p class="onesent">Adds <b>recurrence authoring</b> (daily/weekly/monthly/yearly rules) to the private event form via a new <code>recurrence/</code> package — UI section, model, and a <code>RecurrenceToDto</code> wire mapper.</p>
+    <div class="meta">
+      <span><b>+1,834 / −13</b> · 51 files</span>
+      <span>Checks: <span class="badge green">Success</span></span>
+      <span>Review: <span class="badge warn">Changes requested (sbrewerclan, 3 comments)</span></span>
+    </div>
+  </div>
+
+  <div class="card" id="changed">
+    <h2>What Changed</h2>
+    <ul>
+      <li><b>RecurrenceSection</b> (+517) — the picker UI: frequency, interval, monthly/yearly variants, end conditions, error visuals.</li>
+      <li><b>RecurrenceModel</b> (+68) — the domain model; <b>this is where the contested server enums live</b>.</li>
+      <li><b>RecurrenceToDto</b> (+35) — maps the model to the wire format on publish.</li>
+      <li><b>Form integration</b> — <code>EventEditViewModel</code> (+81), <code>EventFormValidator</code> (+63), <code>EventFormModel</code>, <code>PublishEventUseCase</code>.</li>
+      <li><b>Tests</b> (~+800) — section behavior (+254), VM reductions (+197), DTO mapping (+179), validator (+97), screenshot test.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="files">
+    <h2>Files Changed (top of 51)</h2>
+    <table>
+      <tr><th>File</th><th>Δ</th></tr>
+      <tr><td><code>recurrence/RecurrenceSection.kt</code></td><td class="num">+517</td></tr>
+      <tr><td><code>recurrence/RecurrenceModel.kt</code></td><td class="num">+68</td></tr>
+      <tr><td><code>recurrence/RecurrenceUiState.kt</code> + preview provider</td><td class="num">+125</td></tr>
+      <tr><td><code>recurrence/RecurrenceToDto.kt</code></td><td class="num">+35</td></tr>
+      <tr><td><code>edit/EventEditViewModel.kt</code></td><td class="num">+81</td></tr>
+      <tr><td><code>edit/EventFormValidator.kt</code></td><td class="num">+63 / −1</td></tr>
+      <tr><td><code>strings.xml</code></td><td class="num">+51</td></tr>
+      <tr><td>Tests (section, VM, DTO, validator, use cases)</td><td class="num">~+800</td></tr>
+    </table>
+  </div>
+
+  <div class="card" id="impact">
+    <h2>Architecture Impact</h2>
+    <ul>
+      <li>New self-contained <code>recurrence/</code> package in <code>:feature:calendar</code> — clean seam, easy to review in isolation.</li>
+      <li><b>Wire-format enums defined app-side</b> — sbrewerclan wants them in the MaltSync shared library instead; that's a cross-repo change (shared-lib PR + toml pin bump).</li>
+      <li>Heaviest touch on the shared form files — merging this first (after 1914) minimizes total rebase pain.</li>
+    </ul>
+  </div>
+
+  <div class="card warncard" id="risks">
+    <h2>Risks</h2>
+    <ul>
+      <li><b>Recurrence logic is classically bug-prone</b> — month-end days (29/30/31), "last weekday of month", interval + end-date interactions. The +179-line DTO test is good sign; check the edge cases it covers.</li>
+      <li><b>MaltSync question blocks approval path</b> — if enums must move, this PR waits on a shared-lib release; decide whether that's a must-fix-now or follow-up.</li>
+      <li><b>517-line composable</b> — check it's decomposed into readable sub-composables internally.</li>
+      <li><b>Timezone/DST</b> — do recurrence expansions happen server-side (safe) or is any client math involved?</li>
+    </ul>
+  </div>
+
+  <div class="card" id="questions">
+    <h2>Open Reviewer Comments (unresolved)</h2>
+    <div class="quote">"These values should be moved to the maltSync shared library." / "These should also be moved to MaltSync"<span class="who">sbrewerclan · RecurrenceModel.kt:19 and :30 — the central question of this PR</span></div>
+    <div class="quote">"Some Strings here are already translated in Core.Strings"<span class="who">sbrewerclan · strings.xml:49</span></div>
+  </div>
+
+  <div class="card" id="checklist">
+    <h2>Checklist</h2>
+    <ul class="check">
+      <li><input type="checkbox"> <span>Take a position on MaltSync move: now vs. follow-up ticket. (Your answer applies to #1913 too.)</span></li>
+      <li><input type="checkbox"> <span><code>RecurrenceToDtoTest</code>: does it cover monthly day-31, last-weekday, and end-condition edges?</span></li>
+      <li><input type="checkbox"> <span>Only <b>private</b> events get recurrence — confirm public/unit events can't reach the picker.</span></li>
+      <li><input type="checkbox"> <span>Editing an existing recurring event: does the model round-trip, or is this create-only for now?</span></li>
+      <li><input type="checkbox"> <span>strings.xml entries deduped against Core.Strings.</span></li>
+    </ul>
+  </div>
+
+  <div class="card accent" id="readfirst">
+    <h2>What To Read First</h2>
+    <ol>
+      <li><code>RecurrenceModel.kt</code> (+68) — small, and it's where the review battle is.</li>
+      <li><code>RecurrenceToDto.kt</code> + its test — the correctness core.</li>
+      <li><code>RecurrenceSection.kt</code> — skim for structure, not line-by-line.</li>
+    </ol>
+    <p><b>Next:</b> <a href="pr-1914.html">PR #1914 — Public event toggle →</a></p>
+  </div>
+
+</div>
+</body>
+</html>

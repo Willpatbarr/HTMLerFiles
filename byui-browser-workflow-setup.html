@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>byui-browser &mdash; Org Workflow Setup</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33; --g4:#8E7CC3;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+main{max-width:74rem;margin-inline:auto;padding:5rem clamp(16px,4vw,44px) 7rem}
+@media (max-width:1580px){ main{padding-top:80px} }
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 2.2rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media (max-width:900px){ .head{grid-template-columns:1fr} .head .lede{margin-top:1.1rem} }
+
+h2{font-size:1.32rem;margin:3.1rem 0 1.25rem;font-weight:600;letter-spacing:-.01em}
+h2:first-child{margin-top:0}
+.tabpanel > h2:first-child{margin-top:.4rem}
+p{margin:0 0 .8rem}
+ul,ol{margin:0 0 .8rem;padding-left:1.2rem}
+li{margin:0 0 .34rem}
+a{color:var(--accent);overflow-wrap:anywhere}
+
+code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
+  border-radius:4px;overflow-wrap:anywhere}
+.m{font-family:var(--mono);font-size:.93em;letter-spacing:-.01em;overflow-wrap:anywhere}
+
+/* ---------- controls: CSS only, no script ---------- */
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.page{display:none}
+.tabpanel{display:none}
+
+/* ---------- floating page nav ---------- */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:4px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:13px 12px 14px;
+  box-shadow:var(--shadow);width:190px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer;line-height:1.35}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:700;padding:11px 10px 4px}
+.navlabel:first-child{padding-top:2px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:4px}
+@media (max-width:1580px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:190px;max-height:74vh;
+    overflow-y:auto}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+}
+#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+
+/* ---------- tab bar ---------- */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 30px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong);
+  position:sticky;top:0;z-index:40}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:10px 13px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+
+/* ---------- the container ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:17px 19px;margin:0 0 20px;position:relative}
+.card > *:last-child{margin-bottom:0}
+
+.ct{font-size:1.06rem;font-weight:650;color:#f5f7f9;margin:0 0 .6rem;
+  letter-spacing:-.008em;line-height:1.4}
+.ct .m{font-size:.9em}
+.rail{font-weight:400}
+.r1{color:var(--g1)} .r2{color:var(--g2)} .r3{color:var(--g3)} .r4{color:var(--g4)}
+
+/* block type, parked in the top-right corner and faded back */
+.tag{position:absolute;top:13px;right:16px;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;font-weight:700;opacity:.6;pointer-events:none;
+  font-family:var(--mono)}
+.typed .ct{padding-right:5.4rem}
+
+/* raised surface -- title separated from its own body by size, colour and a rule */
+.card.hi{background:#242a32;border-color:var(--border-strong)}
+.card.hi .ct{font-size:1.18rem;color:#ffffff;font-weight:680;padding:0 0 .58rem;
+  margin:0 0 .7rem;border-bottom:1px solid rgba(255,255,255,.14)}
+.card.hi p:not(.ct),.card.hi li{color:var(--muted)}
+
+/* a unit card: the fields of one thing, headers suppressed */
+.card.kvc .tw{border:0;border-radius:0;background:none;margin:0}
+.card.kvc table{font-size:13.8px}
+.card.kvc tr:first-child{display:none}
+.card.kvc td{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.055)}
+.card.kvc td:first-child{width:13rem;color:var(--muted);padding-right:18px}
+.card.kvc tr:last-child td{border-bottom:0;padding-bottom:0}
+@media (max-width:560px){ .card.kvc td:first-child{width:auto} }
+
+.grid{display:grid;gap:20px;margin:0 0 20px;
+  grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));align-items:start}
+.grid2{display:grid;gap:20px;margin:0 0 20px;
+  grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));align-items:start}
+.grid .card,.grid2 .card,.grid .note,.grid2 .note{margin:0}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;max-width:100%;margin:0;border:1px solid var(--border);
+  border-radius:9px;background:rgba(0,0,0,.16)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:10px 13px;border-bottom:1px solid var(--border);
+  vertical-align:top;line-height:1.55}
+th{color:var(--faint);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;background:rgba(0,0,0,.24);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td code{white-space:normal}
+td:has(> .pill){white-space:nowrap}
+
+/* ---------- status pill ---------- */
+.pill{display:inline-block;border-radius:10px;padding:1px 9px;font-size:10.5px;
+  font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;
+  line-height:1.7;vertical-align:1px}
+.pill.ok  {background:#2E8B6222;color:#2E8B62;border:1px solid #2E8B6266}
+.pill.act {background:#B06A1E22;color:#B06A1E;border:1px solid #B06A1E66}
+.pill.no  {background:#C24A4A22;color:#C24A4A;border:1px solid #C24A4A66}
+.pill.none{background:#A4ACB522;color:#A4ACB5;border:1px solid #A4ACB566}
+
+/* ---------- file path: its own grey chip ---------- */
+.loc{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-family:var(--mono);
+  font-size:12.2px;line-height:1.5;color:var(--muted);background:rgba(0,0,0,.3);
+  border:1px solid rgba(255,255,255,.085);border-radius:6px;padding:3px 9px;
+  margin:0 0 .6rem}
+
+/* ---------- code ---------- */
+.desc{color:var(--muted);font-size:13.6px;margin:0 0 .7rem}
+.code{position:relative;margin:0 0 .7rem}
+.code pre{margin:0;background:var(--bg);border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;padding:15px 17px;overflow-x:auto;max-width:100%;
+  font-family:var(--mono);font-size:12.8px;line-height:1.62}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--bg);
+  padding:1px 4px;border-radius:3px;pointer-events:none;font-family:var(--mono)}
+.k{color:#A25494} .ty{color:#4368A8} .ad{color:#2E8B62} .rm{color:#C24A4A}
+.cm{color:var(--faint)} .s{color:#5A8C33} .fn{color:#4368A8} .mac{color:#A25494}
+.n2{color:#B06A1E} .h{color:#A25494;font-weight:600}
+.code.tree pre{line-height:1.85;font-size:12.6px}
+.code.tree .tl{color:var(--accent)}
+
+/* ---------- callout kinds ---------- */
+.note{--nc:var(--warn);--ns:var(--warn-soft);
+  border:1px solid var(--nc);background:var(--ns);border-radius:12px;
+  padding:15px 19px;margin:0 0 20px;position:relative}
+.note b{display:block;color:var(--nc);font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;font-weight:700;margin:0 0 7px}
+.note > *:last-child{margin-bottom:0}
+.note.good{--nc:#5FBF8F;--ns:#13291f}
+.note.calm{--nc:#8FD0E8;--ns:#152833}
+.note.pre {--nc:#B79CE8;--ns:#221b33}
+.note.ref {--nc:#5C9CD6;--ns:#141f2b}
+.note.drop{--nc:#C24A4A;--ns:#2a1414}
+.note.pre b,.note.good b,.note.calm b,.note.ref b{
+  text-transform:none;font-size:1.04rem;letter-spacing:-.008em;font-weight:650;
+  margin:0 0 .55rem;line-height:1.4}
+.note.pre b .m,.note.good b .m,.note.calm b .m,.note.ref b .m{font-size:.9em}
+.note .tw{border-color:rgba(255,255,255,.1)}
+.note .tag{color:var(--nc)}
+.note.tagged b{padding-right:4.4rem}
+
+/* ---------- index page ---------- */
+.gh{padding-bottom:.5rem;border-bottom:2px solid}
+.gh.g1{color:var(--g1);border-bottom-color:var(--g1)}
+.gh.g2{color:var(--g2);border-bottom-color:var(--g2)}
+.gh.g3{color:var(--g3);border-bottom-color:var(--g3)}
+.gh.g4{color:var(--g4);border-bottom-color:var(--g4)}
+.gh.g0{color:var(--accent);border-bottom-color:var(--accent)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr));
+  gap:16px;margin:0 0 2.6rem}
+.pcard{display:block;border:1px solid var(--border);border-left-width:3px;
+  border-radius:11px;background:var(--card);padding:15px 18px;cursor:pointer;
+  transition:.15s}
+.pcard:hover{border-color:var(--border-strong);background:#242a32}
+.pcard.g1{border-left-color:var(--g1)} .pcard.g2{border-left-color:var(--g2)}
+.pcard.g3{border-left-color:var(--g3)} .pcard.g4{border-left-color:var(--g4)}
+.pcard.g0{border-left-color:var(--accent)}
+.pcard .pt{display:block;font-weight:650;font-size:15px;margin:0 0 5px}
+.pcard.g1 .pt{color:var(--g1)} .pcard.g2 .pt{color:var(--g2)}
+.pcard.g3 .pt{color:var(--g3)} .pcard.g4 .pt{color:var(--g4)}
+.pcard.g0 .pt{color:var(--accent)}
+.pcard .pd{display:block;color:var(--muted);font-size:13px;line-height:1.55}
+
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));
+  gap:16px 24px;border:1px solid var(--border);border-radius:12px;background:var(--card);
+  padding:18px 20px;margin:0 0 2.6rem}
+.lgroup{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.lh{display:block;width:100%;color:var(--faint);font-size:10px;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:700;margin:0 0 3px}
+.lswatch{font-size:11px;font-weight:700;letter-spacing:.05em;padding:2px 9px;
+  border-radius:3px;text-transform:uppercase}
+.lswatch.g1{color:var(--g1);background:#1C8E9C1f}
+.lswatch.g2{color:var(--g2);background:#B06A1E1f}
+.lswatch.g3{color:var(--g3);background:#5A8C331f}
+.lswatch.g4{color:var(--g4);background:#8E7CC31f}
+.lkind{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  padding:2px 8px;border-radius:3px}
+.lkind.k-finding{color:var(--warn);background:var(--warn-soft);border:1px solid var(--warn)}
+.lkind.k-calm{color:#8FD0E8;background:#152833;border:1px solid #8FD0E8}
+.lkind.k-pre{color:#B79CE8;background:#221b33;border:1px solid #B79CE8}
+.lkind.k-good{color:#5FBF8F;background:#13291f;border:1px solid #5FBF8F}
+.lkind.k-ref{color:#5C9CD6;background:#141f2b;border:1px solid #5C9CD6}
+.lplain{font-size:13px;color:var(--accent);text-decoration:underline;
+  text-underline-offset:2px}
+.tabref{color:var(--muted)}
+.tl{color:var(--accent);cursor:pointer;text-decoration:underline;
+  text-underline-offset:2px;text-decoration-thickness:1px}
+.tl:hover{color:var(--ink)}
+
+/* ---------- todo: real checkboxes, no script needed ---------- */
+ul.todo{list-style:none;padding-left:0;margin:0;font-size:14.2px}
+ul.todo li{margin:0 0 .6rem;background:rgba(0,0,0,.2);
+  border:1px solid rgba(255,255,255,.065);border-radius:8px;padding:10px 13px}
+ul.todo li:last-child{margin-bottom:0}
+ul.todo label{display:grid;grid-template-columns:1.1rem 1.6rem 1fr;gap:.55rem;
+  align-items:start;cursor:pointer}
+ul.todo .tn{color:var(--faint);font-variant-numeric:tabular-nums}
+.cb{width:15px;height:15px;margin:.28rem 0 0;accent-color:var(--accent);cursor:pointer;
+  flex:none}
+.cb:checked ~ span{color:var(--faint);text-decoration:line-through}
+.cb:checked ~ .tn{color:#5FBF8F;text-decoration:none}
+
+/* ---------- priority list ---------- */
+.prio{display:inline-block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;border:0}
+.prio.blocking{background:#3B1D1D;color:#E58A8A}
+.prio.high{background:#33280F;color:#f77027}
+.prio.medium{background:#33300F;color:#DCC55E}
+.prio.low{background:#16301F;color:#6FBF95}
+.prio.none{background:#24292F;color:#A4ACB5}
+ol.tagged{list-style:none;padding-left:0;margin:0}
+ol.tagged li{display:grid;grid-template-columns:5.6rem 1.9rem 1fr;align-items:baseline;
+  margin:0 0 15px;line-height:1.6;background:rgba(0,0,0,.2);
+  border:1px solid rgba(255,255,255,.065);border-radius:8px;padding:11px 14px}
+ol.tagged li:last-child{margin-bottom:0}
+ol.tagged .num{color:var(--faint);font-variant-numeric:tabular-nums}
+ol.tagged .prio{justify-self:start}
+@media (max-width:560px){ ol.tagged li{grid-template-columns:1.9rem 1fr}
+  ol.tagged .prio{grid-column:1/-1;margin:0 0 6px;justify-self:start} }
+
+/* ---------- diagram ---------- */
+.dw{overflow-x:auto;max-width:100%;margin:0}
+.dw svg{display:block;width:100%;min-width:720px;height:auto}
+.n{fill:#1d2126;stroke:var(--border-strong);stroke-width:1}
+.n-l1{fill:#132428;stroke:#2a6d76}
+.n-l2{fill:#241d12;stroke:#7a5426}
+.n-l3{fill:#1b1d20;stroke:#41474e;stroke-dasharray:5 3}
+.n-cv{fill:#241f2e;stroke:#6b5a8c}
+.nt{fill:#f2f4f7;font:600 12.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+.nd{fill:#a4acb5;font:11px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.lh2t{font:700 11px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  letter-spacing:.09em}
+.lhA{fill:#1C8E9C} .lhB{fill:#B06A1E} .lhC{fill:#8a939c}
+.fl{stroke:#5a636d;stroke-width:1.4;fill:none}
+.flA{stroke:#2a6d76} .flB{stroke:#7a5426} .flC{stroke:#41474e;stroke-dasharray:5 3}
+.ah{fill:#5a636d} .ahA{fill:#2a6d76} .ahB{fill:#7a5426} .ahC{fill:#41474e}
+.newtag{fill:#8E7CC3;font:700 9.5px ui-monospace,Menlo,monospace;letter-spacing:.08em}
+
+@media (max-width:720px){ .typed .ct{padding-right:0} .note.tagged b{padding-right:0}
+  .tag{position:static;display:block;margin:0 0 .4rem} }
+
+#r-p-ov:checked ~ main #p-ov{display:block}
+#r-p-ov:checked ~ .skipto label[for="r-p-ov"]{background:var(--bg);color:#6cc394}
+#r-p-gh:checked ~ main #p-gh{display:block}
+#r-p-gh:checked ~ .skipto label[for="r-p-gh"]{background:var(--bg);color:#B06A1E}
+#r-p-ci:checked ~ main #p-ci{display:block}
+#r-p-ci:checked ~ .skipto label[for="r-p-ci"]{background:var(--bg);color:#B06A1E}
+#r-p-own:checked ~ main #p-own{display:block}
+#r-p-own:checked ~ .skipto label[for="r-p-own"]{background:var(--bg);color:#B06A1E}
+#r-p-proj:checked ~ main #p-proj{display:block}
+#r-p-proj:checked ~ .skipto label[for="r-p-proj"]{background:var(--bg);color:#1C8E9C}
+#r-p-skills:checked ~ main #p-skills{display:block}
+#r-p-skills:checked ~ .skipto label[for="r-p-skills"]{background:var(--bg);color:#1C8E9C}
+#r-p-conv:checked ~ main #p-conv{display:block}
+#r-p-conv:checked ~ .skipto label[for="r-p-conv"]{background:var(--bg);color:#5A8C33}
+#r-p-cad:checked ~ main #p-cad{display:block}
+#r-p-cad:checked ~ .skipto label[for="r-p-cad"]{background:var(--bg);color:#5A8C33}
+#r-p-adr:checked ~ main #p-adr{display:block}
+#r-p-adr:checked ~ .skipto label[for="r-p-adr"]{background:var(--bg);color:#5A8C33}
+#r-p-onb:checked ~ main #p-onb{display:block}
+#r-p-onb:checked ~ .skipto label[for="r-p-onb"]{background:var(--bg);color:#5A8C33}
+#r-t-ov-1:checked ~ .tabpanel#t-ov-1{display:block}
+#r-t-gh-1:checked ~ .tabpanel#t-gh-1{display:block}
+#r-t-gh-1:checked ~ .tabs label[for="r-t-gh-1"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-gh-2:checked ~ .tabpanel#t-gh-2{display:block}
+#r-t-gh-2:checked ~ .tabs label[for="r-t-gh-2"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-gh-3:checked ~ .tabpanel#t-gh-3{display:block}
+#r-t-gh-3:checked ~ .tabs label[for="r-t-gh-3"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-gh-4:checked ~ .tabpanel#t-gh-4{display:block}
+#r-t-gh-4:checked ~ .tabs label[for="r-t-gh-4"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-ci-1:checked ~ .tabpanel#t-ci-1{display:block}
+#r-t-ci-1:checked ~ .tabs label[for="r-t-ci-1"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-ci-2:checked ~ .tabpanel#t-ci-2{display:block}
+#r-t-ci-2:checked ~ .tabs label[for="r-t-ci-2"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-ci-3:checked ~ .tabpanel#t-ci-3{display:block}
+#r-t-ci-3:checked ~ .tabs label[for="r-t-ci-3"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-ci-4:checked ~ .tabpanel#t-ci-4{display:block}
+#r-t-ci-4:checked ~ .tabs label[for="r-t-ci-4"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-own-1:checked ~ .tabpanel#t-own-1{display:block}
+#r-t-own-1:checked ~ .tabs label[for="r-t-own-1"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-own-2:checked ~ .tabpanel#t-own-2{display:block}
+#r-t-own-2:checked ~ .tabs label[for="r-t-own-2"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-own-3:checked ~ .tabpanel#t-own-3{display:block}
+#r-t-own-3:checked ~ .tabs label[for="r-t-own-3"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-own-4:checked ~ .tabpanel#t-own-4{display:block}
+#r-t-own-4:checked ~ .tabs label[for="r-t-own-4"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-t-proj-1:checked ~ .tabpanel#t-proj-1{display:block}
+#r-t-proj-1:checked ~ .tabs label[for="r-t-proj-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-proj-2:checked ~ .tabpanel#t-proj-2{display:block}
+#r-t-proj-2:checked ~ .tabs label[for="r-t-proj-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-proj-3:checked ~ .tabpanel#t-proj-3{display:block}
+#r-t-proj-3:checked ~ .tabs label[for="r-t-proj-3"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-proj-4:checked ~ .tabpanel#t-proj-4{display:block}
+#r-t-proj-4:checked ~ .tabs label[for="r-t-proj-4"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-skills-1:checked ~ .tabpanel#t-skills-1{display:block}
+#r-t-skills-1:checked ~ .tabs label[for="r-t-skills-1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-skills-2:checked ~ .tabpanel#t-skills-2{display:block}
+#r-t-skills-2:checked ~ .tabs label[for="r-t-skills-2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-skills-3:checked ~ .tabpanel#t-skills-3{display:block}
+#r-t-skills-3:checked ~ .tabs label[for="r-t-skills-3"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-skills-4:checked ~ .tabpanel#t-skills-4{display:block}
+#r-t-skills-4:checked ~ .tabs label[for="r-t-skills-4"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-t-conv-1:checked ~ .tabpanel#t-conv-1{display:block}
+#r-t-conv-1:checked ~ .tabs label[for="r-t-conv-1"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-conv-2:checked ~ .tabpanel#t-conv-2{display:block}
+#r-t-conv-2:checked ~ .tabs label[for="r-t-conv-2"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-conv-3:checked ~ .tabpanel#t-conv-3{display:block}
+#r-t-conv-3:checked ~ .tabs label[for="r-t-conv-3"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-conv-4:checked ~ .tabpanel#t-conv-4{display:block}
+#r-t-conv-4:checked ~ .tabs label[for="r-t-conv-4"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-cad-1:checked ~ .tabpanel#t-cad-1{display:block}
+#r-t-cad-1:checked ~ .tabs label[for="r-t-cad-1"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-cad-2:checked ~ .tabpanel#t-cad-2{display:block}
+#r-t-cad-2:checked ~ .tabs label[for="r-t-cad-2"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-cad-3:checked ~ .tabpanel#t-cad-3{display:block}
+#r-t-cad-3:checked ~ .tabs label[for="r-t-cad-3"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-cad-4:checked ~ .tabpanel#t-cad-4{display:block}
+#r-t-cad-4:checked ~ .tabs label[for="r-t-cad-4"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-adr-1:checked ~ .tabpanel#t-adr-1{display:block}
+#r-t-adr-1:checked ~ .tabs label[for="r-t-adr-1"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-adr-2:checked ~ .tabpanel#t-adr-2{display:block}
+#r-t-adr-2:checked ~ .tabs label[for="r-t-adr-2"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-adr-3:checked ~ .tabpanel#t-adr-3{display:block}
+#r-t-adr-3:checked ~ .tabs label[for="r-t-adr-3"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-adr-4:checked ~ .tabpanel#t-adr-4{display:block}
+#r-t-adr-4:checked ~ .tabs label[for="r-t-adr-4"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-onb-1:checked ~ .tabpanel#t-onb-1{display:block}
+#r-t-onb-1:checked ~ .tabs label[for="r-t-onb-1"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-onb-2:checked ~ .tabpanel#t-onb-2{display:block}
+#r-t-onb-2:checked ~ .tabs label[for="r-t-onb-2"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-onb-3:checked ~ .tabpanel#t-onb-3{display:block}
+#r-t-onb-3:checked ~ .tabs label[for="r-t-onb-3"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-t-onb-4:checked ~ .tabpanel#t-onb-4{display:block}
+#r-t-onb-4:checked ~ .tabs label[for="r-t-onb-4"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}</style>
+</head>
+<body>
+<input class="st" type="radio" name="pg" id="r-p-ov" checked><input class="st" type="radio" name="pg" id="r-p-gh"><input class="st" type="radio" name="pg" id="r-p-ci"><input class="st" type="radio" name="pg" id="r-p-own"><input class="st" type="radio" name="pg" id="r-p-proj"><input class="st" type="radio" name="pg" id="r-p-skills"><input class="st" type="radio" name="pg" id="r-p-conv"><input class="st" type="radio" name="pg" id="r-p-cad"><input class="st" type="radio" name="pg" id="r-p-adr"><input class="st" type="radio" name="pg" id="r-p-onb">
+<input class="st" type="checkbox" id="navtoggle">
+<nav class="skipto" aria-label="Pages"><label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label><div class="skipto-menu"><div class="navlabel">Start here</div><label for="r-p-ov">Overview</label><div class="navlabel">Repository</div><label for="r-p-gh">GitHub Settings</label><label for="r-p-ci">CI &amp; Gates</label><label for="r-p-own">Ownership &amp; Review</label><div class="navlabel">Tooling</div><label for="r-p-proj">GitHub Projects</label><label for="r-p-skills">Skills Plugin</label><div class="navlabel">Process</div><label for="r-p-conv">Conventions</label><label for="r-p-cad">Cadence</label><label for="r-p-adr">Decisions</label><label for="r-p-onb">Onboarding</label></div></nav>
+<main><section class="page g0" id="p-ov"><input class="st" type="radio" name="t-ov" id="r-t-ov-1" checked><div class="head"><h1>Overview</h1><p class="lede">Nine things the project needs, each scored the same four ways: done, specified, undecided, and the facts around it.</p></div><div class="tabpanel" id="t-ov-1">
+<p>Nine things the project needs. Each gets a page, and every page answers the same four
+questions in the same order.</p>
+
+<div class="card"><p class="ct">Where each thing stands</p><div class="tw"><table><tr><th>Thing</th><th>State</th><th>Done</th><th>Specified</th><th>To specify</th></tr><tr><td><b><label class="tl" for="r-p-gh">GitHub Settings</label></b></td><td><span class="pill act">in progress</span></td><td>13</td><td>2</td><td>7</td></tr><tr><td><b><label class="tl" for="r-p-ci">CI &amp; Gates</label></b></td><td><span class="pill act">in progress</span></td><td>6</td><td>6</td><td>6</td></tr><tr><td><b><label class="tl" for="r-p-own">Ownership &amp; Review</label></b></td><td><span class="pill ok">mostly done</span></td><td>5</td><td>4</td><td>4</td></tr><tr><td><b><label class="tl" for="r-p-proj">GitHub Projects</label></b></td><td><span class="pill act">in progress</span></td><td>5</td><td>4</td><td>8</td></tr><tr><td><b><label class="tl" for="r-p-skills">Skills Plugin</label></b></td><td><span class="pill act">in progress</span></td><td>3</td><td>0</td><td>7</td></tr><tr><td><b><label class="tl" for="r-p-conv">Conventions</label></b></td><td><span class="pill act">in progress</span></td><td>4</td><td>3</td><td>6</td></tr><tr><td><b><label class="tl" for="r-p-cad">Cadence</label></b></td><td><span class="pill act">in progress</span></td><td>3</td><td>4</td><td>6</td></tr><tr><td><b><label class="tl" for="r-p-adr">Decisions</label></b></td><td><span class="pill ok">mostly done</span></td><td>5</td><td>5</td><td>4</td></tr><tr><td><b><label class="tl" for="r-p-onb">Onboarding</label></b></td><td><span class="pill act">in progress</span></td><td>4</td><td>4</td><td>5</td></tr></table></div></div>
+
+<div class="grid"><div class="card kvc"><p class="ct">What each tab means</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td><b>Done</b></td><td>Exists and works today</td></tr><tr><td><b>Specified</b></td><td>The decision is made and written down. What is left is execution</td></tr><tr><td><b>To Specify</b></td><td>Nobody has decided. This is the queue</td></tr><tr><td><b>Other</b></td><td>Facts and consequences that shape the three above, but are not tasks</td></tr></table></div></div><!--k--><div class="card kvc"><p class="ct">Reading the priorities</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td><b>Blocking</b></td><td>Something else cannot proceed until this is decided</td></tr><tr><td><b>High</b></td><td>Gets decided by default, badly, if left</td></tr><tr><td><b>Medium</b></td><td>A real gap with no deadline attached</td></tr><tr><td><b>Low</b></td><td>Worth doing, nothing degrades meanwhile</td></tr></table></div></div><!--k--></div>
+
+<div class="note good"><b>Three things can be done today and need nobody's agreement</b><p>Enable Discussions. Add <code>tests</code> to the workspace members. Send the calendar invite for the Architecture Sync.</p><p>The third one is worth more than everything else in this document: four teams are blocked on three ADRs that are the stated output of a meeting nobody has held.</p></div>
+
+<div class="note calm"><b>Where this came from</b><p>Repository files were read from the working tree. Settings, rulesets, issues, pull requests, milestones and projects were read from the GitHub API on 2026-09-15. GitHub Projects is free on a public repository, so nothing here waits on procurement.</p></div>
+</div></section><section class="page g2" id="p-gh"><input class="st" type="radio" name="t-gh" id="r-t-gh-1" checked><input class="st" type="radio" name="t-gh" id="r-t-gh-2"><input class="st" type="radio" name="t-gh" id="r-t-gh-3"><input class="st" type="radio" name="t-gh" id="r-t-gh-4"><div class="head"><h1>GitHub Settings</h1><p class="lede">Repository configuration, the ruleset on <code>main</code>, and the features that are on, off, or empty.</p></div><div class="tabs" role="tablist"><label class="tab g2" for="r-t-gh-1">Done</label><label class="tab g2" for="r-t-gh-2">Specified</label><label class="tab g2" for="r-t-gh-3">To Specify</label><label class="tab g2" for="r-t-gh-4">Other</label></div><div class="tabpanel" id="t-gh-1">
+<div class="note good"><b>The hard part is configured and stricter than the docs claim</b><p>A repository ruleset named <b>main</b> has been active since 2026-07-15, and nobody can bypass it &mdash; administrators included.</p></div>
+
+<div class="card"><p class="ct">Ruleset on <code>main</code></p><div class="tw"><table><tr><th>What</th><th>State</th></tr><tr><td>Pull request required</td><td><span class="pill ok">on</span></td></tr><tr><td>Required approvals</td><td><span class="pill ok">2</span></td></tr><tr><td>Code Owner review required</td><td><span class="pill ok">on</span></td></tr><tr><td>Extra approval for unattributed changes</td><td><span class="pill ok">on</span></td></tr><tr><td>Required status check &mdash; <code>lint, test</code></td><td><span class="pill ok">on</span></td></tr><tr><td>Deletion blocked &middot; force push blocked</td><td><span class="pill ok">on</span></td></tr><tr><td>Bypass list</td><td><span class="pill ok">empty</span></td></tr></table></div></div>
+
+<div class="grid"><div class="card kvc"><p class="ct">Repository</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td>Visibility</td><td>Public</td></tr><tr><td>License</td><td>MIT</td></tr><tr><td>Default branch</td><td><code>main</code></td></tr><tr><td>Created</td><td>2026-07-15</td></tr><tr><td>Last push</td><td>2026-07-20</td></tr></table></div></div><!--k--><div class="card kvc"><p class="ct">Features on</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td>Issues</td><td><span class="pill ok">enabled</span></td></tr><tr><td>Projects</td><td><span class="pill ok">enabled</span></td></tr><tr><td>Wiki</td><td><span class="pill ok">enabled</span></td></tr><tr><td>Actions</td><td><span class="pill ok">4 runs, all green</span></td></tr></table></div></div><!--k--></div>
+</div><div class="tabpanel" id="t-gh-2">
+<div class="card"><p class="ct">Stated somewhere, not yet true</p><div class="tw"><table><tr><th>What</th><th>Stated in</th><th>What is left</th></tr><tr><td>Enable GitHub Discussions</td><td>Architecture &sect;4.3 &mdash; the async proposal channel</td><td>One toggle. <b>Settings &rarr; General &rarr; Features</b>. It is currently off, so half of &sect;4.3 has nowhere to happen</td></tr><tr><td>Branch naming <code>team/short-description</code></td><td>README &middot; &sect;4.1</td><td>Nothing enforces it, and both merged pull requests already used a prefix that is not a team</td></tr></table></div></div>
+
+<div class="note"><b>Two merged PRs already broke the branch convention</b><p><code>scaffold/rust-workspace</code> and <code>devops/makefile-targets</code>. Neither prefix is one of the nine team slugs.</p><p>Defensible for bootstrap work done before the teams existed. The problem is that the next person needing a non-team branch will copy them, so this needs a ruling rather than a correction &mdash; see <b>To Specify</b>.</p></div>
+</div><div class="tabpanel" id="t-gh-3">
+<div class="card"><p class="ct">Open settings decisions</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>Review thread resolution: on or off</td><td>Off today, so an unanswered review comment does not block a merge. With 27 juniors this is the setting most likely to cost something</td><td><span class="prio high">High</span></td></tr><tr><td>Merge method: which one</td><td>Merge, squash and rebase are all allowed, so history shape is decided per person. Squash keeps <code>git log</code> readable against crate ownership</td><td><span class="prio high">High</span></td></tr><tr><td>Non-team branch prefixes: allowed or not</td><td>Two merged PRs already use them. Either admit a short list or say the nine slugs are the whole vocabulary</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Stale review dismissal on push</td><td>Off today. An approval survives later pushes to the same branch</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Last-push approval</td><td>Off today. The person who pushed last can be one of the two approvers</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Team labels: what set</td><td>The nine GitHub defaults are untouched. An issue cannot be routed before someone reads it</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Wiki: use it or turn it off</td><td>Enabled and empty. An enabled-and-empty surface invites a second documentation home competing with <code>docs/</code></td><td><span class="prio low">Low</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-gh-4">
+<div class="card"><p class="ct">Empty surfaces</p><div class="tw"><table><tr><th>Surface</th><th>State</th><th>Reading</th></tr><tr><td>Milestones</td><td><span class="pill no">0</span></td><td>The milestones page is empty</td></tr><tr><td>Projects</td><td><span class="pill no">0</span></td><td>None at repository or organisation level</td></tr><tr><td>Issues</td><td><span class="pill no">0 ever</span></td><td>Both merged PRs reference no issue</td></tr><tr><td>Labels</td><td><span class="pill none">defaults</span></td><td>The nine GitHub defaults, untouched</td></tr><tr><td>Discussions</td><td><span class="pill no">disabled</span></td><td>Named as a channel in &sect;4.3</td></tr><tr><td>Dependabot</td><td><span class="pill no">none</span></td><td>Zero impact at zero dependencies. High impact the week rustls lands</td></tr></table></div></div>
+
+<div class="note calm"><b>The split is consistent with the rest of the repository</b><p>The engineering settings are configured carefully. The planning settings are untouched. That is the same shape as the files: ownership and architecture documented deeply, the contributor-facing layer absent.</p></div>
+</div></section><section class="page g2" id="p-ci"><input class="st" type="radio" name="t-ci" id="r-t-ci-1" checked><input class="st" type="radio" name="t-ci" id="r-t-ci-2"><input class="st" type="radio" name="t-ci" id="r-t-ci-3"><input class="st" type="radio" name="t-ci" id="r-t-ci-4"><div class="head"><h1>CI &amp; Gates</h1><p class="lede">What runs on every pull request, the merge gates the architecture states, and which of them has a runner.</p></div><div class="tabs" role="tablist"><label class="tab g2" for="r-t-ci-1">Done</label><label class="tab g2" for="r-t-ci-2">Specified</label><label class="tab g2" for="r-t-ci-3">To Specify</label><label class="tab g2" for="r-t-ci-4">Other</label></div><div class="tabpanel" id="t-ci-1">
+<div class="card"><p class="ct">What runs today</p><div class="tw"><table><tr><th>What</th><th>State</th></tr><tr><td><code>.github/workflows/ci.yml</code></td><td><span class="pill ok">active</span></td></tr><tr><td>Triggers &mdash; push to <code>main</code>, PR to <code>main</code></td><td><span class="pill ok">on</span></td></tr><tr><td><code>make lint</code> &mdash; rustfmt check plus Clippy at <code>-D warnings</code></td><td><span class="pill ok">green</span></td></tr><tr><td><code>make test</code> &mdash; <code>cargo test --workspace</code></td><td><span class="pill ok">green</span></td></tr><tr><td>Cargo cache</td><td><span class="pill ok"><code>Swatinem/rust-cache@v2</code></span></td></tr><tr><td>Required status check on <code>main</code></td><td><span class="pill ok">enforced</span></td></tr><tr><td>Runs to date</td><td><span class="pill ok">4, all green</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-ci-2">
+<div class="card"><p class="ct">Gates with no runner</p><div class="tw"><table><tr><th>What</th><th>Stated in</th><th>What is left</th></tr><tr><td>Integration tests exercising the new path</td><td>&sect;4.2 &middot; &sect;5 &middot; <code>tests/README.md</code></td><td><code>tests/</code> is not a workspace member, so <code>cargo test --workspace</code> cannot reach it. One line in <code>Cargo.toml</code></td></tr><tr><td>Conformance &mdash; WPT, test262, CSS suite</td><td>&sect;4.2 &middot; &sect;5</td><td>No harness, no vendored subset, no job</td></tr><tr><td>Miri for any new <code>unsafe</code></td><td>&sect;4.2</td><td>No Miri job exists</td></tr><tr><td>Fuzzing on parsers and deserialisers</td><td>&sect;5, with five named owner teams</td><td>No <code>fuzz/</code> directory. <code>.gitignore</code> already anticipates the artifacts</td></tr><tr><td>Performance benchmarks</td><td>&sect;5</td><td>No benches, no job</td></tr><tr><td>Crash isolation per renderer</td><td>&sect;1.2 &middot; &sect;5</td><td>No test asserts it</td></tr></table></div></div>
+
+<div class="note"><b>Adding tests to the workspace is the cheapest fix in the project</b><p>One line in <code>Cargo.toml</code>. Until it lands, an integration test written under <code>tests/</code> is invisible to the command CI actually runs, and a stated merge gate has nothing behind it.</p></div>
+</div><div class="tabpanel" id="t-ci-3">
+<div class="card"><p class="ct">Open pipeline decisions</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>Pin the toolchain, or accept the drift</td><td>No <code>rust-toolchain.toml</code>. With <code>-D warnings</code> and a floating <code>stable</code>, a new Clippy lint turns <code>main</code> red with no code change and no owner</td><td><span class="prio high">High</span></td></tr><tr><td>macOS and Windows in the matrix, or not</td><td><code>make release</code> supports three targets; CI compiles one. Two shells will be written against a toolchain nothing exercises</td><td><span class="prio high">High</span></td></tr><tr><td>Miri: add the job or drop the requirement</td><td>Stated as a gate today and enforced nowhere. Either is defensible; the current state is not</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Which conformance subsets to track</td><td>WPT and test262 are enormous. &ldquo;A subset&rdquo; is not a specification</td><td><span class="prio medium">Medium</span></td></tr><tr><td><code>--locked</code> in CI</td><td><code>Cargo.lock</code> is committed but CI can resolve around it silently</td><td><span class="prio low">Low</span></td></tr><tr><td>Concurrency group and job timeout</td><td>Neither is set. Rapid pushes run duplicate jobs; a hung job runs for the six-hour default</td><td><span class="prio low">Low</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-ci-4">
+<div class="grid"><div class="card kvc"><p class="ct">Where the gates actually bite</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td><code>make lint</code></td><td>Locally and in CI</td></tr><tr><td><code>make test</code></td><td>Locally and in CI</td></tr><tr><td><code>RUSTFLAGS: -D warnings</code></td><td>CI only &mdash; set in the workflow env, not a committed Cargo config</td></tr><tr><td><code>forbid(unsafe_code)</code></td><td>Everywhere, in 13 of 14 crates</td></tr></table></div></div><!--k--><div class="card kvc"><p class="ct">Anticipated, absent</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td>Coverage</td><td><code>*.profraw</code>, <code>/coverage/</code>, <code>lcov.info</code> ignored; no tooling</td></tr><tr><td>Fuzzing</td><td><code>fuzz/artifacts/</code>, <code>fuzz/corpus/</code> ignored; no directory</td></tr><tr><td>The one missing forbid</td><td><code>crates/browser/src/main.rs</code> &mdash; the only crate without it</td></tr></table></div></div><!--k--></div>
+
+<div class="note calm"><b>The local gate and the CI gate are not the same gate</b><p><code>RUSTFLAGS: -D warnings</code> lives in the workflow environment, so a local <code>make build</code> warns where CI fails. Moving it into a committed <code>.cargo/config.toml</code> makes them match, at the cost of noisier local builds.</p></div>
+</div></section><section class="page g2" id="p-own"><input class="st" type="radio" name="t-own" id="r-t-own-1" checked><input class="st" type="radio" name="t-own" id="r-t-own-2"><input class="st" type="radio" name="t-own" id="r-t-own-3"><input class="st" type="radio" name="t-own" id="r-t-own-4"><div class="head"><h1>Ownership &amp; Review</h1><p class="lede">CODEOWNERS, the review fan-out per path, and the four approval thresholds that turn on an undefined phrase.</p></div><div class="tabs" role="tablist"><label class="tab g2" for="r-t-own-1">Done</label><label class="tab g2" for="r-t-own-2">Specified</label><label class="tab g2" for="r-t-own-3">To Specify</label><label class="tab g2" for="r-t-own-4">Other</label></div><div class="tabpanel" id="t-own-1">
+<div class="card"><p class="ct">Ownership model</p><div class="tw"><table><tr><th>What</th><th>State</th></tr><tr><td><code>.github/CODEOWNERS</code> &mdash; 14 rules</td><td><span class="pill ok">complete</span></td></tr><tr><td>Rules match architecture &sect;2 exactly</td><td><span class="pill ok">consistent</span></td></tr><tr><td><code>common</code> listed for all ten teams</td><td><span class="pill ok">correct</span></td></tr><tr><td>Owning-team doc comment in all 14 crates</td><td><span class="pill ok">present</span></td></tr><tr><td>Code Owner review required by the ruleset</td><td><span class="pill ok">enforced</span></td></tr><tr><td>Two approvals required</td><td><span class="pill ok">enforced</span></td></tr></table></div></div>
+
+<div class="note good"><b>CODEOWNERS is a gate here, not a suggestion</b><p>On most repositories CODEOWNERS only requests a review. The <code>main</code> ruleset requires it, so every one of the fourteen rules actually blocks a merge.</p></div>
+</div><div class="tabpanel" id="t-own-2">
+<div class="card"><p class="ct">Stated, with no mechanism behind it</p><div class="tw"><table><tr><th>What</th><th>Stated in</th><th>What is left</th></tr><tr><td>Experienced engineers own critical paths &mdash; parser, layout core, JS VM, IPC, security</td><td>&sect;4.1</td><td>CODEOWNERS resolves teams, not seniority, and no roster of experienced engineers exists</td></tr><tr><td><code>unsafe</code> needs two experienced reviewers</td><td>&sect;1.1</td><td>Same gap &mdash; though <code>forbid(unsafe_code)</code> is stricter in 13 crates, which hides it until the first justified <code>unsafe</code></td></tr><tr><td>An ADR needs three experienced engineers from different teams</td><td>&sect;7 &middot; adr README</td><td>Unverifiable at review time for the same reason</td></tr><tr><td><code>crates/browser/</code> is cross-team</td><td>&sect;1.3 &middot; CODEOWNERS comment &middot; the crate's own source comment</td><td>The CODEOWNERS rule lists two teams, not ten</td></tr></table></div></div>
+</div><div class="tabpanel" id="t-own-3">
+<div class="card"><p class="ct">Open ownership decisions</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>Who counts as an experienced engineer</td><td>Four separate approval thresholds turn on the phrase and no document names anyone. A GitHub team makes all four mechanical and takes two minutes</td><td><span class="prio high">High</span></td></tr><tr><td><code>/crates/browser/</code>: two teams or ten</td><td>Three documents call it cross-team; the rule says two teams. &sect;8 step 3 lands exactly here</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Who owns <code>ci.yml</code>, <code>Makefile</code>, <code>rustfmt.toml</code>, <code>tests/</code></td><td>All fall to the default rule, so one team reviews the five files that enforce every other rule</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Who owns <code>.claude/</code></td><td>Same default. A skill set that writes commits for 37 people deserves a deliberate rule</td><td><span class="prio medium">Medium</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-own-4">
+<div class="card"><p class="ct">Review cost by path</p><div class="tw"><table><tr><th>Path touched</th><th>Fan-out</th><th>Typical change</th></tr><tr><td><code>/crates/common/</code></td><td><span class="pill no">10 teams</span></td><td>Any shared type, IPC message or error variant</td></tr><tr><td><code>/Cargo.toml</code></td><td><span class="pill no">10 teams</span></td><td>Adding a workspace member or a shared dependency</td></tr><tr><td><code>/docs/TECH_ARCHITECTURE.md</code></td><td><span class="pill no">10 teams</span></td><td>Any architecture change, plus a mandatory ADR</td></tr><tr><td><code>/docs/adr/</code></td><td><span class="pill no">10 teams</span></td><td>Writing any ADR</td></tr><tr><td>A single crate directory</td><td><span class="pill ok">2 teams</span></td><td>Ordinary team work</td></tr><tr><td><code>ci.yml</code> &middot; <code>Makefile</code> &middot; <code>tests/</code></td><td><span class="pill act">1 team</span></td><td>Changing what enforces every other rule</td></tr></table></div></div>
+
+<div class="note"><b>The fan-out is inverted at both ends</b><p>The four highest-cost paths are the four that have to be edited first &mdash; the ADRs, the architecture doc, the <code>common</code> types, and the manifest that would add <code>tests/</code>.</p><p>The lowest-cost paths are the ones that decide whether any rule is checked at all. Early velocity is bounded by the first group; process correctness by the second.</p></div>
+</div></section><section class="page g1" id="p-proj"><input class="st" type="radio" name="t-proj" id="r-t-proj-1" checked><input class="st" type="radio" name="t-proj" id="r-t-proj-2"><input class="st" type="radio" name="t-proj" id="r-t-proj-3"><input class="st" type="radio" name="t-proj" id="r-t-proj-4"><div class="head"><h1>GitHub Projects</h1><p class="lede">The chosen project-management tool: what it gives you free, the one automation it does not have, and the fields the scrum of scrums reads.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-proj-1">Done</label><label class="tab g1" for="r-t-proj-2">Specified</label><label class="tab g1" for="r-t-proj-3">To Specify</label><label class="tab g1" for="r-t-proj-4">Other</label></div><div class="tabpanel" id="t-proj-1"><div class="note good"><b>Nothing to buy, nothing to sign up for</b><p>GitHub Projects is free on a public repository, so the whole licensing question that any external tool would have raised does not exist here. Every student already has an account, and it is the account CODEOWNERS already resolves.</p></div><div class="card"><p class="ct">Settled</p><div class="tw"><table><tr><th>What</th><th>State</th></tr><tr><td>Tool choice</td><td><span class="pill ok">GitHub Projects</span></td></tr><tr><td>Cost at 37 seats</td><td><span class="pill ok">free</span></td></tr><tr><td>Accounts to create</td><td><span class="pill ok">none</span></td></tr><tr><td>Projects feature on the repository</td><td><span class="pill ok">enabled</span></td></tr><tr><td>Identity model</td><td><span class="pill ok">same as CODEOWNERS</span></td></tr></table></div></div><div class="card"><p class="ct">Not yet created</p><div class="tw"><table><tr><th>Surface</th><th>State</th><th>Reading</th></tr><tr><td>Projects, organisation level</td><td><span class="pill no">0</span></td><td>Nothing exists to inherit</td></tr><tr><td>Projects, repository level</td><td><span class="pill no">0</span></td><td>The tab is enabled and empty</td></tr><tr><td>Issues</td><td><span class="pill no">0 ever</span></td><td>Both merged pull requests reference none</td></tr><tr><td>Milestones</td><td><span class="pill no">0</span></td><td>A separate GitHub surface, also untouched</td></tr><tr><td>Labels</td><td><span class="pill none">defaults</span></td><td>The nine GitHub defaults</td></tr></table></div></div></div><div class="tabpanel" id="t-proj-2"><div class="card"><p class="ct">Follows from the choice</p><div class="tw"><table><tr><th>What</th><th>Stated in</th><th>What is left</th></tr><tr><td>Create one project at organisation level</td><td>The tool choice, plus nine teams</td><td>Nine separate boards is nine silos. One project with a <b>Team</b> field keeps cross-team blockers visible without leaving it</td></tr><tr><td>Turn on auto-add for the repository</td><td>The tool choice</td><td>A built-in workflow adds every issue and pull request as it opens. Without it somebody has to remember, which means the board is wrong by week three</td></tr><tr><td>Confirm the two default workflows are on</td><td>GitHub enables them on project creation</td><td><b>Item closed &rarr; Done</b> and <b>pull request merged &rarr; Done</b>. Verify rather than assume; they are the only automation you get for free</td></tr><tr><td>Start using issues at all</td><td>The tool choice &mdash; a project item is an issue or a pull request</td><td>Zero issues exist today. A board over an empty issue tracker tracks nothing</td></tr></table></div></div><div class="note calm"><b>No procurement step, which changes the ordering</b><p>Every earlier version of this plan had licensing as the long-lead item that gated the structure decisions. That item is gone. Nothing on this page waits on anyone outside the team, so the whole page can be done in an afternoon.</p></div></div><div class="tabpanel" id="t-proj-3"><div class="card"><p class="ct">Open decisions</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>How an item reaches <b>In Review</b></td><td>GitHub has no built-in workflow for <i>pull request opened</i>. Either write an Actions workflow that sets the field, or accept that In Review is set by hand. This is the single biggest difference from every other tool that was considered</td><td><span class="prio high">High</span></td></tr><tr><td>Field set</td><td><b>Team</b>, <b>Status</b>, <b>Crate</b> and <b>Blocked on</b> is the minimum. <b>Blocked on</b> is the field the scrum of scrums actually reads</td><td><span class="prio high">High</span></td></tr><tr><td>Status vocabulary</td><td>Whatever it is, <b>Done</b> has to be spelled exactly as the built-in workflows set it, or the free automation writes a value nothing filters on</td><td><span class="prio high">High</span></td></tr><tr><td>Whether every pull request needs an issue</td><td>Both merged PRs reference none. A PR-only board loses the work that has no code yet &mdash; which is all three ADRs</td><td><span class="prio high">High</span></td></tr><tr><td>Sprints: iteration field, milestones, or neither</td><td>GitHub has an <b>Iteration</b> field type and a separate Milestones surface. Using both is how a board ends up with two competing calendars</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Task granularity</td><td>Per crate, per feature, or per vertical slice. Decides whether the board holds 40 items or 400</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Who administers the project</td><td>One named person. Org-level project settings are not in the repository, so nothing here can record or restore them</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Views to save</td><td>One per team filtered on <b>Team</b>, plus one grouped by <b>Blocked on</b> for the scrum of scrums</td><td><span class="prio medium">Medium</span></td></tr></table></div></div></div><div class="tabpanel" id="t-proj-4"><div class="note good"><b>The pull request is the item, so the link cannot be forgotten</b><p>Every external tool considered here links a ticket to a pull request by reading an identifier out of the branch name or the PR body. Miss the identifier and the tool silently does nothing.</p><p>GitHub Projects has no identifier to miss. The pull request <i>is</i> the item. With 27 juniors and a branch convention that two merged PRs have already broken, that is worth more than it looks.</p></div><div class="note"><b>There is no built-in <b>PR opened &rarr; In Review</b></b><p>The built-in automations are a fixed short list: auto-add items matching a filter, auto-archive, set Status to Done when an item closes, and set Status to Done when a pull request merges. The last two are on by default.</p><p>There is no trigger for <i>opened</i>, <i>ready for review</i> or <i>approved</i>. Moving an item to In Review on PR open needs a hand-written Actions workflow calling the GraphQL API. It is an open request on GitHub's own community discussions, not a setting.</p></div><div class="grid"><div class="card kvc"><p class="ct">What a workflow can do</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td><code>actions/add-to-project</code></td><td>Maintained by GitHub. Adds an issue or pull request to a project, with label filters</td></tr><tr><td>Field values</td><td>Set in a later step through <code>gh project</code> or the GraphQL API</td></tr><tr><td>Everything else</td><td>The built-in automations, which is the fixed list above</td></tr></table></div></div><div class="card kvc"><p class="ct">Where the sprint could live</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td><b>Iteration</b> field</td><td>A project field type with a repeating cadence. Lives on the board</td></tr><tr><td><b>Milestones</b></td><td>A separate GitHub surface, currently 0. Lives on the issue</td></tr><tr><td>Pick one</td><td>Both is how a board acquires two calendars that disagree</td></tr></table></div></div></div><div class="note calm"><b>Projects settings are not repository files</b><p>Everything on this page lives in GitHub's UI rather than in the repo, so none of it is versioned, reviewable or restorable from a clone. That is the cost of the free option, and it is why <b>who administers the project</b> is a real decision rather than a formality.</p></div></div></section><section class="page g1" id="p-skills"><input class="st" type="radio" name="t-skills" id="r-t-skills-1" checked><input class="st" type="radio" name="t-skills" id="r-t-skills-2"><input class="st" type="radio" name="t-skills" id="r-t-skills-3"><input class="st" type="radio" name="t-skills" id="r-t-skills-4"><div class="head"><h1>Skills Plugin</h1><p class="lede">A shared skill set for 27 juniors, and the plugin marketplace that keeps it current with no action from anyone.</p></div><div class="tabs" role="tablist"><label class="tab g1" for="r-t-skills-1">Done</label><label class="tab g1" for="r-t-skills-2">Specified</label><label class="tab g1" for="r-t-skills-3">To Specify</label><label class="tab g1" for="r-t-skills-4">Other</label></div><div class="tabpanel" id="t-skills-1">
+<div class="note calm"><b>Nothing yet</b><p>No part of this exists in the repository today. Everything on the other three tabs is ahead of you.</p></div>
+
+<div class="card kvc"><p class="ct">What exists today</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td><code>.claude/</code> directory</td><td><span class="pill no">absent</span></td></tr><tr><td><code>AGENTS.md</code> or <code>CLAUDE.md</code></td><td><span class="pill no">absent</span></td></tr><tr><td>Plugin repository</td><td><span class="pill no">absent</span></td></tr><tr><td>Any written skill</td><td><span class="pill no">none</span></td></tr></table></div></div><!--k-->
+</div><div class="tabpanel" id="t-skills-2">
+<div class="note calm"><b>Nothing is waiting on execution</b><p>Nothing here has been decided and left undone. What is missing is the decision itself &mdash; see <b>To Specify</b>.</p></div>
+
+<div class="note calm"><b>The distribution mechanism is settled by the tool, not by the team</b><p>Claude Code already provides the answer to &ldquo;how does everyone get the update&rdquo;: a marketplace declared in the repository's own <code>.claude/settings.json</code> installs itself when a teammate trusts the project folder, then refreshes in the background.</p><p>That is a fact about the tool, so it sits here rather than in <b>To Specify</b>. What the team still has to decide is everything on the next tab.</p></div>
+</div><div class="tabpanel" id="t-skills-3">
+<div class="card"><p class="ct">Open plugin decisions</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>Which skills ship first</td><td><code>/commit</code>, <code>/pr</code> and <code>/bug</code> cover the highest-volume actions. Eight at once is a set nobody learns</td><td><span class="prio high">High</span></td></tr><tr><td>Plugin name</td><td>Skills are namespaced as <code>/plugin-name:skill</code>. <code>browser</code> gives <code>/browser:commit</code>; a long name is typed every time</td><td><span class="prio high">High</span></td></tr><tr><td>Same repository or a second one</td><td>Every change to <code>byui-browser</code> needs two approvals and Code Owner review &mdash; correct for engine code, heavy for a typo in a skill</td><td><span class="prio high">High</span></td></tr><tr><td>Release channel policy</td><td>A second marketplace entry pointing at a <code>next</code> branch lets staff test before 27 juniors get it. A bad <code>/commit</code> skill is a day of malformed history</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Who owns <code>.claude/</code></td><td>It falls to the CODEOWNERS default rule, so one team. A skill set that writes commits has closer to <code>ci.yml</code> blast radius than a crate</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Version bump policy</td><td>Users only receive an update when <code>version</code> in <code>plugin.json</code> changes. Without a policy, a fix everyone swears they pulled is a fix nobody has</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Whether an <code>AGENTS.md</code> exists at all</td><td>27 juniors in a course repository where assistant use is near-certain, and no guidance of any kind</td><td><span class="prio medium">Medium</span></td></tr></table></div></div>
+
+<div class="note"><b>A skill applies a convention, it cannot choose one</b><p><code>/commit</code> can only enforce a commit format once a format exists, and <code>/pr</code> can only fill in a template that has been written. Both depend on the Conventions page.</p><p>Writing the skills first does not skip that argument. It relocates it into the skill file.</p></div>
+</div><div class="tabpanel" id="t-skills-4">
+<div class="card"><p class="ct">How an update reaches 37 people</p><div class="tw"><table><tr><th>Who</th><th>Does what</th></tr><tr><td>A student, once</td><td>Clones and answers the trust prompt</td></tr><tr><td>A student, per update</td><td><span class="pill none">nothing</span></td></tr><tr><td>You, to release</td><td>Edit the <code>SKILL.md</code>, bump <code>version</code>, push</td></tr><tr><td>Everyone else</td><td>Picks it up on the next background refresh</td></tr></table></div></div>
+
+<div class="grid"><div class="card kvc"><p class="ct">Three files</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td><code>.claude/settings.json</code></td><td>In the browser repo. <code>extraKnownMarketplaces</code> plus <code>enabledPlugins</code>, about twelve lines</td></tr><tr><td><code>.claude-plugin/marketplace.json</code></td><td>The catalogue, at the plugin repo root</td></tr><tr><td><code>.claude-plugin/plugin.json</code></td><td>Name, description, version</td></tr></table></div></div><!--k--><div class="card kvc"><p class="ct">Consequences to know</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td>Namespacing</td><td>Plugin skills are always <code>/name:skill</code>. A committed <code>.claude/skills/</code> keeps the bare <code>/commit</code></td></tr><tr><td>Trust prompt</td><td>Repo settings apply only after the folder is trusted. One keystroke, but a student who declined silently has no skills</td></tr><tr><td>Version gate</td><td>Pushing without bumping <code>version</code> ships nothing</td></tr></table></div></div><!--k--></div>
+</div></section><section class="page g3" id="p-conv"><input class="st" type="radio" name="t-conv" id="r-t-conv-1" checked><input class="st" type="radio" name="t-conv" id="r-t-conv-2"><input class="st" type="radio" name="t-conv" id="r-t-conv-3"><input class="st" type="radio" name="t-conv" id="r-t-conv-4"><div class="head"><h1>Conventions</h1><p class="lede">Commit format, PR body, issue templates, branch naming &mdash; the layer a junior touches first.</p></div><div class="tabs" role="tablist"><label class="tab g3" for="r-t-conv-1">Done</label><label class="tab g3" for="r-t-conv-2">Specified</label><label class="tab g3" for="r-t-conv-3">To Specify</label><label class="tab g3" for="r-t-conv-4">Other</label></div><div class="tabpanel" id="t-conv-1">
+<div class="card"><p class="ct">Machine-enforced already</p><div class="tw"><table><tr><th>What</th><th>State</th></tr><tr><td><code>rustfmt.toml</code> &mdash; edition 2024, width 100, two shorthands</td><td><span class="pill ok">enforced by <code>make lint</code></span></td></tr><tr><td>Clippy at <code>-D warnings</code></td><td><span class="pill ok">enforced in CI</span></td></tr><tr><td><code>#![forbid(unsafe_code)]</code> in 13 of 14 crates</td><td><span class="pill ok">compile error</span></td></tr><tr><td><code>.gitignore</code></td><td><span class="pill ok">present</span></td></tr><tr><td><code>LICENSE</code> &mdash; MIT</td><td><span class="pill ok">present</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-conv-2">
+<div class="card"><p class="ct">Stated, unbacked</p><div class="tw"><table><tr><th>What</th><th>Stated in</th><th>What is left</th></tr><tr><td>Branch naming <code>team/short-description</code></td><td>README &middot; architecture &sect;4.1</td><td>No hook, no check. Both merged PRs used a non-team prefix</td></tr><tr><td>Small, focused pull requests</td><td>&sect;4.1</td><td>Subjective by design. A PR template is where this normally lives</td></tr><tr><td>Cross-team PRs need reviewers from every owning team</td><td>README &middot; &sect;4.1 &middot; &sect;2</td><td>Enforced by the ruleset &mdash; but a junior has no way to know which teams without reading CODEOWNERS</td></tr></table></div></div>
+</div><div class="tabpanel" id="t-conv-3">
+<div class="card"><p class="ct">Formats nobody has chosen</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>Commit message format</td><td>The only unstated format in a repository that specifies branch names, review counts, ADR approvals and line width. Every argument not had here is had 27 times in review</td><td><span class="prio high">High</span></td></tr><tr><td>Pull request body format</td><td>No <code>.github/pull_request_template.md</code>. A <code>Closes #N</code> line has to live here, because that is what closes the issue and moves the board item to Done</td><td><span class="prio high">High</span></td></tr><tr><td><code>CONTRIBUTING.md</code> contents</td><td>27 juniors with no written path from clone to merged PR. The highest-volume gap in the repository</td><td><span class="prio high">High</span></td></tr><tr><td>Issue templates</td><td>Bug, task and ADR proposal. The bug shape carries crate and owning team, which stops a layout bug bouncing between three teams</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Definition of Done</td><td>Not stated anywhere. A DoD that is not written is a DoD argued about in review</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Non-team branch prefixes</td><td>One sentence either way, and it is already ambiguous in the history</td><td><span class="prio medium">Medium</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-conv-4">
+<div class="card"><p class="ct">Conventional files</p><div class="tw"><table><tr><th>File</th><th>State</th><th>Matters here because</th></tr><tr><td><code>CONTRIBUTING.md</code></td><td><span class="pill no">absent</span></td><td>27 juniors, no path from clone to first PR</td></tr><tr><td><code>.github/pull_request_template.md</code></td><td><span class="pill no">absent</span></td><td>Where the cross-team checklist and the <code>Closes #N</code> line belong</td></tr><tr><td><code>.github/ISSUE_TEMPLATE/</code></td><td><span class="pill no">absent</span></td><td>No structured way to file the vertical-slice work</td></tr><tr><td><code>AGENTS.md</code> / <code>CLAUDE.md</code></td><td><span class="pill no">absent</span></td><td>No assistant guidance in a course repository</td></tr><tr><td><code>rust-toolchain.toml</code></td><td><span class="pill no">absent</span></td><td><code>-D warnings</code> plus a floating <code>stable</code> breaks <code>main</code> on its own</td></tr><tr><td><code>SECURITY.md</code> &middot; <code>CODE_OF_CONDUCT.md</code></td><td><span class="pill none">low</span></td><td>Normal to omit in a course repository</td></tr></table></div></div>
+
+<div class="note calm"><b>The gaps cluster in one layer</b><p>Ownership and architecture are documented to an unusual depth for a project with 166 lines of Rust. The contributor-facing layer is the part that does not exist &mdash; and it is the layer 27 juniors touch first.</p></div>
+</div></section><section class="page g3" id="p-cad"><input class="st" type="radio" name="t-cad" id="r-t-cad-1" checked><input class="st" type="radio" name="t-cad" id="r-t-cad-2"><input class="st" type="radio" name="t-cad" id="r-t-cad-3"><input class="st" type="radio" name="t-cad" id="r-t-cad-4"><div class="head"><h1>Cadence</h1><p class="lede">The two meetings the architecture document specifies, the ceremonies it does not, and the calendar invite that unblocks four teams.</p></div><div class="tabs" role="tablist"><label class="tab g3" for="r-t-cad-1">Done</label><label class="tab g3" for="r-t-cad-2">Specified</label><label class="tab g3" for="r-t-cad-3">To Specify</label><label class="tab g3" for="r-t-cad-4">Other</label></div><div class="tabpanel" id="t-cad-1">
+<div class="note calm"><b>Nothing yet</b><p>No part of this exists in the repository today. Everything on the other three tabs is ahead of you.</p></div>
+
+<div class="card kvc"><p class="ct">Observable proxies</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td>ADRs written</td><td><span class="pill no">0</span> &mdash; the sync's stated output</td></tr><tr><td>Issues opened</td><td><span class="pill no">0</span></td></tr><tr><td>Milestones</td><td><span class="pill no">0</span></td></tr><tr><td>Discussions</td><td><span class="pill no">disabled</span></td></tr></table></div></div><!--k-->
+</div><div class="tabpanel" id="t-cad-2">
+<div class="card"><p class="ct">Specified, never scheduled</p><div class="tw"><table><tr><th>What</th><th>Stated in</th><th>What is left</th></tr><tr><td>Weekly Architecture Sync</td><td>&sect;4.3 &mdash; 30 to 45 minutes, one representative per team</td><td>A calendar invite. Its output is the ADRs, and there are none</td></tr><tr><td>Bi-weekly cross-team demo</td><td>&sect;4.3 &mdash; progress on integration points</td><td>A calendar invite</td></tr><tr><td>Async-first written proposals</td><td>&sect;4.3 &mdash; GitHub Discussions or in-repo RFCs</td><td>Discussions is off and there is no <code>rfcs/</code> directory, so neither half has a home</td></tr><tr><td>Mentor pairing for the first three months</td><td>&sect;6</td><td>No pairing recorded anywhere, for 27 juniors</td></tr></table></div></div>
+
+<div class="note good"><b>The calendar invite is the highest-value action in this document</b><p>Four teams are blocked on three unwritten ADRs. The ADRs are the stated output of a meeting that has never been held. Nothing else here unblocks as many people for as little work.</p></div>
+</div><div class="tabpanel" id="t-cad-3">
+<div class="card"><p class="ct">Ceremonies nobody has defined</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>The scrum of scrums itself</td><td><code>@byui-cse/byui-browser-scrum-of-scrums</code> is the default owner of every path in the repository. The GitHub team exists; the meeting does not</td><td><span class="prio high">High</span></td></tr><tr><td>Sprint length</td><td>Not stated anywhere. Everything downstream &mdash; the board, the demo cadence, the DoD &mdash; assumes an answer</td><td><span class="prio high">High</span></td></tr><tr><td>Definition of Done</td><td>Not stated. With a two-approval ruleset and five stated merge gates, this is mostly writing down what already happens</td><td><span class="prio high">High</span></td></tr><tr><td>Who runs each meeting, and when</td><td>Two recurring meetings with no owner and no slot</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Backlog location and grooming</td><td>Follows the project structure decision</td><td><span class="prio medium">Medium</span></td></tr><tr><td>First sync agenda</td><td>Process model, IPC format, DOM representation, in that order. Worth fixing in advance so the first meeting produces an ADR rather than a discussion</td><td><span class="prio medium">Medium</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-cad-4">
+<div class="note"><b>&ldquo;Experienced engineer&rdquo; is load-bearing and undefined</b><p>An ADR needs approval from three experienced engineers from different teams. The architecture document says there are ten across nine teams and never names them.</p><p>Without a roster, the first sync can hold the discussion but cannot ratify the outcome. A GitHub team called <code>experienced</code> fixes it before the meeting rather than after the first disputed ADR.</p></div>
+
+<div class="card"><p class="ct">What the architecture document commits to</p><div class="tw"><table><tr><th>Channel</th><th>Frequency</th><th>Output</th></tr><tr><td>Architecture Sync</td><td>Weekly, 30&ndash;45 min</td><td>Decisions recorded as ADRs</td></tr><tr><td>Cross-team demo</td><td>Bi-weekly</td><td>Progress on integration points</td></tr><tr><td>Written proposals</td><td>As needed</td><td>Preferred for significant interface changes</td></tr></table></div></div>
+</div></section><section class="page g3" id="p-adr"><input class="st" type="radio" name="t-adr" id="r-t-adr-1" checked><input class="st" type="radio" name="t-adr" id="r-t-adr-2"><input class="st" type="radio" name="t-adr" id="r-t-adr-3"><input class="st" type="radio" name="t-adr" id="r-t-adr-4"><div class="head"><h1>Decisions</h1><p class="lede">The ADR process, the three records that block four teams, and the roster question that gates the first of them.</p></div><div class="tabs" role="tablist"><label class="tab g3" for="r-t-adr-1">Done</label><label class="tab g3" for="r-t-adr-2">Specified</label><label class="tab g3" for="r-t-adr-3">To Specify</label><label class="tab g3" for="r-t-adr-4">Other</label></div><div class="tabpanel" id="t-adr-1">
+<div class="card"><p class="ct">Process exists</p><div class="tw"><table><tr><th>What</th><th>State</th></tr><tr><td><code>docs/adr/README.md</code> &mdash; four-step process</td><td><span class="pill ok">written</span></td></tr><tr><td><code>docs/adr/0000-template.md</code></td><td><span class="pill ok">written</span></td></tr><tr><td>Naming convention <code>NNNN-short-title.md</code></td><td><span class="pill ok">written</span></td></tr><tr><td>Approval threshold &mdash; 3 experienced engineers, different teams</td><td><span class="pill ok">written</span></td></tr><tr><td><code>/docs/adr/</code> owned by all ten teams</td><td><span class="pill ok">in CODEOWNERS</span></td></tr><tr><td>ADRs actually written</td><td><span class="pill no">0</span></td></tr></table></div></div>
+
+<div class="note"><b>A process referenced from three places and never exercised</b><p>The README, architecture &sect;4.3 and architecture &sect;7 all point at <code>docs/adr/</code>. It holds its own README and the template, and nothing else.</p></div>
+</div><div class="tabpanel" id="t-adr-2">
+<div class="card"><p class="ct">Named, unwritten</p><div class="tw"><table><tr><th>What</th><th>Stated in</th><th>What is left</th></tr><tr><td>ADR 0001 &mdash; process model</td><td>&sect;8 step 5</td><td>Blocks Browser UX and Layout &amp; Rendering, and the &sect;8 step 3 skeleton</td></tr><tr><td>ADR 0002 &mdash; IPC format</td><td>&sect;8 step 5</td><td>Blocks Networking, Security &amp; Storage, Browser UX and Devtools. Every cross-process seam is an IPC message</td></tr><tr><td>ADR 0003 &mdash; DOM representation</td><td>&sect;8 step 5</td><td>Blocks HTML, CSS, Layout &amp; Rendering and JS APIs at once</td></tr><tr><td>Fill the <code>common</code> crate</td><td>&sect;8 step 2</td><td>Four modules, four <code>TODO</code>s. Cannot start before the three ADRs land</td></tr><tr><td>Agree the first vertical slice</td><td>&sect;8 step 4</td><td>Parse HTML, apply CSS, lay out a block, paint to a window. Three teams build to their own idea of the seam without it</td></tr></table></div></div>
+</div><div class="tabpanel" id="t-adr-3">
+<div class="card"><p class="ct">Open decisions about deciding</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>Who the deciders are</td><td>The approval threshold is unverifiable without a roster. This gates the first ADR, not the second</td><td><span class="prio blocking">Blocking</span></td></tr><tr><td>Whether &sect;3.2's interface signatures need an ADR</td><td>&sect;3.2 states concrete signatures; &sect;7 says architecture changes need an ADR; no ADR records them. Either they become 0004 or &sect;3.2 is declared illustrative</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Where process decisions are recorded</td><td>The ADR directory is the only decision-recording mechanism, and a tooling choice is not an architecture decision. <code>CONTRIBUTING.md</code> is the usual home and does not exist</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Template gaps: supersedes, affected crates, approvers</td><td>The status field offers <b>Superseded</b> with no field naming which ADR supersedes which, and the three-approver rule has nowhere to be recorded</td><td><span class="prio low">Low</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-adr-4">
+<div class="card"><p class="ct">Who is waiting on what</p><div class="tw"><table><tr><th>Blocked on</th><th>Teams waiting</th><th>Why</th></tr><tr><td><b>DOM representation</b></td><td><span class="pill no">4 teams</span></td><td>Arena shape and <code>NodeId</code> decide the signature of <code>style_document</code>, the box tree input, and every binding</td></tr><tr><td><b>IPC format</b></td><td><span class="pill no">4 teams</span></td><td><code>fetch</code>, the storage APIs and the DevTools protocol all cross a process boundary</td></tr><tr><td><b>Process model</b></td><td><span class="pill act">2 teams</span></td><td>The multi-process skeleton and the GPU/compositor split</td></tr><tr><td><b>First vertical slice</b></td><td><span class="pill act">3 teams</span></td><td>Without it three teams build to three different seams</td></tr><tr><td><b>Nothing</b></td><td><span class="pill ok">1 team</span></td><td>JavaScript Engine &mdash; the VM is self-contained and needs only error types</td></tr></table></div></div>
+
+<div class="note calm"><b>One team can start today</b><p><code>js</code> owns the VM and values; DOM bindings live in <code>webapis</code>. If the ADRs slip, it is the only crate still producing &mdash; worth knowing before the slip rather than after.</p></div>
+</div></section><section class="page g3" id="p-onb"><input class="st" type="radio" name="t-onb" id="r-t-onb-1" checked><input class="st" type="radio" name="t-onb" id="r-t-onb-2"><input class="st" type="radio" name="t-onb" id="r-t-onb-3"><input class="st" type="radio" name="t-onb" id="r-t-onb-4"><div class="head"><h1>Onboarding</h1><p class="lede">What a new student can read today, what &sect;6 promises them, and the path from clone to first pull request.</p></div><div class="tabs" role="tablist"><label class="tab g3" for="r-t-onb-1">Done</label><label class="tab g3" for="r-t-onb-2">Specified</label><label class="tab g3" for="r-t-onb-3">To Specify</label><label class="tab g3" for="r-t-onb-4">Other</label></div><div class="tabpanel" id="t-onb-1">
+<div class="card"><p class="ct">Readable today</p><div class="tw"><table><tr><th>What</th><th>State</th></tr><tr><td><code>docs/TEAMS.md</code> &mdash; nine team charters</td><td><span class="pill ok">written for week 1</span></td></tr><tr><td><code>docs/TECH_ARCHITECTURE.md</code> &sect;6 &mdash; junior guidelines</td><td><span class="pill ok">written</span></td></tr><tr><td>Owning-team comment in every crate</td><td><span class="pill ok">present</span></td></tr><tr><td>Planned interfaces in the crate that will implement them</td><td><span class="pill ok">present</span></td></tr><tr><td><code>README.md</code> build and test commands</td><td><span class="pill ok">accurate</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-onb-2">
+<div class="card"><p class="ct">&sect;6, unbacked</p><div class="tw"><table><tr><th>What</th><th>Stated in</th><th>What is left</th></tr><tr><td>Every junior paired with a mentor for three months</td><td>&sect;6</td><td>No pairing is recorded anywhere, for 27 juniors</td></tr><tr><td>Start with well-scoped tasks with clear interfaces</td><td>&sect;6</td><td>No <code>good first issue</code> labelling, and zero issues exist</td></tr><tr><td>Prefer adding tests and documentation over large refactors</td><td>&sect;6</td><td>Reasonable advice with no first task to apply it to</td></tr><tr><td><code>unsafe</code> off-limits without mentor approval</td><td>&sect;6</td><td><code>forbid(unsafe_code)</code> already makes it a compile error in 13 crates &mdash; stricter than the rule</td></tr></table></div></div>
+</div><div class="tabpanel" id="t-onb-3">
+<div class="card"><p class="ct">Open onboarding decisions</p><div class="tw"><table><tr><th>Decision</th><th>Why it matters</th><th>Priority</th></tr><tr><td>The written path from clone to first PR</td><td><code>CONTRIBUTING.md</code> does not exist. 27 juniors is the largest single audience in the project</td><td><span class="prio high">High</span></td></tr><tr><td>Who mentors whom</td><td>Ten experienced engineers, 27 juniors. The pairing is stated as a rule and exists as nobody's list</td><td><span class="prio high">High</span></td></tr><tr><td>First-issue labelling</td><td><code>good first issue</code> is already in the default label set and zero issues exist to carry it</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Environment setup beyond <code>rustup update stable</code></td><td>Editor, toolchain pin, and whether Claude Code is expected</td><td><span class="prio medium">Medium</span></td></tr><tr><td>Whether assistant use is guided or ignored</td><td>No <code>AGENTS.md</code>, no <code>CLAUDE.md</code>, in a 2026 course repository</td><td><span class="prio medium">Medium</span></td></tr></table></div></div>
+</div><div class="tabpanel" id="t-onb-4">
+<div class="grid"><div class="card kvc"><p class="ct">Scale</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td>Total engineers</td><td>About 37</td></tr><tr><td>Experienced</td><td>10</td></tr><tr><td>Juniors</td><td>27</td></tr><tr><td>Teams</td><td>9</td></tr><tr><td>Rust on disk</td><td>166 lines across 14 crates</td></tr></table></div></div><!--k--><div class="card kvc"><p class="ct">What juniors meet first</p><div class="tw"><table><tr><th>Field</th><th>Value</th></tr><tr><td>A ruleset</td><td>Two approvals and Code Owner review on every PR</td></tr><tr><td>A CI gate</td><td>rustfmt, Clippy at <code>-D warnings</code>, workspace tests</td></tr><tr><td>A branch convention</td><td>Stated, unenforced, already broken twice</td></tr><tr><td>A commit convention</td><td><span class="pill no">none</span></td></tr><tr><td>A contributing guide</td><td><span class="pill no">none</span></td></tr></table></div></div><!--k--></div>
+
+<div class="note calm"><b>The architecture document's own closing argument</b><p>&ldquo;With 27 junior engineers, clear boundaries and strong type contracts are the highest-leverage investment we can make.&rdquo; The boundaries and contracts are done. The path a junior walks to reach them is the part that is missing.</p></div>
+</div></section></main>
+</body>
+</html>

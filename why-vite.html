@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why Vite</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+    --term:#8E6FD6;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); margin: 0;
+         font: 16px/1.62 -apple-system, "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 74rem; margin-inline: auto;
+         padding: 4.5rem clamp(16px,4vw,40px) 5rem; }
+  h1 { font-size: clamp(26px,5.4vw,38px); margin: 0 0 .85rem; color: var(--accent);
+       font-weight: 600; letter-spacing: -.015em; }
+  h1::after { content: ""; display: block; width: 3.2rem; height: 3px;
+              background: var(--accent); border-radius: 2px; margin-top: .85rem; }
+  h2 { font-size: clamp(19px,2.4vw,1.3rem); margin: 0 0 .2rem; font-weight: 600; }
+  h3 { font-size: clamp(16px,2vw,1.06rem); margin: 2rem 0 .5rem; font-weight: 600; }
+  p { margin: 0 0 1rem; max-width: 68ch; }
+  .lede { color: var(--muted); margin: 0 0 1.6rem; max-width: 72ch; }
+  .head { display: grid; grid-template-columns: minmax(14rem, 22rem) 1fr;
+          gap: 0 2.6rem; align-items: start; margin: 0 0 1.6rem; }
+  .head h1 { margin: 0; }
+  .head .lede { margin: .35rem 0 0; }
+  @media (max-width: 900px) { .head { grid-template-columns: 1fr; }
+    .head .lede { margin-top: 1.1rem; } }
+  .added { border: 1px solid var(--warn); background: var(--warn-soft);
+           padding: .6rem .85rem; border-radius: 10px; color: var(--ink);
+           margin: 0 0 1.3rem; font-size: .93rem; max-width: 68ch; }
+  .added b { display: block; color: var(--warn); font-size: 12px; letter-spacing: .08em;
+             text-transform: uppercase; margin: 0 0 5px; }
+  .names { display: grid; gap: .3rem 1.6rem; margin: 0 0 1.6rem;
+           grid-template-columns: repeat(auto-fit, minmax(min(270px,100%),1fr));
+           font-size: .87rem; color: var(--muted); border-top: 1px solid var(--border);
+           border-bottom: 1px solid var(--border); padding: .8rem 0; }
+  .names b { color: var(--ink); font-weight: 600; }
+  .t { color: var(--term); }
+  .names b.t { color: var(--term); }
+  .tw { overflow-x: auto; margin: 0 0 1.5rem; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--border-strong);
+       color: var(--muted); font-weight: 500; font-size: .81rem;
+       letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+  td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--border);
+       vertical-align: top; }
+  td strong { font-weight: 600; }
+  code, a { overflow-wrap: anywhere; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .84rem;
+         background: var(--card); padding: 1px 5px; border-radius: 5px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 24px;
+          background: var(--card); border-radius: 10px 10px 0 0;
+          padding: 4px 6px 0; border-bottom: 2px solid var(--border-strong); }
+  .tab { background: none; border: 0; border-bottom: 2px solid transparent;
+         color: var(--muted); font-size: 13.5px; padding: 9px 12px; cursor: pointer;
+         border-radius: 8px 8px 0 0; transition: .15s; font-family: inherit;
+         margin-bottom: -2px; }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent);
+                font-weight: 600; }
+  .page { display: none; } .page.active { display: block; }
+  .tabpanel { display: none; } .tabpanel.active { display: block; }
+  @media (max-width: 720px) {
+    td, th { padding: .45rem .45rem; }
+  }
+</style>
+<body>
+<main>
+  <div class="head">
+    <h1>Why Vite</h1>
+    <p class="lede">What Vite is for, how it works, and why you'd choose Vite over the
+      alternatives. About a third is mine rather than Vite's, marked in place.</p>
+  </div>
+
+  <div class="names">
+    <div><b class="t">Bundler</b> — turns many source files into a few browser-ready files</div>
+    <div><b class="t">webpack</b> — the long-standing default <span class="t">bundler</span>; what Vite competes with</div>
+    <div><b class="t">Native ES modules</b> — browsers loading <code>import</code> files directly, no <span class="t">bundler</span></div>
+    <div><b class="t">esbuild</b> — Go <span class="t">bundler</span>, very fast; Vite pre-bundles dependencies with <span class="t">esbuild</span></div>
+    <div><b class="t">Rollup</b> — JavaScript <span class="t">bundler</span>, good output; Vite builds for production with <span class="t">Rollup</span></div>
+    <div><b class="t">Rolldown</b> — Rust <span class="t">bundler</span>, being built to replace <span class="t">esbuild</span> and <span class="t">Rollup</span> both</div>
+    <div><b class="t">HMR</b> — Hot Module Replacement; swaps one changed module in the running page</div>
+  </div>
+
+  <section class="page active" id="p-main">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="t-problem">The problem</button>
+      <button class="tab" data-tab="t-does">What Vite does</button>
+      <button class="tab" data-tab="t-others">Why not the others</button>
+      <button class="tab" data-tab="t-rolldown"><span class="t">Rolldown</span></button>
+      <button class="tab" data-tab="t-heading">Where it's going</button>
+    </div>
+
+    <div class="tabpanel active" id="t-problem">
+      <h2>The problem</h2>
+      <p>A browser cannot load a modern JavaScript app the way you wrote it. Source is split
+        across hundreds of files, imports things by bare name, and often is not JavaScript at
+        all. Something has to turn all of that into files a browser will accept.</p>
+      <p>The traditional answer bundles the whole app up front. Bundling up front is fine once, but bundling
+        happens on every dev server start and, in part, on every save — so the wait grows with
+        the size of the codebase, exactly as the codebase becomes worth working on.</p>
+    </div>
+
+    <div class="tabpanel" id="t-does">
+      <h2>What Vite does</h2>
+      <p>Vite's move is to stop treating the app as one thing. Dependencies and your own source
+        have opposite characteristics, so they get opposite treatment.</p>
+      <div class="tw"><table>
+        <tr><th></th><th>Dependencies</th><th>Your source</th></tr>
+        <tr><td>How often it changes</td><td>almost never</td><td>constantly</td></tr>
+        <tr><td>How much there is</td><td>a great deal</td><td>comparatively little</td></tr>
+        <tr><td>What Vite does</td><td>pre-bundles once, with <span class="t">esbuild</span></td>
+          <td>serves on demand, unbundled</td></tr>
+        <tr><td>When that cost is paid</td><td>on install</td><td>per file, per request</td></tr>
+      </table></div>
+      <p>The consequence is the whole point. Starting the dev server no longer means building
+        the app — dependencies are already prepared, and your source is not built at all until
+        the browser asks for a specific file. Start-up stops scaling with the size of your
+        codebase.</p>
+      <p>Saving a file re-transforms that one file and hands the module to <span class="t">HMR</span>, which swaps the
+        module in the running page. Not a rebuild, not a reload.</p>
+      <p><strong>Production still bundles</strong>, with <span class="t">Rollup</span>. Hundreds of separate module
+        requests are fine over localhost and bad over a network, and a real build wants
+        minification, tree-shaking and chunking. Dev and production are deliberately different
+        mechanisms.</p>
+
+      <h3>If it helps — against Gradle</h3>
+      <div class="added"><b>Added</b>My analogy, not Vite's.</div>
+      <p>An Android build assembles everything into an APK before the emulator sees any of it,
+        and incremental builds shrink that work without removing the packaging step. Vite's dev
+        mode removes the packaging step entirely: the browser loads your source files directly
+        and only the file you touched is re-processed.</p>
+      <p>Roughly, Vite's dev mode is what Live Edit is reaching for, except unbundled serving is the
+        normal path rather than a special case.</p>
+    </div>
+
+    <div class="tabpanel" id="t-others">
+      <h2>Why not the others</h2>
+      <div class="added"><b>Added</b>The Vite page does not make this comparison. This is
+        the half of your question the source does not answer.</div>
+      <div class="tw"><table>
+        <tr><th>Instead of Vite</th><th>What you get</th><th>Why you would still pick Vite</th></tr>
+        <tr><td><strong>webpack</strong></td><td>The most configurable and most battle-tested
+          option; handles setups nothing else will</td><td>Dev feedback stays slow as the app
+          grows, and the config surface is large</td></tr>
+        <tr><td><strong>Rspack</strong></td><td><span class="t">webpack</span>'s model rewritten in Rust — much
+          faster, config-compatible</td><td>Fixes <span class="t">webpack</span>'s speed, keeps <span class="t">webpack</span>'s model. Vite
+          changed the model itself</td></tr>
+        <tr><td><strong>Turbopack</strong></td><td>Rust, fast, from the Next.js team</td>
+          <td>Effectively bound to Next.js. Vite is framework-neutral</td></tr>
+        <tr><td><strong>Parcel</strong></td><td>Zero config, fast, genuinely pleasant</td>
+          <td>Much smaller ecosystem; fewer frameworks assume Parcel</td></tr>
+        <tr><td><strong><span class="t">esbuild</span> alone</strong></td><td>Extreme speed</td><td><span class="t">esbuild</span> is a <span class="t">bundler</span>,
+          not a dev server. Vite uses <span class="t">esbuild</span> rather than competing with <span class="t">esbuild</span></td></tr>
+        <tr><td><strong><span class="t">Rollup</span> alone</strong></td><td>Excellent production output</td>
+          <td>No dev server at all. Vite uses <span class="t">Rollup</span> too</td></tr>
+        <tr><td><strong>Snowpack, WMR</strong></td><td>The same <span class="t">native-ESM</span> idea, earlier</td>
+          <td>Superseded. Snowpack is discontinued</td></tr>
+      </table></div>
+      <p><strong>The honest summary.</strong> Vite's technical claim is the dev feedback loop.
+        Its stronger claim is that everyone consolidated on it — Nuxt, SvelteKit, Astro, React
+        Router, SolidStart, Vitest, Storybook, Laravel and Rails all build on it, so it is
+        where the integration work already exists. Picking Vite is mostly picking the
+        default.</p>
+    </div>
+
+    <div class="tabpanel" id="t-rolldown">
+      <h2>The two-tool problem, and <span class="t">Rolldown</span></h2>
+      <p>Using <span class="t">esbuild</span> for dev and <span class="t">Rollup</span> for production means two transformation pipelines and
+        two plugin systems, held together by glue. Things behave differently in dev than in
+        production, which is the worst class of bug to chase.</p>
+      <p><span class="t">Rolldown</span> is a single <span class="t">bundler</span>, written in Rust, using Oxc for parsing, transforming and
+        minifying. <span class="t">Rolldown</span> is meant to do both jobs, keep <span class="t">Rollup</span>'s plugin API so the ecosystem
+        survives the move, and remove the dev-versus-production gap.</p>
+    </div>
+
+    <div class="tabpanel" id="t-heading">
+      <h2>Where it's going</h2>
+      <div class="tw"><table>
+        <tr><th>Effort</th><th>What it is for</th></tr>
+        <tr><td><strong>Full bundle mode</strong></td><td>Bundling in dev too, for codebases
+          large enough that unbundled stops paying</td></tr>
+        <tr><td><strong>Environment API</strong></td><td>Targets beyond browser and SSR —
+          workers, edge runtimes, custom environments</td></tr>
+        <tr><td><strong>Faster language support</strong></td><td>New JavaScript features land
+          sooner, via Oxc and <span class="t">Rolldown</span> together</td></tr>
+      </table></div>
+    </div>
+  </section>
+</main>
+<script>
+document.querySelectorAll('.tabs .tab').forEach(function(b){
+  b.addEventListener('click',function(){
+    var page=b.closest('.page');
+    page.querySelectorAll('.tab, .tabpanel').forEach(function(el){el.classList.remove('active')});
+    b.classList.add('active');
+    page.querySelector('#'+b.dataset.tab).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+</script>
+</body>
+</html>

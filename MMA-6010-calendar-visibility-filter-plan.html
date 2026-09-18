@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6010 — Calendar Visibility Filter Improvements</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:56px 32px 96px 240px;
+  }
+  .wrap{max-width:860px;margin:0 auto}
+
+  /* ---------- floating left nav ---------- */
+  .skipto {
+    position: fixed; top: 50%; left: 18px; transform: translateY(-50%);
+    z-index: 60; display: flex; flex-direction: column; gap: 5px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 12px 13px; box-shadow: var(--shadow);
+    width: 172px;
+  }
+  .skipto a {
+    text-decoration: none; color: var(--muted); font-size: 13px;
+    padding: 6px 10px; border-radius: 8px; transition: .15s;
+  }
+  .skipto a:hover { background: var(--bg); color: var(--accent); }
+  .skipto .lbl{
+    font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--faint); padding:2px 10px 4px;
+  }
+  @media (max-width: 1180px) {
+    .skipto { top:0; left:0; right:0; transform:none; width:auto;
+      flex-direction:row; overflow-x:auto; border-radius:0; border-width:0 0 1px; }
+    .skipto .lbl{display:none}
+    body{padding:88px 20px 80px}
+  }
+
+  /* ---------- type ---------- */
+  h1{font-size:30px;line-height:1.25;margin:0 0 6px;letter-spacing:-.02em}
+  h2{font-size:21px;margin:0 0 14px;letter-spacing:-.01em}
+  h3{font-size:15px;margin:0 0 8px;color:var(--ink)}
+  p{margin:0 0 12px;color:var(--muted)}
+  .sub{color:var(--faint);font-size:14px;margin:0}
+  a{color:var(--accent)}
+
+  section{margin:0 0 34px;scroll-margin-top:28px}
+
+  /* ---------- cards ---------- */
+  .card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); padding:22px 24px; box-shadow:var(--shadow);
+  }
+  .card + .card{margin-top:14px}
+  .hero{border-left:3px solid var(--accent)}
+  .hero p{color:var(--ink);font-size:17px;margin:0}
+
+  /* ---------- pills ---------- */
+  .pill{
+    display:inline-block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;border:1px solid var(--border-strong);
+    color:var(--faint);background:var(--bg);
+  }
+  .pill.must{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+  .pill.imp{color:var(--warn);border-color:var(--warn);background:var(--warn-soft)}
+  .pill.opt{color:var(--faint)}
+
+  /* ---------- steps ---------- */
+  .step{margin:0 0 14px}
+  .step-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 4px}
+  .num{
+    flex:0 0 auto;width:26px;height:26px;border-radius:8px;
+    display:grid;place-items:center;font-size:13px;font-weight:600;
+    background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent);
+  }
+  .purpose{color:var(--faint);font-size:14px;margin:0 0 16px;padding-left:36px}
+  .file{
+    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    color:var(--ink); background:var(--bg);
+    border:1px solid var(--border-strong); border-radius:8px;
+    padding:5px 10px; display:inline-block; margin:14px 0 8px;
+  }
+  .file.new::after{content:" NEW";color:var(--accent);font-size:11px;letter-spacing:.06em}
+  ul{margin:0 0 4px;padding-left:20px}
+  li{margin:0 0 5px;color:var(--muted)}
+  li::marker{color:var(--faint)}
+  .nofile{color:var(--faint);font-size:13px;font-style:italic;margin:14px 0 8px}
+
+  /* ---------- three things ---------- */
+  .three{display:grid;gap:12px}
+  .three .card{padding:18px 20px}
+  .three .n{color:var(--accent);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+
+  /* ---------- flags ---------- */
+  .flag{border-left:3px solid var(--warn)}
+  .flag h3{color:var(--warn)}
+
+  /* ---------- todo ---------- */
+  .todo li{list-style:none;margin:0 0 10px;position:relative;padding-left:28px;color:var(--ink)}
+  .todo{padding-left:0}
+  .todo li::before{
+    content:"";position:absolute;left:0;top:4px;width:15px;height:15px;
+    border:1px solid var(--border-strong);border-radius:4px;background:var(--bg);
+  }
+  ol.next{padding-left:20px}
+  ol.next li{color:var(--ink);margin:0 0 8px}
+
+  hr{border:0;border-top:1px solid var(--border);margin:0 0 30px}
+  code{
+    font:13px ui-monospace,SFMono-Regular,Menlo,monospace;
+    background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:1px 5px;color:var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="lbl">Skip to</span>
+  <a href="#tldr">One Sentence</a>
+  <a href="#three">Only 3 Things</a>
+  <a href="#ticket">The Ticket</a>
+  <a href="#steps">The 5 Steps</a>
+  <a href="#flags">Flags &amp; Questions</a>
+  <a href="#todo">TODO</a>
+  <a href="#next">What To Do Next</a>
+</nav>
+
+<div class="wrap">
+
+  <header style="margin:0 0 30px">
+    <h1>MMA-6010 — Calendar Visibility Filter Improvements</h1>
+    <p class="sub">Branch <code>MMA-6010</code> · Epic LTS-2600 · Designer: Jared · Small enhancement</p>
+  </header>
+
+  <section id="tldr">
+    <div class="card hero">
+      <p><strong>One-sentence version:</strong> Give the calendars bottom sheet a real title and a check button to close it, and flatten the filter chip so it always just reads "Calendars".</p>
+    </div>
+  </section>
+
+  <section id="three">
+    <h2>Remember Only 3 Things</h2>
+    <div class="three">
+      <div class="card">
+        <div class="n">One</div>
+        <p style="margin:2px 0 0;color:var(--ink)">Only <strong>three files</strong> change: a strings file, the bottom sheet, and the chip.</p>
+      </div>
+      <div class="card">
+        <div class="n">Two</div>
+        <p style="margin:2px 0 0;color:var(--ink)">The sheet header reuses <code>CardHeader</code>, which already supports a trailing action slot.</p>
+      </div>
+      <div class="card">
+        <div class="n">Three</div>
+        <p style="margin:2px 0 0;color:var(--ink)">The chip label is the <strong>one unresolved decision</strong> — everything else is mechanical.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="ticket">
+    <h2>The Ticket <span class="pill must">Must Know</span></h2>
+    <div class="card">
+      <p>Jared's three asks, verbatim from Jira:</p>
+      <ul>
+        <li>Add "Show or Hide Calendars" title on top of bottom sheet</li>
+        <li>Remove 'all calendars' or '{cal} + {x} more' state of chip</li>
+        <li>Add sheet dismissal check button</li>
+      </ul>
+      <p style="margin-top:14px;color:var(--faint);font-size:14px">No attachments and no Figma link on the ticket. Spacing and exact placement are inferred from existing app patterns.</p>
+    </div>
+  </section>
+
+  <hr>
+
+  <section id="steps">
+    <h2>The 5 Steps</h2>
+
+    <!-- STEP 1 -->
+    <div class="card step">
+      <div class="step-head">
+        <span class="num">1</span>
+        <h3 style="margin:0">Add the new strings</h3>
+        <span class="pill must">Must Know</span>
+      </div>
+      <p class="purpose">purpose: title text for the sheet header</p>
+
+      <div class="file">.../res/values/strings.xml</div>
+      <ul>
+        <li>Add <code>show_or_hide_calendars</code> string</li>
+        <li>Add <code>comment</code> attribute per file convention</li>
+        <li>Reuse existing <code>done</code> for check button</li>
+      </ul>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="card step">
+      <div class="step-head">
+        <span class="num">2</span>
+        <h3 style="margin:0">Add sheet header + check button</h3>
+        <span class="pill must">Must Know</span>
+      </div>
+      <p class="purpose">purpose: ticket bullets 1 and 3</p>
+
+      <div class="file">.../calendar/schedule/ScheduleView.kt</div>
+      <ul>
+        <li>Import <code>CardHeader</code> from <code>core.ui.text</code></li>
+        <li>Import <code>Icons.Rounded.Check</code> and <code>IconButton</code></li>
+        <li>Add <code>CardHeader</code> as first Column child</li>
+        <li>Set headline to new title string</li>
+        <li>Set <code>trailingContent</code> to check <code>IconButton</code></li>
+        <li>Wire button <code>onClick</code> to <code>uiState.onDismiss</code></li>
+        <li>Content description uses <code>R.string.done</code></li>
+      </ul>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="card step">
+      <div class="step-head">
+        <span class="num">3</span>
+        <h3 style="margin:0">Collapse the chip label</h3>
+        <span class="pill imp">Blocked on answer</span>
+      </div>
+      <p class="purpose">purpose: ticket bullet 2</p>
+
+      <div class="file">.../ux/calendar/CalendarScreen.kt</div>
+      <ul>
+        <li>Delete <code>allSelected</code> / <code>firstSelected</code> locals</li>
+        <li>Delete <code>when</code> block in <code>CalendarsFilterChip</code></li>
+        <li>Pass <code>stringResource(R.string.calendars)</code> directly</li>
+        <li>Keep <code>selected</code> tied to "some hidden"</li>
+        <li>Remove unused <code>pluralStringResource</code> import</li>
+        <li>Remove unused <code>selectedCount</code> if orphaned</li>
+      </ul>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="card step">
+      <div class="step-head">
+        <span class="num">4</span>
+        <h3 style="margin:0">Cover it with a Robolectric test</h3>
+        <span class="pill imp">Important</span>
+      </div>
+      <p class="purpose">purpose: match existing feature/calendar test harness</p>
+
+      <div class="file new">.../calendar/schedule/DisplayCalendarsBottomSheetTest.kt</div>
+      <ul>
+        <li>Model on <code>ManageEventsScreenTest</code> setup</li>
+        <li>Assert title text is displayed</li>
+        <li>Assert check click invokes <code>onDismiss</code></li>
+        <li>Assert row toggle still invokes <code>onCalendarClick</code></li>
+      </ul>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="card step">
+      <div class="step-head">
+        <span class="num">5</span>
+        <h3 style="margin:0">Verify</h3>
+        <span class="pill must">Must Know</span>
+      </div>
+      <p class="purpose">purpose: green before PR</p>
+
+      <div class="nofile">no file edits</div>
+      <ul>
+        <li><code>:feature:calendar:testDebugUnitTest</code> and <code>:app:compileDebugKotlin</code></li>
+        <li><code>detektDebug</code> and <code>lintDebug</code></li>
+        <li>Run app, eyeball sheet + chip</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr>
+
+  <section id="flags">
+    <h2>Flags &amp; Open Questions</h2>
+
+    <div class="card flag">
+      <h3>Chip text is the one real ambiguity <span class="pill imp">Important</span></h3>
+      <p>"Remove 'all calendars' or '{cal} + {x} more'" leaves the single-selected case undefined. The plan assumes <em>all</em> states collapse to "Calendars".</p>
+      <p style="margin:0">If Jared wants the single-calendar name preserved, Step 3 changes.</p>
+    </div>
+
+    <div class="card">
+      <h3>Chip highlight state <span class="pill opt">Optional</span></h3>
+      <p style="margin:0">Plan keeps the chip filled whenever any calendar is hidden. Easy to make it always unselected instead.</p>
+    </div>
+
+    <div class="card">
+      <h3>No string deletion <span class="pill opt">Optional</span></h3>
+      <p style="margin:0"><code>R.string.all_calendars</code> stays in use by Manage Calendars, so it survives this change.</p>
+    </div>
+
+    <div class="card">
+      <h3>Figma is not reachable right now <span class="pill opt">Optional</span></h3>
+      <p style="margin:0">The Figma connector is unauthorized in this session. Authorize it in claude.ai connector settings if Jared's redlines have exact spacing.</p>
+    </div>
+  </section>
+
+  <section id="todo">
+    <h2>TODO</h2>
+    <div class="card">
+      <ul class="todo">
+        <li>Confirm chip label with Jared (unblocks Step 3)</li>
+        <li>Add <code>show_or_hide_calendars</code> to strings.xml</li>
+        <li>Add CardHeader + check button to ScheduleView.kt</li>
+        <li>Flatten CalendarsFilterChip in CalendarScreen.kt</li>
+        <li>Write DisplayCalendarsBottomSheetTest.kt</li>
+        <li>Run tests, detekt, lint</li>
+        <li>Screenshot the sheet for the PR description</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="next">
+    <h2>What To Do Next</h2>
+    <div class="card">
+      <ol class="next">
+        <li>Ask Jared what the chip should read when exactly one calendar is selected.</li>
+        <li>Ship Steps 1, 2, 4 now — they do not depend on that answer.</li>
+        <li>Land Step 3 once the label is confirmed, then run Step 5 and open the PR.</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

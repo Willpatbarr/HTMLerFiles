@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR #1820 — CodeQL Workflow (Draft)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="navlabel">Pages</span>
+  <a href="index.html">Overview</a>
+  <a href="pr-1915.html">1915 · Location <span class="tkt">MMA-5939</span></a>
+  <a href="pr-1913.html">1913 · Reminder <span class="tkt">MMA-5941</span></a>
+  <a href="pr-1912.html">1912 · Recurrence <span class="tkt">MMA-5938</span></a>
+  <a href="pr-1914.html">1914 · Public Evt <span class="tkt">MMA-5946</span></a>
+  <a href="pr-1820.html" class="current">1820 · CodeQL</a>
+  <span class="navlabel">Skip to</span>
+  <a href="#changed">What changed</a>
+  <a href="#risks">Risks</a>
+  <a href="#checklist">Checklist</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="kicker">PR Review · <span class="prio opt">Optional — draft</span></div>
+  <h1>#1820 — ci: CodeQL Analysis Workflow for Java/Kotlin</h1>
+  <p class="sub"><a href="https://github.com/ICS-Eng/MemberTools-Android/pull/1820">Open on GitHub</a> · branch <code>CodeQL-Custom</code> · draft since Jun 29, last touched Jul 10</p>
+
+  <div class="card accent">
+    <h2>One-Sentence Version</h2>
+    <p class="onesent">A <b>draft CI-only PR</b> adding a CodeQL security-analysis workflow — the Analyze (java-kotlin) check is currently <b>failing</b>, and it's had only bot/GavinTodd comments, so skip unless Jordan asks for eyes on it.</p>
+    <div class="meta">
+      <span><b>+103 / −0</b> · 3 files</span>
+      <span>Checks: <span class="badge red">Analyze (java-kotlin): FAILURE</span></span>
+      <span>Review: <span class="badge">Draft — comments from Copilot + GavinTodd</span></span>
+    </div>
+  </div>
+
+  <div class="card" id="changed">
+    <h2>What Changed</h2>
+    <ul>
+      <li><code>.github/workflows/codeql.yml</code> (+91) — the CodeQL workflow itself.</li>
+      <li><code>gradle.properties</code> (+8) and <code>build-logic/gradle.properties</code> (+4) — presumably memory/CI tuning so the analysis build can complete.</li>
+    </ul>
+  </div>
+
+  <div class="card warncard" id="risks">
+    <h2>Risks / Notes</h2>
+    <ul>
+      <li>The <b>gradle.properties changes apply to every build</b>, not just CI — worth a glance if this ever leaves draft.</li>
+      <li>Sitting for a month with a red check; it's a background experiment, not review-queue work.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="checklist">
+    <h2>Checklist</h2>
+    <ul class="check">
+      <li><input type="checkbox"> <span>Skip for now — it's a draft with a failing check.</span></li>
+      <li><input type="checkbox"> <span>Optionally ping Jordan: still pursuing this, or close it?</span></li>
+    </ul>
+  </div>
+
+  <div class="card accent">
+    <h2>What To Do Next</h2>
+    <ol>
+      <li>Back to the <a href="index.html">overview</a> and work the checklist there.</li>
+    </ol>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar Manage Migration — MMA-5973</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  padding:56px 40px 120px 232px;
+}
+.wrap{max-width:940px; margin:0 auto}
+
+/* floating left nav */
+.skipto{
+  position:fixed; top:50%; left:18px; transform:translateY(-50%);
+  z-index:60; display:flex; flex-direction:column; gap:5px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:12px 12px 13px; box-shadow:var(--shadow);
+  width:172px;
+}
+.skipto strong{
+  font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--faint); padding:2px 10px 6px; font-weight:600;
+}
+.skipto a{
+  text-decoration:none; color:var(--muted); font-size:13px;
+  padding:6px 10px; border-radius:8px; transition:.15s;
+}
+.skipto a:hover{background:var(--bg); color:var(--accent)}
+@media (max-width:1180px){
+  .skipto{top:0; left:0; right:0; transform:none; width:auto;
+    flex-direction:row; overflow-x:auto; border-radius:0; border-width:0 0 1px;}
+  .skipto strong{display:none}
+  .skipto a{white-space:nowrap}
+  body{padding:76px 20px 100px}
+}
+
+h1{font-size:31px; line-height:1.25; margin:0 0 8px; letter-spacing:-.02em}
+.sub{color:var(--faint); font-size:14px; margin:0 0 44px}
+.sub code{font-size:12.5px}
+h2{
+  font-size:13px; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--accent); margin:0 0 20px; font-weight:600;
+}
+h3{font-size:16.5px; margin:0 0 10px; letter-spacing:-.01em}
+section{margin-bottom:60px; scroll-margin-top:32px}
+p{margin:0 0 14px; color:var(--muted)}
+p.lead{color:var(--ink)}
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px;
+  background:#0f1215; border:1px solid var(--border); border-radius:5px;
+  padding:1px 5px; color:#cfd6de;
+}
+
+.card{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); padding:26px 28px; box-shadow:var(--shadow);
+}
+.card + .card{margin-top:16px}
+
+.onesent{
+  background:var(--accent-soft); border:1px solid #2c4a3a;
+  border-radius:var(--radius); padding:26px 30px;
+}
+.onesent p{margin:0; color:#dff0e6; font-size:18.5px; line-height:1.55}
+
+/* priority pills */
+.pri{
+  display:inline-block; font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+  font-weight:600; padding:3px 9px; border-radius:20px; vertical-align:2px; margin-left:10px;
+}
+.must{background:var(--accent-soft); color:var(--accent); border:1px solid #2c4a3a}
+.imp{background:var(--warn-soft); color:var(--warn); border:1px solid #4a3a17}
+.opt{background:#20242a; color:var(--faint); border:1px solid var(--border-strong)}
+
+ul{margin:0; padding-left:20px; color:var(--muted)}
+li{margin-bottom:9px}
+li:last-child{margin-bottom:0}
+li strong{color:var(--ink); font-weight:600}
+
+/* before / after diagram */
+.ba{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+@media (max-width:820px){.ba{grid-template-columns:1fr}}
+.mod{
+  border:1px solid var(--border); border-radius:10px;
+  padding:13px 15px; margin-bottom:9px; background:#191d22;
+}
+.mod:last-child{margin-bottom:0}
+.mod-name{
+  font-family:ui-monospace,Menlo,monospace; font-size:12.5px;
+  color:var(--ink); font-weight:600; margin-bottom:7px; display:block;
+}
+.mod ul{padding-left:16px; font-size:13.5px; line-height:1.55}
+.mod li{margin-bottom:4px}
+.hot{border-color:#4a3a17; background:#1f1c14}
+.hot .mod-name{color:var(--warn)}
+.good{border-color:#2c4a3a; background:#161e1a}
+.good .mod-name{color:var(--accent)}
+.tag{
+  font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--faint); font-weight:600; margin-bottom:12px; display:block;
+}
+.newline{color:var(--accent)}
+.gone{color:var(--faint); text-decoration:line-through}
+.arrow{
+  text-align:center; color:var(--faint); font-size:12px;
+  margin:14px 0 4px; letter-spacing:.04em;
+}
+
+/* tables */
+table{width:100%; border-collapse:collapse; font-size:13.5px; margin:0}
+th{
+  text-align:left; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--faint); font-weight:600; padding:0 12px 10px 0;
+  border-bottom:1px solid var(--border-strong);
+}
+td{padding:11px 12px 11px 0; border-bottom:1px solid var(--border); color:var(--muted); vertical-align:top}
+tr:last-child td{border-bottom:none}
+td code{font-size:12px; padding:1px 4px}
+td:last-child, th:last-child{padding-right:0}
+.to{color:var(--accent)}
+
+/* callout */
+.callout{
+  border-left:3px solid var(--warn); background:var(--warn-soft);
+  border-radius:0 10px 10px 0; padding:16px 20px; margin:20px 0 0;
+}
+.callout p{margin:0; color:#f0dcbc; font-size:14.5px}
+.callout strong{color:var(--warn)}
+
+/* three things */
+.three{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+@media (max-width:820px){.three{grid-template-columns:1fr}}
+.thing{
+  background:var(--card); border:1px solid var(--border-strong);
+  border-radius:var(--radius); padding:22px 22px 24px;
+}
+.thing .n{
+  font-size:26px; font-weight:700; color:var(--accent);
+  line-height:1; margin-bottom:12px; display:block; letter-spacing:-.03em;
+}
+.thing p{margin:0; font-size:14.5px; line-height:1.6}
+
+/* todo */
+.todo label{
+  display:flex; gap:12px; align-items:flex-start;
+  padding:12px 0; border-bottom:1px solid var(--border);
+  color:var(--muted); font-size:14.5px; cursor:pointer;
+}
+.todo label:last-child{border-bottom:none}
+.todo input{margin-top:5px; accent-color:var(--accent); flex-shrink:0}
+.todo label:hover{color:var(--ink)}
+
+ol{color:var(--muted); padding-left:22px; margin:0}
+ol li{margin-bottom:11px}
+pre{
+  background:#0f1215; border:1px solid var(--border); border-radius:10px;
+  padding:16px 18px; overflow-x:auto; margin:0;
+  font-family:ui-monospace,Menlo,monospace; font-size:12.5px; line-height:1.7; color:#cfd6de;
+}
+pre .c{color:var(--faint)}
+hr{border:none; border-top:1px solid var(--border); margin:0 0 22px}
+</style>
+</head>
+<body>
+
+<nav class="skipto">
+  <strong>Skip to</strong>
+  <a href="#gist">One Sentence</a>
+  <a href="#why">Why</a>
+  <a href="#picture">Before / After</a>
+  <a href="#a">Commit A</a>
+  <a href="#b">Commit B</a>
+  <a href="#koin">Koin Swaps</a>
+  <a href="#verify">Verification</a>
+  <a href="#risks">Gotchas</a>
+  <a href="#later">Follow-up</a>
+  <a href="#three">Only 3 Things</a>
+  <a href="#todo">TODO</a>
+</nav>
+
+<div class="wrap">
+
+<h1>Calendar Manage Migration</h1>
+<p class="sub">Branch <code>MMA-5973</code> &nbsp;·&nbsp; two commits &nbsp;·&nbsp; pure relocation, no behavior change &nbsp;·&nbsp; all work is in-repo, no external dependency</p>
+
+<section id="gist">
+  <h2>One-Sentence Version</h2>
+  <div class="onesent">
+    <p>Move the Manage Calendars screen into <code>:feature:calendar</code> and <code>CalendarRepository</code> into <code>:repo:calendar</code>, bridging the two dependencies that would otherwise point backwards into <code>app</code> with a pair of narrow interfaces.</p>
+  </div>
+</section>
+
+<section id="why">
+  <h2>Why <span class="pri must">Must know</span></h2>
+  <div class="card">
+    <p class="lead"><code>CalendarRepository</code> is the blocker for the whole calendar modularization. It still lives in <code>app</code>, and every calendar UI use case injects it — so no calendar UI can leave <code>app</code> until it moves.</p>
+    <ul>
+      <li><strong>Already extracted:</strong> <code>:database:calendar</code> is complete. <code>:feature:calendar</code> owns grid, month, week, day, schedule, the event editor, and location.</li>
+      <li><strong>Still stranded in app:</strong> Manage Calendars (screen + UiState + ViewModel + use case + color picker) and the read/agenda repository beneath it.</li>
+      <li><strong>Deliberately staying in app:</strong> <code>CalendarSyncRepository</code> and <code>CalendarSyncWorker</code>, because they are woven into the <code>sync2</code> pipeline (<code>ToolsPersister</code>, <code>RemoveDataUseCase</code>, <code>SyncRepository</code>).</li>
+      <li><strong>Scope discipline:</strong> the grid, schedule, event-detail, and sample-seeder code stays in <code>app</code> this round. It only gets import updates.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="picture">
+  <h2>Before / After <span class="pri must">Must know</span></h2>
+  <div class="ba">
+
+    <div class="card">
+      <span class="tag">Before — today</span>
+      <div class="mod hot">
+        <span class="mod-name">:app</span>
+        <ul>
+          <li><code>ux/calendar/manage/*</code> — screen, UiState, VM, color picker</li>
+          <li><code>domain/calendar/GetManageCalendarsUiStateUseCase</code></li>
+          <li><code>model/repository/calendar/</code> — CalendarRepository, CalendarColorUtil, GetCalendarUnitSelectionUseCase</li>
+          <li><code>model/webservice/tools/calendar/</code> — SyncMode, DtoExt</li>
+          <li><code>util/HsvColorComparator</code></li>
+          <li><code>model/sync/calendar/CalendarSyncRepository</code></li>
+          <li><code>work/</code> — WorkScheduler, CalendarSyncWorker</li>
+        </ul>
+      </div>
+      <div class="mod">
+        <span class="mod-name">:feature:calendar</span>
+        <ul><li>grid, month, week, threeday, day, schedule, edit, location, richtext</li></ul>
+      </div>
+      <div class="mod">
+        <span class="mod-name">:repo:calendar</span>
+        <ul><li>CalendarEventRepository + event worker only</li></ul>
+      </div>
+      <div class="mod good">
+        <span class="mod-name">:database:calendar</span>
+        <ul><li>fully extracted</li></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">After — this change</span>
+      <div class="mod">
+        <span class="mod-name">:app</span>
+        <ul>
+          <li class="gone">ux/calendar/manage/*</li>
+          <li class="gone">domain/calendar/</li>
+          <li class="gone">model/repository/calendar/</li>
+          <li class="gone">model/webservice/tools/calendar/</li>
+          <li><code>CalendarSyncRepository</code> now <code>: CalendarSyncSource</code></li>
+          <li class="newline">new <code>CalendarRefreshSchedulerImpl</code> (~10 lines)</li>
+          <li>grid / schedule / event / sample — imports only</li>
+        </ul>
+      </div>
+      <div class="mod good">
+        <span class="mod-name">:feature:calendar</span>
+        <ul>
+          <li>everything it already had</li>
+          <li class="newline">+ <code>manage/</code> — screen, UiState, VM, use case, color picker, HsvColorComparator</li>
+          <li class="newline">+ <code>GetCalendarUnitSelectionUseCase</code> (root pkg)</li>
+        </ul>
+      </div>
+      <div class="mod good">
+        <span class="mod-name">:repo:calendar</span>
+        <ul>
+          <li>CalendarEventRepository + event worker</li>
+          <li class="newline">+ <code>CalendarRepository</code>, <code>CalendarColorUtil</code>, <code>SyncMode</code>, <code>DtoExt</code></li>
+          <li class="newline">+ interfaces <code>CalendarSyncSource</code>, <code>CalendarRefreshScheduler</code></li>
+        </ul>
+      </div>
+      <div class="mod good">
+        <span class="mod-name">:database:calendar</span>
+        <ul><li>unchanged</li></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="arrow">The only backwards edge: <code>:repo:calendar</code> declares two interfaces that <code>app</code> implements</p>
+
+  <div class="callout">
+    <p><strong>Why this is acceptable.</strong> It is an existing, named pattern here — <code>ServingMissionaryPhotoUriSource</code> in <code>:repo:missionary</code> is implemented by an app-module use case, and <code>DigitalRecommendWorker</code> in <code>:repo:temple</code> is implemented by a thin app adapter. The Follow-up section removes the inversion entirely when you want it gone.</p>
+  </div>
+</section>
+
+<section id="a">
+  <h2>Commit A — data layer to <code>:repo:calendar</code> <span class="pri must">Must know</span></h2>
+
+  <div class="card">
+    <h3>Files moved</h3>
+    <hr>
+    <table>
+      <tr><th>From <code>app/src/main/java/org/lds/ldstools/</code></th><th>To package <code>org.lds.ldstools.repo.calendar</code></th></tr>
+      <tr><td><code>model/repository/calendar/CalendarRepository.kt</code></td><td class="to"><code>CalendarRepository.kt</code></td></tr>
+      <tr><td><code>model/repository/calendar/CalendarColorUtil.kt</code></td><td class="to"><code>CalendarColorUtil.kt</code></td></tr>
+      <tr><td><code>model/webservice/tools/calendar/SyncMode.kt</code></td><td class="to"><code>SyncMode.kt</code></td></tr>
+      <tr><td><code>model/webservice/tools/calendar/DtoExt.kt</code></td><td class="to"><code>DtoExt.kt</code></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Two new interfaces, two app-side implementations</h3>
+    <p>Each interface is the minimum surface <code>CalendarRepository</code> actually calls — nothing more.</p>
+<pre><span class="c">// :repo:calendar — CalendarSyncSource.kt</span>
+interface CalendarSyncSource {
+    suspend fun fetchCalendarData(): FetcherResult&lt;List&lt;DtoCalendar&gt;&gt;
+    suspend fun processAndSaveCalendars(dtos: List&lt;DtoCalendar&gt;, proxy: Boolean)
+}
+
+<span class="c">// :repo:calendar — work/CalendarRefreshScheduler.kt</span>
+interface CalendarRefreshScheduler {
+    fun refreshCalendar(syncMode: SyncMode): UUID
+}</pre>
+    <ul style="margin-top:18px">
+      <li><strong>CalendarSyncRepository</strong> — add <code>: CalendarSyncSource</code> plus <code>override</code>. Both signatures already match verbatim (lines 125, 146). Zero body changes.</li>
+      <li><strong>CalendarRefreshSchedulerImpl</strong> — new ~10-line app class delegating to <code>WorkScheduler.refreshCalendar</code>, copying <code>DigitalRecommendWorkerImpl</code>. <code>WorkScheduler</code> itself is untouched.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Three small edits inside <code>CalendarRepository.kt</code> <span class="pri imp">Important</span></h3>
+    <ul>
+      <li>Swap the two app-only constructor params for the interfaces.</li>
+      <li>Delete <code>companion object { const val NO_DATA }</code> — confirmed zero references repo-wide.</li>
+      <li>Lines 279 and 287 KDoc-link <code>[…ux.calendar.sample.USE_SAMPLE_DATA]</code>, unresolvable from the new module. Degrade to prose.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Test relocation</h3>
+    <ul>
+      <li><code>CalendarRepositorySetMonthsToShowTest.kt</code> moves to <code>repo/calendar/src/test/kotlin/…/repo/calendar/</code>; swap the <code>CalendarSyncRepository</code> / <code>WorkScheduler</code> mocks for the two interfaces. Assertions carry over as-is.</li>
+      <li><code>GetCalendarGridUiStateUseCaseTest.kt</code> stays in <code>app</code> — imports only.</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <p><strong>No new Gradle dependencies for <code>:repo:calendar</code>.</strong> store5, maltSync, and kotlin-datetime all arrive as <code>api</code> from <code>:core:common</code>, which the module already depends on. <code>:core:preference</code> and <code>:database:calendar</code> are already declared. The dependency-analysis plugin fails on <em>unused</em> declarations, so do not add any.</p>
+  </div>
+</section>
+
+<section id="b">
+  <h2>Commit B — Manage Calendars UI to <code>:feature:calendar</code> <span class="pri must">Must know</span></h2>
+
+  <div class="card">
+    <h3>Files moved</h3>
+    <hr>
+    <table>
+      <tr><th>From <code>app/src/main/java/org/lds/ldstools/</code></th><th>To <code>…/feature/calendar/</code></th></tr>
+      <tr><td><code>ux/calendar/manage/ManageCalendarsScreen.kt</code></td><td class="to"><code>manage/</code></td></tr>
+      <tr><td><code>ux/calendar/manage/ManageCalendarsUiState.kt</code></td><td class="to"><code>manage/</code></td></tr>
+      <tr><td><code>ux/calendar/manage/ManageCalendarsViewModel.kt</code></td><td class="to"><code>manage/</code></td></tr>
+      <tr><td><code>ux/calendar/manage/CalendarColorSelection.kt</code></td><td class="to"><code>manage/</code></td></tr>
+      <tr><td><code>domain/calendar/GetManageCalendarsUiStateUseCase.kt</code></td><td class="to"><code>manage/</code></td></tr>
+      <tr><td><code>util/HsvColorComparator.kt</code></td><td class="to"><code>manage/</code></td></tr>
+      <tr><td><code>model/repository/calendar/GetCalendarUnitSelectionUseCase.kt</code></td><td class="to"><code>/</code> (root pkg)</td></tr>
+    </table>
+    <p style="margin-top:18px"><strong style="color:var(--ink)">HsvColorComparator moves as-is.</strong> Its only consumer is one <code>@Preview</code>. A pure move preserves the preview's color ordering exactly and keeps the diff reviewable as a relocation.</p>
+    <p><strong style="color:var(--ink)">GetCalendarUnitSelectionUseCase goes in the feature root package</strong>, matching the identical <code>GetGroupsUnitSelectionUseCase</code> in <code>:feature:groups</code>. Konsist enforces package-matches-path, so these paths are exact.</p>
+  </div>
+
+  <div class="card">
+    <h3>Import swaps only — no logic edits</h3>
+    <ul>
+      <li><code>org.lds.ldstools.R</code> → <code>org.lds.ldstools.core.strings.R</code>. All eight strings live in <code>:core:strings</code>; no collision with the module's own <code>R</code>.</li>
+      <li><code>Nav3CalendarKoinModule.kt</code> lines 40–41 → <code>feature.calendar.manage.*</code>. The <code>entry&lt;CalendarManageNavSpec&gt;</code> body is unchanged.</li>
+      <li>The local <code>ProgressIndicatorDialog</code> rides along with the screen. <strong>Verified:</strong> <code>SelectProxyScreen</code> and <code>SyncOptionsScreen</code> import the <em>library</em> version, not this one.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Two Gradle lines, copied from <code>:feature:groups</code></h3>
+<pre>implementation(project(":repo:unit"))            <span class="c">// UnitRepository, BackdropUnitRepository, base class</span>
+testImplementation(project(":database:member"))  <span class="c">// ChurchUnit, for the relocated test</span></pre>
+    <p style="margin-top:16px">Everything else is present: <code>:core:ui</code> already <code>api</code>s both <code>:core:strings</code> and <code>androidx.activity.compose</code> (the <code>BackHandler</code> import).</p>
+  </div>
+</section>
+
+<section id="koin">
+  <h2>Koin Registration Swaps <span class="pri must">Must know</span></h2>
+  <div class="card">
+    <p class="lead"><code>KoinTest</code> runs <code>allowOverride(false)</code>. Every add and its matching remove must land in the <em>same commit</em> — no copy-now-delete-later.</p>
+    <hr>
+    <table>
+      <tr><th>Definition</th><th>Remove from</th><th>Add to</th></tr>
+      <tr>
+        <td><code>CalendarRepository</code></td>
+        <td><code>RepositoryKoinModule:61</code></td>
+        <td class="to"><code>calendarRepoKoinModule</code></td>
+      </tr>
+      <tr>
+        <td><code>CalendarSyncRepository</code></td>
+        <td>—</td>
+        <td class="to"><code>SyncKoinModule:127</code> gains <code>bind CalendarSyncSource::class</code>; concrete type stays registered</td>
+      </tr>
+      <tr>
+        <td><code>CalendarRefreshSchedulerImpl</code></td>
+        <td>—</td>
+        <td class="to"><code>WorkKoinModule</code>, beside <code>DigitalRecommendWorkerImpl</code> (line 68)</td>
+      </tr>
+      <tr>
+        <td><code>ManageCalendarsViewModel</code></td>
+        <td><code>UxCalendarKoinModule</code></td>
+        <td class="to"><code>featureCalendarKoinModule</code></td>
+      </tr>
+      <tr>
+        <td><code>GetManageCalendarsUiStateUseCase</code></td>
+        <td><code>DomainKoinModule:50</code></td>
+        <td class="to"><code>featureCalendarKoinModule</code></td>
+      </tr>
+      <tr>
+        <td><code>GetCalendarUnitSelectionUseCase</code></td>
+        <td><code>RepositoryKoinModule:113</code></td>
+        <td class="to"><code>featureCalendarKoinModule</code></td>
+      </tr>
+    </table>
+    <p style="margin-top:18px">No change to <code>AllKoinModules.kt</code> — both target modules are already aggregated.</p>
+  </div>
+</section>
+
+<section id="verify">
+  <h2>Verification <span class="pri must">Must know</span></h2>
+
+  <div class="card">
+    <h3>Gate each commit separately</h3>
+    <p>Long builds exceed the tool timeout, so log to a file and poll rather than trusting a single foreground exit code.</p>
+<pre>./gradlew :app:testDebugUnitTest --tests '*KoinTest*' \
+          :app:testDebugUnitTest --tests '*Konsist*' \
+          :repo:calendar:testDebugUnitTest \
+          :feature:calendar:testDebugUnitTest &gt; build.log 2&gt;&amp;1 &amp;
+
+./gradlew assembleDebug detektDebug :app:projectHealth &gt; build.log 2&gt;&amp;1 &amp;</pre>
+    <p style="margin-top:16px"><code>KoinTest</code> is the sharpest tool here: <code>Module.verify()</code> catches an unbound constructor param, <code>allowOverride(false)</code> catches a stale duplicate, and the Konsist sweeps catch an unregistered ViewModel or a package/path mismatch.</p>
+  </div>
+
+  <div class="card">
+    <h3>On-device pass — this is UI, so actually drive it</h3>
+    <p>Drawer → Calendar → overflow → Manage Calendars, then confirm each of these still works.</p>
+    <ul>
+      <li>Unit-selection chip filters the list.</li>
+      <li>Toggling a subscribable calendar then <strong>Save</strong> shows the progress dialog and pops back.</li>
+      <li><strong>Back</strong> with unsaved changes shows the discard dialog.</li>
+      <li>The palette icon opens the color sheet, and picking a color persists.</li>
+      <li>Pull-to-refresh spins and settles.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Final sanity check</h3>
+    <p>Three <code>app</code> packages should end up completely empty: <code>domain/calendar/</code>, <code>model/repository/calendar/</code>, <code>model/webservice/tools/calendar/</code>.</p>
+  </div>
+</section>
+
+<section id="risks">
+  <h2>Gotchas <span class="pri imp">Important</span></h2>
+  <div class="card">
+    <ul>
+      <li><strong>Atomic Koin edits.</strong> The single most likely way to break the build. Six definitions, each needing add and remove in one commit.</li>
+      <li><strong>Konsist package-matches-path.</strong> Files must land at exactly the paths listed, or the architecture test fails.</li>
+      <li><strong>Do not add <code>@PreviewTest</code></strong> to <code>ManageCalendarsPreview</code> or <code>CalendarColorSelectionPreview</code>. The screenshot plugin only renders annotated previews in <code>src/screenshotTest</code>, so moving them into <code>src/main</code> generates and requires no reference images.</li>
+      <li><strong>Recompile after any lint or format auto-fix.</strong> An auto-fix can break compilation even when the prior build was green.</li>
+      <li><strong>Ordering nuance.</strong> After Commit A, <code>GetManageCalendarsUiStateUseCase</code> is still in <code>app</code> and imports from <code>:repo:calendar</code>. That is fine — <code>app</code> already depends on it. Fix those imports in A, move the file in B.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="later">
+  <h2>Follow-up — explicitly out of scope <span class="pri opt">Optional</span></h2>
+  <div class="card">
+    <p class="lead">To delete the app-implements-repo inversion later, replace <code>CalendarRefreshScheduler</code> with the dominant convention.</p>
+    <ul>
+      <li><code>CalendarSyncWorkScheduler : AppWorkScheduler2</code> plus <code>Impl</code> in <code>:repo:calendar</code>, mirroring <code>GroupWorkScheduler</code> and the module's own <code>CalendarEventWorkScheduler</code>.</li>
+      <li>Move <code>CalendarSyncWorker</code> there; delete <code>refreshCalendar</code> from the 629-line <code>WorkScheduler</code>; add <code>implementation(project(":repo:work"))</code>.</li>
+      <li><strong>Payoff:</strong> collapses <code>WorkScheduler</code> + <code>SyncMode</code> into one injected dependency for <code>CalendarViewModel</code> and the grid/schedule use cases.</li>
+      <li><strong>Cost:</strong> the worker's fully-qualified name changes, so already-enqueued work from a prior install fails to instantiate <em>once</em> on upgrade. Benign — it is non-retrying and re-enqueued on the next refresh — but worth a PR note.</li>
+    </ul>
+    <p style="margin-top:18px">Also noticed, unrelated and untouched: <code>app/src/main/res/values/calendar_colors.xml</code> (78 lines) and the <code>TextAppearance.Tools.Calendar.*</code> styles have zero code references. Dead View-era leftovers.</p>
+  </div>
+</section>
+
+<section id="three">
+  <h2>Remember Only 3 Things</h2>
+  <div class="three">
+    <div class="thing">
+      <span class="n">1</span>
+      <p>The repository is the blocker, not the screen. Move <code>CalendarRepository</code> first, in its own commit, or nothing else can leave <code>app</code>.</p>
+    </div>
+    <div class="thing">
+      <span class="n">2</span>
+      <p>Koin adds and removes must be atomic per commit. <code>allowOverride(false)</code> turns a split into a red build.</p>
+    </div>
+    <div class="thing">
+      <span class="n">3</span>
+      <p>This is a pure relocation with no behavior change. If a diff hunk changes logic, it is out of scope.</p>
+    </div>
+  </div>
+</section>
+
+<section id="todo">
+  <h2>TODO</h2>
+  <div class="card todo">
+    <label><input type="checkbox"> Commit A — add <code>CalendarSyncSource</code> and <code>CalendarRefreshScheduler</code> to <code>:repo:calendar</code></label>
+    <label><input type="checkbox"> Commit A — <code>git mv</code> the four data files, rewrite packages, swap ctor params, drop <code>NO_DATA</code>, fix the two KDoc links</label>
+    <label><input type="checkbox"> Commit A — <code>CalendarSyncRepository : CalendarSyncSource</code>; new <code>CalendarRefreshSchedulerImpl</code></label>
+    <label><input type="checkbox"> Commit A — three Koin edits, all in this commit</label>
+    <label><input type="checkbox"> Commit A — import updates in the eight remaining app consumers</label>
+    <label><input type="checkbox"> Commit A — relocate <code>CalendarRepositorySetMonthsToShowTest</code>, mock the interfaces</label>
+    <label><input type="checkbox"> Commit A — green: KoinTest, Konsist, both module test tasks, detekt, projectHealth</label>
+    <label><input type="checkbox"> Commit B — two Gradle lines in <code>feature/calendar/build.gradle.kts</code></label>
+    <label><input type="checkbox"> Commit B — <code>git mv</code> the seven UI files; swap <code>R</code> imports</label>
+    <label><input type="checkbox"> Commit B — three Koin moves into <code>featureCalendarKoinModule</code>, atomically</label>
+    <label><input type="checkbox"> Commit B — <code>Nav3CalendarKoinModule</code> import swap</label>
+    <label><input type="checkbox"> Commit B — relocate <code>GetCalendarUnitSelectionUseCaseTest</code></label>
+    <label><input type="checkbox"> Confirm the three <code>app</code> packages are empty</label>
+    <label><input type="checkbox"> On-device pass: all five Manage Calendars behaviors</label>
+  </div>
+</section>
+
+<section id="next">
+  <h2>What To Do Next</h2>
+  <div class="card">
+    <ol>
+      <li><strong>Approve or adjust the plan.</strong> The one open design choice is the thin-adapter bridge versus owning the worker outright — the Follow-up section is the upgrade path if you'd rather do it all now.</li>
+      <li><strong>Start with Commit A only,</strong> and get it fully green before touching any UI file. The data move is the risky half; the UI move is mechanical once it lands.</li>
+      <li><strong>Run the on-device pass before opening the PR,</strong> and attach a recording of the Save and discard-dialog flows — PRs with UI changes need test evidence.</li>
+    </ol>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

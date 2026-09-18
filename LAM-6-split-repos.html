@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAM-6 — Split Into Separate Frontend and Backend Repos</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --new:#2AB8C9; --add:#3DAF62; --edit:#D98C3B; --replace:#C95B7A; --run:#A16BD9;
+  --del:#d9736b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink)}
+body{font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  padding-bottom:80px}
+main{max-width:880px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-top:36px}
+h1{font-size:clamp(24px,5vw,34px);line-height:1.2;margin:0 0 6px;letter-spacing:-.4px}
+h2{font-size:clamp(19px,3.4vw,23px);margin:34px 0 12px;letter-spacing:-.2px}
+h3{font-size:clamp(15px,2.6vw,16.5px);margin:26px 0 8px;letter-spacing:-.1px}
+p{margin:0 0 13px;max-width:70ch}
+a{color:var(--accent);overflow-wrap:anywhere}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:var(--card);border:1px solid var(--border);border-radius:5px;
+  padding:1px 5px;overflow-wrap:anywhere}
+pre{background:#111417;border:1px solid var(--border);border-radius:10px;
+  padding:13px 15px;overflow-x:auto;max-width:100%;margin:0 0 14px;
+  font-size:13px;line-height:1.6}
+pre code{background:none;border:0;padding:0;font-size:13px}
+.subtitle{color:var(--muted);font-size:15.5px;max-width:68ch;margin:0 0 26px}
+
+/* floating nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto a{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto a:hover{background:var(--bg);color:var(--accent)}
+.skipto a.active{background:var(--accent-soft);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.9px;padding:2px 10px 5px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;
+  height:40px;padding:0;background:none;border:0;color:var(--muted);cursor:pointer;
+  border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  .skipto.open .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  .skipto.open .skipto-toggle svg{transform:rotate(180deg)}
+  .skipto.closed .skipto-menu{display:none}
+  .skipto.closed .skipto-toggle svg{transform:none}
+  main{padding-top:72px}
+}
+
+/* pages + tabs */
+.page{display:none}.page.active{display:block}
+.tabpanel{display:none}.tabpanel.active{display:block}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 20px;
+  border-bottom:1px solid var(--border)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;font-family:inherit}
+.tab:hover{color:var(--ink);background:var(--card)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 20px;margin:0 0 16px;box-shadow:var(--shadow)}
+.card h3:first-child{margin-top:0}
+.onesent{background:var(--accent-soft);border:1px solid #2c4a3a;border-radius:var(--radius);
+  padding:16px 20px;margin:0 0 26px}
+.onesent .lbl{color:var(--accent);font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.9px;display:block;margin-bottom:6px}
+.onesent p{margin:0;font-size:15.5px}
+.callout{background:var(--warn-soft);border:1px solid #4d3c17;border-left:3px solid var(--warn);
+  border-radius:10px;padding:14px 18px;margin:0 0 18px}
+.callout p:last-child{margin-bottom:0}
+.callout .lbl{color:var(--warn);font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.9px;display:block;margin-bottom:5px}
+
+/* tables */
+.tablewrap{overflow-x:auto;margin:0 0 18px;border:1px solid var(--border);
+  border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:420px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)}
+th{color:var(--faint);font-size:11px;text-transform:uppercase;letter-spacing:.8px;
+  font-weight:600;background:#191d21}
+tr:last-child td{border-bottom:0}
+
+/* substep blocks */
+.sub{margin:0 0 24px;padding:0 0 0 16px;border-left:2px solid var(--border)}
+.sub-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 4px}
+.num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+  color:var(--faint)}
+.badge{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  padding:2.5px 7px;border-radius:5px;border:1px solid currentColor}
+.b-run{color:var(--run)}.b-edit{color:var(--edit)}.b-replace{color:var(--replace)}
+.b-new{color:var(--new)}.b-add{color:var(--add)}
+.sub-title{font-size:15px;font-weight:600}
+.loc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+  color:var(--new);overflow-wrap:anywhere;max-width:100%;display:block;margin:2px 0 3px}
+.desc{color:var(--muted);font-size:13.5px;margin:0 0 10px}
+.note{color:var(--muted);font-size:13px;margin:-4px 0 0;padding-left:14px;
+  position:relative}
+.note:before{content:"—";position:absolute;left:0;color:var(--faint)}
+.why{list-style:none;padding:0;margin:10px 0 0;font-size:13.5px;color:var(--muted)}
+.why li{padding-left:26px;position:relative;margin-bottom:5px}
+.why .k{position:absolute;left:0;font-weight:700;font-size:11px;
+  font-family:ui-monospace,Menlo,monospace}
+.why .kb{color:var(--accent)}.why .kc{color:var(--warn)}
+
+/* diff colors */
+.add-l{color:#7ec98f;display:block}
+.del-l{color:var(--del);display:block}
+.ctx-l{color:var(--muted);display:block}
+
+.ex{background:#191d21;border:1px dashed var(--border-strong);border-radius:10px;
+  padding:12px 16px;margin:0 0 16px;font-size:13.5px;color:var(--muted)}
+.ex .lbl{color:var(--faint);font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.9px;display:block;margin-bottom:4px}
+
+/* priority */
+.grid{display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));margin:0 0 18px}
+.pri{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);
+  background:var(--card)}
+.pri.must{border-left:3px solid var(--accent)}
+.pri.imp{border-left:3px solid var(--warn)}
+.pri.opt{border-left:3px solid var(--faint)}
+.pri h4{margin:0 0 9px;font-size:13px;text-transform:uppercase;letter-spacing:.8px}
+.pri.must h4{color:var(--accent)}.pri.imp h4{color:var(--warn)}
+.pri.opt h4{color:var(--faint)}
+.pri ul{margin:0;padding-left:17px;font-size:13.5px;color:var(--muted)}
+.pri li{margin-bottom:6px}
+
+/* todo */
+.todo{list-style:none;padding:0;margin:0}
+.todo li{display:flex;gap:11px;align-items:flex-start;padding:10px 0;
+  border-bottom:1px solid var(--border);font-size:14px}
+.todo li:last-child{border-bottom:0}
+.todo input{margin:3px 0 0;width:16px;height:16px;accent-color:var(--accent);
+  flex-shrink:0;cursor:pointer}
+.todo .t-num{font-family:ui-monospace,Menlo,monospace;font-size:12px;
+  color:var(--faint);flex-shrink:0;min-width:26px}
+ul.plain{padding-left:18px;color:var(--muted);font-size:14px}
+ul.plain li{margin-bottom:8px}
+ul.plain strong{color:var(--ink)}
+@media (max-width:720px){
+  .card{padding:14px 16px}
+  main{padding-top:72px}
+}
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Pages">
+  <button class="skipto-toggle" aria-label="Page menu"><svg width="18" height="18"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <a class="active" data-page="p-overview">Overview</a>
+    <a data-page="p-steps">Steps</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ============ PAGE: OVERVIEW ============ -->
+<section class="page active" id="p-overview">
+
+  <h1>LAM-6 — Split Into Separate Frontend and Backend Repos</h1>
+  <p class="subtitle">E-LAM-0002 · first ticket · LaminarFlow-Frontend + LaminarFlow-Backend</p>
+
+  <div class="onesent">
+    <span class="lbl">One-sentence version</span>
+    <p>Finish the two-repo split by writing the frontend's README, retitling the
+    backend's, and pointing the CI ref at <code>main</code> instead of a
+    per-epic branch pin.</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-stands">Where It Stands</button>
+    <button class="tab" data-tab="t-pri">Priority</button>
+    <button class="tab" data-tab="t-scope">Out of Scope</button>
+  </div>
+
+  <div class="tabpanel active" id="t-stands">
+    <div class="callout">
+      <span class="lbl">The ticket was out of date &mdash; now corrected</span>
+      <p>The status note pinned to LAM-6 was dated 2026-09-01 and predated both
+      LAM-38 and LAM-29, so it claimed CI was missing from both repos. It is not.</p>
+      <p>The E-LAM-0002 audit on 2026-09-05 rewrote that note. The ticket now
+      matches what is below.</p>
+    </div>
+
+    <p>LAM-6 asks for three things. Two are already done:</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Ticket step</th><th>Ticket says</th><th>Actually</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. Two separate repos</td>
+            <td>Done</td>
+            <td><strong>Done</strong> — separate <code>.git</code>, separate remotes</td>
+          </tr>
+          <tr>
+            <td>2. Independent CI in each</td>
+            <td>Not done</td>
+            <td><strong>Done</strong> — <code>.github/workflows/ci.yml</code> in both</td>
+          </tr>
+          <tr>
+            <td>3. A README in each</td>
+            <td>Not done</td>
+            <td><strong>Both partial &mdash; neither links the other</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <span class="lbl">Precondition &mdash; do this first</span>
+      <p>Land <code>E-LAM-0001-B</code> and <code>E-LAM-0001-F</code> on
+      <code>main</code> in their repos. Every step below assumes <code>main</code>
+      carries the real work: Step 1 cuts the E-LAM-0002 branches from it, and
+      Step 5 points the image build at it.</p>
+    </div>
+
+    <div class="card">
+      <h3>What is actually left</h3>
+      <ul class="plain">
+        <li><strong>Neither README links the other repo.</strong> Both state
+        their role already &mdash; the backend's since LAM-4, the frontend's since
+        LAM-28 rewrote it. The cross-link is the half of ticket step 3 that is
+        actually outstanding.</li>
+        <li><strong>The frontend README still carries three Vite template
+        sections</strong> inherited from the scaffold.</li>
+        <li><strong>The backend README</strong> never says which half of the
+        split it is.</li>
+        <li><strong><code>FRONTEND_REF</code> in the backend's CI</strong> pins
+        <code>E-LAM-0001-F</code>. Once E-LAM-0001 lands on <code>main</code>,
+        this becomes <code>main</code> and stops rotting per-epic.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-pri">
+    <div class="grid">
+      <div class="pri must">
+        <h4>Must know</h4>
+        <ul>
+          <li><strong>Step 2</strong> — the frontend README is the actual
+          deliverable of this ticket.</li>
+          <li><strong>Step 5</strong> — a stale <code>FRONTEND_REF</code> lets a
+          broken bundle pass CI silently.</li>
+          <li><strong>Precondition</strong> — E-LAM-0001 must be on
+          <code>main</code> before Step 1 or Step 5 run.</li>
+        </ul>
+      </div>
+      <div class="pri imp">
+        <h4>Important</h4>
+        <ul>
+          <li><strong>Step 1</strong> — epic branches cut from
+          <code>E-LAM-0001-*</code>, never from <code>main</code>.</li>
+          <li><strong>Step 4</strong> — one edit, but it is what closes ticket
+          step 3 on the backend side.</li>
+          <li><strong>Step 6.1</strong> — run the frontend checks before
+          publishing a README that documents them.</li>
+        </ul>
+      </div>
+      <div class="pri opt">
+        <h4>Optional</h4>
+        <ul>
+          <li><strong>Step 3</strong> — deleting <code>readme.txt</code> is
+          hygiene, not a requirement.</li>
+          <li><strong>Step 6.3</strong> — watching the run; the notification
+          works just as well.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-scope">
+    <p>Flagged rather than fixed — each of these is a real observation that this
+    ticket deliberately does not act on.</p>
+
+    <div class="card">
+      <h3>The backend <code>image</code> job checks out the frontend repo, on every commit</h3>
+      <p>The <code>check</code> job is already independent —
+      <code>scripts/test.sh</code> never touches the frontend. The coupling is in
+      the workflow's <em>trigger</em>, not the architecture.</p>
+      <p><a href="https://linear.app/willieworkspace/issue/LAM-41/split-the-backend-ci-so-day-to-day-pushes-dont-build-the-frontend">LAM-41</a>
+      moves the image build to tags and <code>workflow_dispatch</code>, and turns
+      <code>FRONTEND_REF</code> into a dispatch input. ADR-2 is unaffected.</p>
+    </div>
+
+    <div class="card">
+      <h3>No folder-structure section in the frontend README</h3>
+      <p>LAM-9 owns the feature-based scaffold. Documenting it now would describe
+      files that do not exist yet &mdash; including the router it needs and does
+      not yet have.</p>
+    </div>
+
+    <div class="card">
+      <h3>No test script in the frontend</h3>
+      <p><code>npm run lint</code> is the only gate today.
+      <a href="https://linear.app/willieworkspace/issue/LAM-40/stand-up-the-frontend-test-harness">LAM-40</a>
+      was filed on 2026-09-05 to add Vitest, a <code>test</code> script, and the
+      CI step.</p>
+      <p>Step 2.3 writes the README's check list without <code>npm test</code>
+      for that reason &mdash; LAM-40 adds the line.</p>
+    </div>
+  </div>
+
+</section>
+
+<!-- ============ PAGE: STEPS ============ -->
+<section class="page" id="p-steps">
+
+  <h1>Steps</h1>
+  <p class="subtitle">Six steps. Step 1 must land before Step 5.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-s1">1 · Branches</button>
+    <button class="tab" data-tab="t-s2">2 · Frontend README</button>
+    <button class="tab" data-tab="t-s3">3 · readme.txt</button>
+    <button class="tab" data-tab="t-s4">4 · Backend README</button>
+    <button class="tab" data-tab="t-s5">5 · CI ref</button>
+    <button class="tab" data-tab="t-s6">6 · Push</button>
+    <button class="tab" data-tab="t-todo">TODO</button>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="tabpanel active" id="t-s1">
+    <h2>Step 1 — Open the E-LAM-0002 branches</h2>
+    <p>Neither repo has an <code>E-LAM-0002</code> branch yet. Both epic branches
+    cut from <code>main</code>, which now carries E-LAM-0001. Each ticket branch
+    then cuts from its epic.</p>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">1.1</span>
+        <span class="badge b-run">Run</span>
+        <span class="sub-title">Switch the <code>gh</code> Account</span></div>
+      <p class="desc">LaminarFlow pushes as <code>Willpatbarr</code>, not the work account</p>
+<pre><code>gh auth switch --user Willpatbarr</code></pre>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">1.2</span>
+        <span class="badge b-run">Run</span>
+        <span class="sub-title">Cut the Frontend Branches</span></div>
+      <p class="desc">epic off <code>main</code>, then the ticket off the epic</p>
+<pre><code>cd ~/Developer/LaminarFlow/LaminarFlow-Frontend
+git checkout main &amp;&amp; git pull
+git checkout -b E-LAM-0002-F &amp;&amp; git push -u origin E-LAM-0002-F
+git checkout -b LAM-6-F</code></pre>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">1.3</span>
+        <span class="badge b-run">Run</span>
+        <span class="sub-title">Cut the Backend Branches</span></div>
+      <p class="desc">same shape, <code>-B</code> suffix</p>
+<pre><code>cd ~/Developer/LaminarFlow/LaminarFlow-Backend
+git checkout main &amp;&amp; git pull
+git checkout -b E-LAM-0002-B &amp;&amp; git push -u origin E-LAM-0002-B
+git checkout -b LAM-6-B</code></pre>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="tabpanel" id="t-s2">
+    <h2>Step 2 — Finish the frontend README</h2>
+
+    <code class="loc">LaminarFlow-Frontend/README.md</code>
+    <p class="desc">LAM-28 already wrote the title, the role line, and a
+    <code>Same-origin deployment</code> section. Three sections are missing, and
+    three sections of Vite template remain.</p>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">2.1</span>
+        <span class="badge b-edit">Edit</span>
+        <span class="sub-title">Link the Backend Repo</span></div>
+      <code class="loc">README.md:3</code>
+      <p class="desc">the one thing ticket step 3 literally requires, and the only part absent</p>
+<pre><code><span class="ctx-l"> # LaminarFlow — Frontend</span><span class="ctx-l"> </span><span class="ctx-l"> React + TypeScript + Vite. Built with `npm run build` into `dist/`.</span><span class="add-l">+</span><span class="add-l">+The Go API, schema, and migrations live in</span><span class="add-l">+[LaminarFlow-Backend](https://github.com/Willpatbarr/LaminarFlow-Backend).</span></code></pre>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">2.2</span>
+        <span class="badge b-add">Add</span>
+        <span class="sub-title">Add the <code>Running it</code> Section</span></div>
+      <code class="loc">README.md:18</code>
+      <p class="desc">after <code>Same-origin deployment</code>, before the sections 2.5 removes</p>
+<pre><code>## Running it
+
+Node is pinned in [.nvmrc](.nvmrc) — `nvm use` picks it up, and CI reads the
+same file, so local and CI cannot drift.
+
+    npm ci
+    npm run dev</code></pre>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">2.3</span>
+        <span class="badge b-add">Add</span>
+        <span class="sub-title">Add the <code>Checks</code> Section</span></div>
+      <code class="loc">README.md:18</code>
+      <p class="desc">directly after 2.2</p>
+<pre><code>## Checks
+
+`npm run build` type-checks with `tsc -b` before Vite emits the bundle, so a
+type error fails the build rather than shipping.
+
+    npm run lint
+    npm run build</code></pre>
+      <p class="note"><code>npm test</code> is deliberately absent &mdash; LAM-40
+      adds both the script and that line</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">2.4</span>
+        <span class="badge b-add">Add</span>
+        <span class="sub-title">Add the Postgres Boundary Section</span></div>
+      <code class="loc">README.md:18</code>
+      <p class="desc">directly after 2.3</p>
+<pre><code>## This repo never talks to Postgres
+
+[scripts/check-no-db-driver.mjs](scripts/check-no-db-driver.mjs) fails
+`npm run lint` if a database driver reaches the dependency tree. Every read and
+write goes through the backend's HTTP API.</code></pre>
+      <p class="note">the boundary LAM-39 added &mdash; worth stating, because
+      nothing in the code says it</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">2.5</span>
+        <span class="badge b-edit">Edit</span>
+        <span class="sub-title">Delete the Three Template Sections</span></div>
+      <code class="loc">README.md:19-50</code>
+      <p class="desc"><code>## Template notes</code> to end of file, inherited from the Vite scaffold</p>
+<pre><code><span class="del-l">-## Template notes</span><span class="del-l">-</span><span class="del-l">-Inherited from the Vite React+TS template, kept for reference.</span><span class="del-l">-...</span><span class="del-l">-## React Compiler</span><span class="del-l">-...</span><span class="del-l">-## Expanding the Oxlint configuration</span><span class="del-l">-...</span></code></pre>
+      <ul class="why">
+        <li><span class="k kc">C</span>plugin comparisons and Oxlint setup advice
+        describe the template, not this repo; <code>.oxlintrc.json</code> is the
+        live config and already exists</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="tabpanel" id="t-s3">
+    <h2>Step 3 — Delete the placeholder <code>readme.txt</code></h2>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">3.1</span>
+        <span class="badge b-run">Run</span>
+        <span class="sub-title">Remove <code>readme.txt</code></span></div>
+      <code class="loc">LaminarFlow-Frontend/readme.txt</code>
+      <p class="desc">tracked one-line placeholder from the initial commit,
+      superseded by Step 2</p>
+<pre><code>cd ~/Developer/LaminarFlow/LaminarFlow-Frontend
+git rm readme.txt</code></pre>
+      <p class="note"><code>readme.txt</code> reaches <code>main</code> with the
+      epic; this removes it on the ticket branch</p>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="tabpanel" id="t-s4">
+    <h2>Step 4 — Name the backend and link the frontend</h2>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">4.1</span>
+        <span class="badge b-edit">Edit</span>
+        <span class="sub-title">Retitle <code>README.md</code> and Link the Frontend</span></div>
+      <code class="loc">LaminarFlow-Backend/README.md:1-2</code>
+      <p class="desc">the title never said which half of the split this repo is</p>
+<pre><code><span class="del-l">-# LaminarFlow</span><span class="del-l">-Linear Clone with some added functionality</span><span class="add-l">+# LaminarFlow — Backend</span><span class="add-l">+</span><span class="add-l">+The Go API, schema, and migrations for LaminarFlow, a Linear clone with some</span><span class="add-l">+added functionality. The React client lives in</span><span class="add-l">+[LaminarFlow-Frontend](https://github.com/Willpatbarr/LaminarFlow-Frontend).</span></code></pre>
+      <ul class="why">
+        <li><span class="k kb">B</span>ticket step 3: each README states its role
+        and points to the other repo</li>
+        <li><span class="k kc">C</span>lines 14-16 already describe the bundle
+        handoff, so they need no edit</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="tabpanel" id="t-s5">
+    <h2>Step 5 — Point the image build at <code>main</code></h2>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">5.1</span>
+        <span class="badge b-edit">Edit</span>
+        <span class="sub-title">Set <code>FRONTEND_REF</code> to <code>main</code></span></div>
+      <code class="loc">LaminarFlow-Backend/.github/workflows/ci.yml:59-61</code>
+      <p class="desc">the branch pin existed only because <code>main</code> was empty</p>
+<pre><code><span class="ctx-l">     env:</span><span class="ctx-l">       # The frontend repo supplies the bundle through a BuildKit named context.</span><span class="del-l">-      # E-LAM-0001-F rather than main because main is still the initial commit</span><span class="del-l">-      # and has no package.json. Change this to main once the epic lands.</span><span class="del-l">-      FRONTEND_REF: E-LAM-0001-F</span><span class="add-l">+      # main, now that E-LAM-0001 has landed there. The image job builds the</span><span class="add-l">+      # backend under test against the last frontend that shipped.</span><span class="add-l">+      FRONTEND_REF: main</span></code></pre>
+      <ul class="why">
+        <li><span class="k kc">C</span>a branch pin goes stale every epic;
+        <code>main</code> does not</li>
+      </ul>
+      <p class="note">the <code>env:</code> block on the <code>image</code> job,
+      not the <code>check</code> job</p>
+      <div class="callout" style="margin-top:14px">
+        <span class="lbl">Why <code>main</code> works now</span>
+        <p>This is what the original comment asked for: "Change this to main
+        once the epic lands." LAM-41 later replaces the constant entirely with a
+        <code>workflow_dispatch</code> input, so a release can pin an exact
+        frontend version.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="tabpanel" id="t-s6">
+    <h2>Step 6 — Push and verify</h2>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">6.1</span>
+        <span class="badge b-run">Run</span>
+        <span class="sub-title">Verify the Frontend Locally</span></div>
+      <p class="desc">proves the README's commands are the real ones before
+      publishing them</p>
+<pre><code>cd ~/Developer/LaminarFlow/LaminarFlow-Frontend
+npm ci &amp;&amp; npm run lint &amp;&amp; npm run build</code></pre>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">6.2</span>
+        <span class="badge b-run">Run</span>
+        <span class="sub-title">Push Both Ticket Branches</span></div>
+      <p class="desc">order does not matter — Step 5.1 points at <code>main</code>,
+      not at either ticket branch</p>
+<pre><code>cd ~/Developer/LaminarFlow/LaminarFlow-Frontend &amp;&amp; git push -u origin LAM-6-F
+cd ~/Developer/LaminarFlow/LaminarFlow-Backend &amp;&amp; git push -u origin LAM-6-B</code></pre>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">6.3</span>
+        <span class="badge b-run">Run</span>
+        <span class="sub-title">Watch the Backend Run</span></div>
+      <p class="desc">the <code>image</code> job is the one Step 5.1 touched —
+      confirm it resolves the new ref</p>
+<pre><code>cd ~/Developer/LaminarFlow/LaminarFlow-Backend
+gh run watch</code></pre>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="num">6.4</span>
+        <span class="badge b-run">Run</span>
+        <span class="sub-title">Switch the <code>gh</code> Account Back</span></div>
+      <p class="desc">LaminarFlow is the only thing that pushes as
+      <code>Willpatbarr</code></p>
+<pre><code>gh auth switch --user willbarr_church</code></pre>
+    </div>
+  </div>
+
+  <!-- TODO -->
+  <div class="tabpanel" id="t-todo">
+    <h2>TODO</h2>
+    <div class="card">
+      <ul class="todo">
+        <li><input type="checkbox"><span class="t-num">0</span>
+          <span>Land <code>E-LAM-0001-B</code> and <code>E-LAM-0001-F</code> on
+          <code>main</code></span></li>
+        <li><input type="checkbox"><span class="t-num">1.1</span>
+          <span><code>gh auth switch --user Willpatbarr</code></span></li>
+        <li><input type="checkbox"><span class="t-num">1.2</span>
+          <span>Cut and push <code>E-LAM-0002-F</code>, branch <code>LAM-6-F</code></span></li>
+        <li><input type="checkbox"><span class="t-num">1.3</span>
+          <span>Cut and push <code>E-LAM-0002-B</code>, branch <code>LAM-6-B</code></span></li>
+        <li><input type="checkbox"><span class="t-num">2.1</span>
+          <span>Frontend README — link the backend repo</span></li>
+        <li><input type="checkbox"><span class="t-num">2.2</span>
+          <span>Frontend README — <code>Running it</code></span></li>
+        <li><input type="checkbox"><span class="t-num">2.3</span>
+          <span>Frontend README — <code>Checks</code></span></li>
+        <li><input type="checkbox"><span class="t-num">2.4</span>
+          <span>Frontend README — Postgres boundary</span></li>
+        <li><input type="checkbox"><span class="t-num">2.5</span>
+          <span>Frontend README — delete the Vite template sections</span></li>
+        <li><input type="checkbox"><span class="t-num">3.1</span>
+          <span><code>git rm readme.txt</code></span></li>
+        <li><input type="checkbox"><span class="t-num">4.1</span>
+          <span>Retitle backend README, link the frontend</span></li>
+        <li><input type="checkbox"><span class="t-num">5.1</span>
+          <span>Set <code>FRONTEND_REF</code> to <code>main</code></span></li>
+        <li><input type="checkbox"><span class="t-num">6.1</span>
+          <span><code>npm ci &amp;&amp; npm run lint &amp;&amp; npm run build</code></span></li>
+        <li><input type="checkbox"><span class="t-num">6.2</span>
+          <span>Push <code>LAM-6-F</code>, then <code>LAM-6-B</code></span></li>
+        <li><input type="checkbox"><span class="t-num">6.3</span>
+          <span>Backend CI green, including the <code>image</code> job</span></li>
+        <li><input type="checkbox"><span class="t-num">6.4</span>
+          <span><code>gh auth switch --user willbarr_church</code></span></li>
+      </ul>
+    </div>
+  </div>
+
+</section>
+
+</main>
+
+<script>
+document.querySelectorAll('.tabs .tab').forEach(function(b){
+  b.addEventListener('click',function(){
+    var page=b.closest('.page');
+    page.querySelectorAll('.tab, .tabpanel').forEach(function(el){el.classList.remove('active')});
+    b.classList.add('active');
+    page.querySelector('#'+b.dataset.tab).classList.add('active');
+  });
+});
+document.querySelectorAll('.skipto a[data-page]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.page, .skipto a').forEach(function(el){el.classList.remove('active')});
+    a.classList.add('active');
+    document.getElementById(a.dataset.page).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+var nav=document.querySelector('.skipto');
+var menu=nav.querySelector('.skipto-menu');
+function closeMenu(){nav.classList.remove('open');nav.classList.add('closed');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});}
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){
+  if(getComputedStyle(menu).display!=='none'){closeMenu();}
+  else{nav.classList.remove('closed');nav.classList.add('open');}
+});
+nav.addEventListener('mouseleave',function(){nav.classList.remove('closed')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',closeMenu)});
+</script>
+</body>
+</html>

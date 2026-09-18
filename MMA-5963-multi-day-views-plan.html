@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-5963 — Calendar: Week &amp; 3-Day Views — Plan</title>
+<style>
+  :root{
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:dark; scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:48px 24px 96px;
+  }
+  .wrap{max-width:880px; margin:0 auto}
+  header.top{margin:0 0 34px}
+  .eyebrow{color:var(--accent); font-size:13px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; margin:0 0 6px}
+  h1{font-size:30px; line-height:1.2; margin:0 0 10px}
+  .sub{color:var(--muted); font-size:15px; margin:0}
+  .meta{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0}
+  .pill{font-size:12px; color:var(--muted); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:4px 11px}
+  .pill b{color:var(--ink); font-weight:600}
+
+  section{margin:0 0 26px}
+  h2{font-size:20px; margin:34px 0 12px; padding-top:8px; scroll-margin-top:80px}
+  h3{font-size:16px; margin:20px 0 8px}
+  p{margin:0 0 12px}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin:0 0 14px}
+  .card.tight{padding:14px 16px}
+  .onesent{border-left:3px solid var(--accent); background:var(--accent-soft)}
+  .onesent p{margin:0; font-size:17px}
+
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+  @media(max-width:720px){.grid3{grid-template-columns:1fr}}
+  .r3{background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px}
+  .r3 .n{color:var(--accent); font-weight:700; font-size:13px}
+  .r3 p{margin:6px 0 0; font-size:14px; color:var(--muted)}
+
+  ul,ol{margin:0 0 12px; padding-left:22px}
+  li{margin:0 0 7px}
+  .clean{list-style:none; padding-left:0}
+  .clean li{padding-left:20px; position:relative}
+  .clean li::before{content:"›"; position:absolute; left:2px; color:var(--accent)}
+
+  .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:2px 8px; border-radius:6px; vertical-align:middle}
+  .must{background:#3a1f22; color:#f0929b; border:1px solid #5a2c31}
+  .imp{background:var(--warn-soft); color:var(--warn); border:1px solid #574012}
+  .opt{background:#1a2833; color:#7fb6d6; border:1px solid #274056}
+  .done{background:var(--accent-soft); color:var(--accent); border:1px solid #2c5340}
+  .gap{background:#3a1f22; color:#f0929b; border:1px solid #5a2c31}
+  .verify{background:var(--warn-soft); color:var(--warn); border:1px solid #574012}
+
+  .ws{border:1px solid var(--border); border-radius:var(--radius); padding:0; margin:0 0 14px; overflow:hidden; background:var(--card); scroll-margin-top:80px}
+  .ws > .head{display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid var(--border); background:#20252b}
+  .ws > .head .num{width:26px; height:26px; flex:0 0 26px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center}
+  .ws > .head .t{font-weight:600; font-size:16px; flex:1}
+  .ws > .body{padding:14px 18px}
+  .ws .fr{font-size:12px; color:var(--faint); margin:2px 0 10px}
+  .frlink,.acref,.secref,.wsref{display:inline-block; text-decoration:none; border:1px solid; border-radius:6px; padding:0 6px; margin:0 3px 2px 0; font-size:11px; font-weight:700; letter-spacing:.02em; line-height:1.7; white-space:nowrap; transition:.15s}
+  .frlink{color:var(--accent); background:var(--accent-soft); border-color:#2c5340}
+  .frlink:hover{background:var(--accent); color:#0f1512; border-color:var(--accent)}
+  .acref{color:#7fb0e6; background:#1a2a40; border-color:#2f4a66}
+  .acref:hover{background:#7fb0e6; color:#0f1512; border-color:#7fb0e6}
+  .secref{color:var(--warn); background:var(--warn-soft); border-color:#574012}
+  .secref:hover{background:var(--warn); color:#241a08; border-color:var(--warn)}
+  .wsref{color:#c9a7e8; background:#291f38; border-color:#443060}
+  .wsref:hover{background:#c9a7e8; color:#17101f; border-color:#c9a7e8}
+  .frlink::after,.acref::after,.secref::after{content:" \2197"; font-size:9px; opacity:.7}
+  .wsref::after{content:" \2193"; font-size:9px; opacity:.7}
+  .frkey{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--muted); align-items:center}
+  .frkey span{display:inline-flex; align-items:center; gap:5px}
+  .frkey i{width:22px; height:14px; border-radius:4px; border:1px solid; display:inline-block}
+  .frkey .kfr{background:var(--accent-soft); border-color:#2c5340}
+  .frkey .kac{background:#1a2a40; border-color:#2f4a66}
+  .frkey .kws{background:#291f38; border-color:#443060}
+  code{background:#11151a; border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:13px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; color:#cbd3dc}
+  .path{color:#8fd0ac}
+
+  table{width:100%; border-collapse:collapse; font-size:14px; margin:0 0 12px; display:block; overflow-x:auto}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--faint); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap}
+  td code{white-space:nowrap}
+
+  .warnbox{border-left:3px solid var(--warn); background:var(--warn-soft)}
+  .warnbox strong{color:var(--warn)}
+
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; color:var(--muted)}
+  .flow .box{background:var(--bg); border:1px solid var(--border-strong); border-radius:8px; padding:6px 10px; color:var(--ink)}
+  .flow .arw{color:var(--accent)}
+
+  .check li{list-style:none; margin-left:-22px; padding-left:26px; position:relative}
+  .check li::before{content:"☐"; position:absolute; left:0; color:var(--faint)}
+
+  .skipto{position:fixed; top:50%; left:18px; transform:translateY(-50%); z-index:60; display:flex; flex-direction:column; gap:5px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 12px 13px; box-shadow:var(--shadow); width:172px}
+  .skipto .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--faint); padding:0 10px 4px}
+  .skipto a{text-decoration:none; color:var(--muted); font-size:13px; padding:6px 10px; border-radius:8px; transition:.15s}
+  .skipto a:hover{background:var(--bg); color:var(--accent)}
+  @media(max-width:1180px){
+    body{padding-top:64px}
+    .skipto{top:0; left:0; right:0; transform:none; width:auto; flex-direction:row; overflow-x:auto; border-radius:0; border-width:0 0 1px; padding:8px 10px}
+    .skipto .lbl{display:none}
+  }
+  .foot{color:var(--faint); font-size:12px; text-align:center; margin-top:40px; border-top:1px solid var(--border); padding-top:18px}
+
+  .ac{border:1px solid var(--border); border-radius:12px; background:var(--bg); padding:12px 16px; margin:0 0 10px}
+  .ac .ach{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin:0 0 7px}
+  .ac .ach .num{color:#7fb0e6; font-weight:700; font-size:13px; white-space:nowrap}
+  .ac .ach .t{font-weight:600; font-size:15px}
+  .ac .ach .frs{margin-left:auto; font-size:11px; color:var(--faint); white-space:nowrap}
+  .ac ul{margin:0; padding-left:18px; font-size:14px; color:var(--muted)}
+  .ac li{margin:0 0 5px}
+  .ac li::marker{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <span class="lbl">Jump to</span>
+  <a href="#tldr">One-sentence</a>
+  <a href="#three">Remember 3</a>
+  <a href="#context">Context</a>
+  <a href="#scope">Scope in/out</a>
+  <a href="#work">Workstreams</a>
+  <a href="#files">Done vs gap map</a>
+  <a href="#order">Build order</a>
+  <a href="#risks">Risks</a>
+  <a href="#next">What to do next</a>
+  <a href="#acs">Spec ACs</a>
+</nav>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">Implementation Plan</p>
+    <h1>MMA-5963 — Calendar: Week &amp; 3-Day Views</h1>
+    <p class="sub">The Week (7-day) and 3-Day grids, built on the Day rendering engine from 5962. A shared <code>CalendarWeekView</code> already renders both — this ticket fixes the two spec divergences (3-Day paging, week-start locale) and finishes engine adoption.</p>
+    <div class="meta">
+      <span class="pill"><b>Type:</b> New Feature</span>
+      <span class="pill"><b>Status:</b> New</span>
+      <span class="pill"><b>Spec:</b> MMA-5960 (calendar-spec.html)</span>
+      <span class="pill"><b>Depends on:</b> MMA-5962 (Day + engine)</span>
+      <span class="pill"><b>Sibling:</b> MMA-5964 (Month)</span>
+    </div>
+  </header>
+
+  <!-- ONE SENTENCE -->
+  <section id="tldr">
+    <div class="card onesent">
+      <p><b>Both views already render on the shared engine — fix the two spec divergences and adopt the rest:</b> rebuild 3-Day paging as a true one-day sliding window with the focused date leading (today it pages in whole 3-day blocks), make Week start on the device locale's first day of week (today it's hardcoded Sunday), thread the shared scroll state + pull-to-refresh in from Day — drill-down is already wired, so everything else is verification.</p>
+    </div>
+  </section>
+
+  <!-- REMEMBER 3 -->
+  <section id="three">
+    <h2>Remember Only 3 Things</h2>
+    <div class="grid3">
+      <div class="r3"><div class="n">1 — Gap-closing again, not greenfield</div><p><span class="path">week/CalendarWeekView.kt</span> already serves <em>both</em> views (<code>daysToShow = 7 / 3</code>) with pager, nav bar, day headers, all-day row, hour grid. Drill-down to Day is already wired in the host. Don't rebuild.</p></div>
+      <div class="r3"><div class="n">2 — 3-Day paging is the wrong shape</div><p>It pages in <b>whole 3-day blocks</b> (the prototype behavior the spec explicitly calls out as insufficient). FR-20 wants a <b>sliding window</b>: focused date first, advancing <b>one day per step</b>. This is the ticket's real work.</p></div>
+      <div class="r3"><div class="n">3 — Week-start is hardcoded Sunday</div><p><code>DateUtil.getLastSunday()</code> anchors the week. FR-13 says follow the <b>device locale</b>. Add a locale-aware helper — do <b>not</b> change <code>getLastSunday</code> itself; the callings sustain-date logic depends on its Sunday semantics.</p></div>
+    </div>
+  </section>
+
+  <!-- CONTEXT -->
+  <section id="context">
+    <h2>Context <span class="tag opt">Optional</span></h2>
+    <div class="card">
+      <p>MMA-5961 imported the PMG engine and moved the calendar view layer into <span class="path">:feature:calendar</span> (host + ViewModel stay in <span class="path">app/…/ux/calendar/</span>). MMA-5962 is hardening the shared engine on this branch: routing edge-cases, chips, and — already visible in Day — the host-owned vertical <code>gridScrollState</code> and a <code>PullToRefreshBox</code>. Week/3-Day inherit routing/chips/overlaps/now-line for free because they render through the same <span class="path">grid/</span> components (<code>CalendarDayColumn</code>, <code>AllDayEventsRow</code>, <code>CalendarGridEventChip</code>).</p>
+      <p>What they <em>don't</em> inherit automatically: the Day-only seams (scroll state, PTR) still need to be threaded into <code>CalendarWeekView</code>, and two behaviors diverge from spec — 3-Day's block paging and Week's Sunday anchor.</p>
+      <div class="flow" style="margin-top:6px">
+        <span class="box">5961 groundwork ✓</span><span class="arw">→</span>
+        <span class="box">5962 Day + engine</span><span class="arw">→ engine reused by →</span>
+        <span class="box">MMA-5963 <b>(this)</b> Week / 3-Day</span><span class="box">5964 Month</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCOPE -->
+  <section id="scope">
+    <h2>Scope — In vs Out</h2>
+    <div class="card tight">
+      <h3 style="margin-top:4px">In scope</h3>
+      <ul class="clean">
+        <li>3-Day <b>sliding window</b>: focused date leads, advances one day per navigation step <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-20">FR-20</a></span></li>
+        <li>Week starts on the device locale's first day of week — <b>Week only</b>; 3-Day is exempt <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-13">FR-13</a></span></li>
+        <li>Adopt the shared vertical scroll state (open at now + scroll memory) in Week/3-Day <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-18">FR-18</a></span></li>
+        <li>Pull-to-refresh in Week/3-Day — reuse the gesture 5962 built for Day <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-23">FR-23</a></span></li>
+        <li>Verify drill-down: tap a day header → Day view for that date (already wired) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-11">FR-11</a></span></li>
+        <li>Engine-parity sweep: routing / overlaps / chips / now-line match Day across 3 &amp; 7 narrow columns; multi-day bars clip at window edges <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-5">FR-5</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-6">FR-6</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-16">FR-16</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-22">FR-22</a></span></li>
+      </ul>
+      <h3>Out of scope</h3>
+      <ul class="clean">
+        <li>Month view (cells, "N more", drill-down from cells, Month week-start adoption) → <b>MMA-5964</b> — note <span class="path">month/CalendarMonthView.kt</span> also uses <code>getLastSunday</code>; it adopts the new locale helper in 5964, not here</li>
+        <li>The engine gaps themselves (routing ≥24h rule, chip content, scroll-to-now mechanics) → <b>MMA-5962</b> owns them; this ticket consumes them</li>
+        <li>Event creation / editing (still deferred)</li>
+        <li>Sample-data removal (<code>USE_SAMPLE_DATA</code> / <span class="path">sample/</span>) — tracked under the 5961 TODO</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- WORKSTREAMS -->
+  <section id="work">
+    <h2>The 6 Workstreams</h2>
+    <p class="sub" style="margin-bottom:10px">WS1–WS2 are the spec divergences (the real work). WS3–WS4 are engine adoption. WS5–WS6 are verification.</p>
+    <div class="frkey" style="margin-bottom:18px">
+      <span><i class="kfr"></i> FR button → spec requirement</span>
+      <span><i class="kac"></i> AC button → spec acceptance criterion</span>
+      <span><i class="kws"></i> WS button → workstream on this page</span>
+      <span style="color:var(--faint)">FR/AC buttons open the full spec (calendar-spec.html) at that anchor</span>
+    </div>
+
+    <!-- WS1 -->
+    <div class="ws" id="ws1">
+      <div class="head"><span class="num">1</span><span class="t">3-Day sliding window — one day per step, focused date leads</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-20">FR-20</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-15">AC-15</a></p>
+        <p>Today's 3-Day is the prototype's <b>rolling blocks</b>: the <code>HorizontalPager</code> in <span class="path">week/CalendarWeekView.kt</span> maps one page per <em>period</em> (<code>periodStartForPage = anchor + (page − ANCHOR) × daysToShow</code>), the nav arrows jump <code>±daysToShow</code>, and page changes shift the focused date by <b>whole periods</b> to preserve its offset within the window. The spec explicitly flags this: <em>"more work than the prototype's rolling 3-day blocks."</em></p>
+        <table>
+          <tr><th>Behavior</th><th>Spec (FR-20)</th><th>Today</th></tr>
+          <tr><td>Window contents</td><td>Focused date D is the <b>first</b> of the three days</td><td><span class="tag gap">only at entry</span> — after swipes/date-adoption D can sit anywhere in the block</td></tr>
+          <tr><td>Navigate forward</td><td>Window advances <b>one day</b></td><td><span class="tag gap">advances 3 days</span> (arrows and swipe)</td></tr>
+        </table>
+        <ul>
+          <li><b>Structural decision first:</b> a full-viewport pager can't slide one column at a time. Likely shape: one page per <em>day</em> with a custom snap (LazyRow of day columns, 3 visible, snap per column) — or keep the pager for Week and give 3-Day its own pane. Spike before committing.</li>
+          <li>Keep the shared pieces shared: <code>WeekDayHeaderRow</code>, <code>AllDayEventsRow</code>, <code>CalendarDayColumn</code>, nav bar. Only the horizontal paging strategy differs.</li>
+          <li>The "preserve offset in window" logic (the <code>snapshotFlow</code> delta block) is <em>correct for Week</em>, wrong for 3-Day — in 3-Day the focused date must snap to lead the window whenever a date is adopted from another view.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS2 -->
+    <div class="ws" id="ws2">
+      <div class="head"><span class="num">2</span><span class="t">Week-start follows the device locale</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-13">FR-13</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-11">AC-11</a></p>
+        <p>Week anchors on <code>DateUtil.getLastSunday(selectedDate)</code> (<span class="path">week/CalendarWeekView.kt:59</span>) — hardcoded Sunday. Spec: start on the <b>device locale's</b> first day of week (Monday for most of Europe, Sunday for en-US, Saturday for some locales). 3-Day is exempt — it never aligns to weeks.</p>
+        <ul>
+          <li><b>Don't touch <code>getLastSunday</code></b> — <span class="path">ux/calling/GetEditCallingsUiStateUseCase.kt</span> uses it for sustain dates where "last Sunday" is <em>semantic</em>, not a week-start.</li>
+          <li>Add a locale-aware <code>startOfWeek(date)</code> helper (e.g. in the grid layer next to <code>CalendarConstants</code>), backed by <code>java.time.temporal.WeekFields.of(Locale)</code> — convert at the kotlinx-datetime edge.</li>
+          <li><span class="path">month/CalendarMonthView.kt:128</span> has the same Sunday anchor — leave it; 5964 adopts the helper.</li>
+          <li>Unit-test both paths (Monday-first + Sunday-first locales) — AC-11 grades both explicitly.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS3 -->
+    <div class="ws" id="ws3">
+      <div class="head"><span class="num">3</span><span class="t">Adopt the shared scroll state (open at now + memory)</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-18">FR-18</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-13">AC-13</a></p>
+        <p>5962 hoisted a single host-owned <code>gridScrollState</code> (passed into <code>CalendarDayView</code>, <span class="path">day/CalendarDayView.kt:60</span>) so the vertical position is shared across pages <em>and across grid views</em>. <code>CalendarWeekView</code> still creates a <code>rememberScrollState()</code> <b>per pager page</b> (<span class="path">week/CalendarWeekView.kt:116</span>) — so it neither opens at the current time band nor remembers position across view switches.</p>
+        <ul>
+          <li>Accept the same <code>scrollState: ScrollState</code> parameter and use it in the <code>verticalScroll</code> — mirroring Day's pattern exactly.</li>
+          <li>Free win: because the state is shared, Day ↔ Week ↔ 3-Day switches keep the same time band automatically (that's the AC-13 cross-view clause).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS4 -->
+    <div class="ws" id="ws4">
+      <div class="head"><span class="num">4</span><span class="t">Pull-to-refresh in Week / 3-Day</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-23">FR-23</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-17">AC-17</a></p>
+        <p>5962 built the gesture in Day: <code>PullToRefreshBox</code> at <span class="path">day/CalendarDayView.kt:113</span>, wired to the existing refresh plumbing (<code>workScheduler.refreshCalendar(SyncMode.FULL)</code> + <code>isRefreshingFlow</code>). Week/3-Day have nothing yet.</p>
+        <ul>
+          <li>Wrap the pager content the same way Day does — same <code>isRefreshing</code>/<code>onRefresh</code> source, no new plumbing.</li>
+          <li>Gesture must only trigger at the top of the vertical scroll (nested-scroll behavior is standard in <code>PullToRefreshBox</code>, but test mid-scroll pulls on a 7-column grid).</li>
+          <li>Month adopts this same state in <b>5964</b> (spec updated per PR #1884 review); Schedule keeps overflow-Refresh only — just don't leak the gesture there.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS5 -->
+    <div class="ws" id="ws5">
+      <div class="head"><span class="num">5</span><span class="t">Drill-down to Day — verify only</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-11">FR-11</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-9">AC-9</a></p>
+        <p>Already wired: <code>onDayFocused</code> in <span class="path">app/…/ux/calendar/CalendarScreen.kt</span> (~L245) sets the selected date <em>then</em> switches to <code>CalendarViewMode.DAY</code>, and both Week and 3-Day pass it as <code>onDayHeaderClick</code> (headers are <code>clickable</code> in <code>WeekDayHeaderRow</code>).</p>
+        <ul>
+          <li>Verify the opened Day lands on the tapped date (not today) and — after WS3 — at the remembered scroll band.</li>
+          <li>Verify view-mode persistence doesn't fight it: <code>setViewMode</code> writes to preferences, so drill-down changes the <em>saved</em> view. Confirm that's the intended UX (it matches how the selector works today).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS6 -->
+    <div class="ws" id="ws6">
+      <div class="head"><span class="num">6</span><span class="t">Engine-parity verification sweep</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-5">FR-5</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-6">FR-6</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-16">FR-16</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-22">FR-22</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-4">AC-4</a> <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-5">AC-5</a> <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-3">AC-3</a></p>
+        <p>The ticket's AC #4 ("engine reuse") is graded here in the multi-day context — Day-view behavior is graded in 5962, but several spec ACs name 3-Day/Week explicitly:</p>
+        <ul>
+          <li><b>Overlaps on narrow columns</b> (AC-4): shrinking side-by-side columns with no cap get <em>very</em> narrow at 1/7 width — stress it; the spec accepts "can get tight" but it must not break.</li>
+          <li><b>Now-line</b> (AC-5): drawn on <b>today's column only</b> when today is visible in the 3/7-day window — verify it doesn't paint on siblings.</li>
+          <li><b>Multi-day bars at window edges</b> (AC-3's last clause): a bar starting before / ending after the visible window clips to the edges and <b>breaks at week/period boundaries</b> — only testable in multi-day views, so it's graded here.</li>
+          <li><b>Chips</b> (FR-22): "render what fits" at 1/7 width — name ellipsizes, no times, location only when it fits.</li>
+        </ul>
+        <p class="sub">If 5962's measurement-layer unit tests exist by then, extend them with multi-day window cases (boundary clipping) rather than writing UI tests for pure logic.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DONE VS GAP MAP -->
+  <section id="files">
+    <h2>Done vs Gap — where everything lives</h2>
+    <div class="card">
+      <p class="sub">View layer under <span class="path">feature/calendar/src/main/kotlin/org/lds/ldstools/feature/calendar/</span>; host + ViewModel under <span class="path">app/src/main/java/org/lds/ldstools/ux/calendar/</span>. Everything below is already on the branch (5961 import + 5962 work in flight).</p>
+      <table>
+        <tr><th>Concern</th><th>File</th><th>Status → action</th></tr>
+        <tr><td>Week + 3-Day view (shared)</td><td><span class="path">week/CalendarWeekView.kt</span></td><td><span class="tag gap">WS1/WS2/WS3/WS4</span> re-page 3-Day; locale week anchor; shared scroll; PTR</td></tr>
+        <tr><td>Week anchor helper</td><td><span class="path">core/common/…/DateUtil.kt:413</span> (<code>getLastSunday</code>)</td><td><span class="tag verify">WS2</span> leave as-is (callings depend on it) — add locale helper instead</td></tr>
+        <tr><td>Drill-down wiring</td><td><span class="path">app/…/CalendarScreen.kt</span> (<code>onDayFocused</code> ~L245)</td><td><span class="tag done">WS5</span> verify only — already routes header taps → Day</td></tr>
+        <tr><td>Scroll + PTR pattern to copy</td><td><span class="path">day/CalendarDayView.kt</span> (L60 scrollState, L113 PTR)</td><td><span class="tag done">reference</span> 5962's seams — mirror into Week view</td></tr>
+        <tr><td>Host state (date/view/scroll)</td><td><span class="path">app/…/CalendarViewModel.kt</span> + <code>gridScrollState</code></td><td><span class="tag done">WS3</span> seam exists — thread it through</td></tr>
+        <tr><td>Day columns / headers / all-day row</td><td><span class="path">grid/CalendarDayColumn.kt</span>, <span class="path">grid/CalendarDayHeaderCell.kt</span>, <span class="path">grid/AllDayEventsRow.kt</span></td><td><span class="tag verify">WS6</span> shared engine — parity sweep only</td></tr>
+        <tr><td>Month's Sunday anchor</td><td><span class="path">month/CalendarMonthView.kt:128</span></td><td><span class="tag opt">5964</span> adopts the WS2 helper later — don't touch</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- BUILD ORDER -->
+  <section id="order">
+    <h2>Suggested Build Order</h2>
+    <div class="card">
+      <ol>
+        <li><b>WS1 spike first</b> — the 3-Day snapping strategy decides whether <code>CalendarWeekView</code> stays one composable or splits. Everything else layers on top of that answer.</li>
+        <li><b>WS2 week-start</b> — small, isolated, unit-testable; can run in parallel with the WS1 spike.</li>
+        <li><b>WS3 scroll + WS4 PTR</b> — mechanical adoption of Day's pattern once the view structure from WS1 is settled.</li>
+        <li><b>WS5 drill-down + WS6 parity sweep</b> — last, as the gate to "done": narrow-column overlap stress, window-edge bar clipping, Monday/Sunday locale flips.</li>
+      </ol>
+      <div class="card tight warnbox" style="margin-top:10px"><p style="margin:0"><strong>Sequencing note:</strong> this ticket depends on MMA-5962, which is still in flight on this branch. Start WS1/WS2 anytime (they don't touch 5962's files), but run the WS6 parity sweep only after 5962's engine work is frozen — otherwise you're verifying a moving target.</p></div>
+    </div>
+  </section>
+
+  <!-- RISKS -->
+  <section id="risks">
+    <h2>Risks &amp; Watch-outs</h2>
+    <div class="card">
+      <table>
+        <tr><th>Risk</th><th>Why it bites</th><th>Mitigation</th></tr>
+        <tr><td>3-Day snap ≠ pager pages</td><td><code>HorizontalPager</code> snaps full viewports; one-day advance needs per-column snapping — naive "one page per day" makes the swipe animation slide 3 columns' width for a 1-day move</td><td>Spike a LazyRow-of-day-columns with column snapping before restructuring; keep Week on the pager</td></tr>
+        <tr><td>Forking <code>CalendarWeekView</code></td><td>Week and 3-Day share one composable today; different paging could split them and duplicate header/all-day/grid code</td><td>Extract the shared frame (headers + all-day + columns) and vary only the horizontal container</td></tr>
+        <tr><td>Focused-date invariant flips per view</td><td>Week preserves the date's offset inside the window (correct); 3-Day must force the date to <em>lead</em> — one shared <code>snapshotFlow</code> block can't do both</td><td>Make the adoption rule a per-mode strategy, unit-test date↔page math for both</td></tr>
+        <tr><td><code>getLastSunday</code> is shared semantics</td><td>Callings sustain-date defaults use "last Sunday" literally; a locale-aware change there corrupts sustain dates</td><td>New <code>startOfWeek(locale)</code> helper; leave <code>getLastSunday</code> untouched (WS2)</td></tr>
+        <tr><td>kotlinx-datetime × locale APIs</td><td><code>WeekFields.of(Locale)</code> is java.time; the calendar code is kotlinx <code>LocalDate</code></td><td>Convert at the helper's edge only; test Sat-first locales too (e.g. ar-EG)</td></tr>
+        <tr><td>PTR × pager × 7-column vertical scroll</td><td>Three nested scroll containers; pull gesture can fight vertical scroll mid-grid</td><td>Mirror Day's exact nesting order; test mid-scroll pulls (<a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-17">AC-17</a>)</td></tr>
+        <tr><td>5962 engine churn under this ticket</td><td>Routing/chip changes land in shared files while this ticket verifies parity against them</td><td>Gate WS6 on 5962 freeze; rebase before the sweep</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- NEXT -->
+  <section id="next">
+    <h2>What To Do Next</h2>
+    <div class="card">
+      <ol>
+        <li><b>Spike the 3-Day snap</b> (WS1): prove one-day-per-step snapping (LazyRow + snap flinger vs. per-day pager) in isolation before restructuring <span class="path">week/CalendarWeekView.kt</span>.</li>
+        <li><b>Add the locale week-start helper</b> (WS2) with Monday/Sunday/Saturday-locale unit tests, and swap it into the Week anchor at <span class="path">CalendarWeekView.kt:59</span>.</li>
+        <li><b>Thread <code>gridScrollState</code> + <code>PullToRefreshBox</code></b> (WS3/WS4) into the week view, copying Day's pattern verbatim.</li>
+      </ol>
+      <p class="sub" style="margin-top:6px">PR checklist (mirrors the ticket's 4 ACs / testing guide):</p>
+      <ul class="check">
+        <li>Drill-down: tapping a Week/3-Day day header opens Day view for that date</li>
+        <li>3-Day: focused date is the first of the three shown; each navigation step (swipe and arrows) advances exactly one day</li>
+        <li>Week-start: Monday-first locale → Monday columns; Sunday-first → Sunday; 3-Day unaffected by locale</li>
+        <li>Engine parity: routing / overlaps / chips / now-line render identically to Day; now-line on today's column only</li>
+        <li>Multi-day bars clip at window edges and break at week/period boundaries</li>
+        <li>Scroll: opens at current time band; position shared/remembered across Day ↔ 3-Day ↔ Week switches</li>
+        <li>Pull-to-refresh works in Week and 3-Day; triggers sync + indicator; no gesture leak to Month/Schedule</li>
+        <li>Date↔page math unit-tested for both paging modes; existing calendar tests green</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SPEC ACS -->
+  <section id="acs">
+    <h2>Acceptance Criteria for This Ticket — verbatim from the spec</h2>
+    <div class="card">
+      <p class="sub">The spec ACs this ticket's work is graded against, worded exactly as in the module spec (<span class="path">feature/calendar/spec/viewsspec/spec.md</span>, §10). Each shows which workstream on this page covers it (purple WS buttons jump up). The ticket's own four ACs map: #1 Drill-down → AC-9 · #2 3-Day window → AC-15 · #3 Week-start → AC-11 · #4 Engine reuse → AC-4 / AC-5 / AC-3.</p>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-15 (QA #15)</span><span class="t">3-Day sliding window</span><span class="frs">FR-20 · <a class="wsref" href="#ws1">WS1</a></span></div>
+        <ul>
+          <li>Given 3-Day view focused on date D, When viewing, Then D is the first of the three days shown;</li>
+          <li>And when navigating forward, Then the window advances one day.</li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-9 (QA #9)</span><span class="t">Drill-down to Day</span><span class="frs">FR-11 · <a class="wsref" href="#ws5">WS5</a></span></div>
+        <ul>
+          <li>Given Week or 3-Day, When the user taps a day header, Then Day view opens for that day;</li>
+          <li>And given Month, When the user taps a day cell, Then Day view opens for that day. <em>(Month path graded in MMA-5964 — the wiring already exists.)</em></li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-11 (QA #11)</span><span class="t">Localization &amp; timezone (both paths)</span><span class="frs">FR-13, FR-14, FR-21 · <a class="wsref" href="#ws2">WS2</a> <a class="wsref" href="#ws6">WS6</a></span></div>
+        <ul>
+          <li>Given the device locale's first day of week is Monday and 24-hour time is on, When viewing Week / Month, Then weeks start Monday and times show 24-hour;</li>
+          <li>And given the default (Sunday first, 12-hour), Then weeks start Sunday and times show 12-hour;</li>
+          <li>And all events render in the device timezone. (3-Day is exempt from week-start — sliding window.)</li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-4 (QA #4)</span><span class="t">Overlap rendering (no cap)</span><span class="frs">FR-5 · <a class="wsref" href="#ws6">WS6</a></span></div>
+        <ul>
+          <li>Given a day that has many overlapping timed events, When viewed in Day / 3-Day / Week, Then all overlaps render side-by-side as shrinking columns, with no cap and no overflow affordance. <em>(Day path graded in 5962; the narrow 3/7-column paths are graded here.)</em></li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-5 (QA #5)</span><span class="t">Live now-line</span><span class="frs">FR-6 · <a class="wsref" href="#ws6">WS6</a></span></div>
+        <ul>
+          <li>Given today is visible in Day / 3-Day / Week, When viewing, Then a current-time line is drawn on today's column only;</li>
+          <li>And When time passes, Then the line advances (it is live, not static);</li>
+          <li>And given Month, Then no now-line is drawn.</li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-3 (QA #3)</span><span class="t">Event routing &amp; multi-day edge cases — window-boundary clause</span><span class="frs">FR-16 · <a class="wsref" href="#ws6">WS6</a></span></div>
+        <ul>
+          <li>…And given a bar starting before / ending after the window, Then it is clipped to the window edges and breaks at week/period boundaries. <em>(The routing rules themselves are 5962's; this boundary-clipping clause is only observable in multi-day windows, so it's graded here.)</em></li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-13 (QA #13)</span><span class="t">Initial scroll &amp; scroll memory</span><span class="frs">FR-18 · <a class="wsref" href="#ws3">WS3</a></span></div>
+        <ul>
+          <li>Given the user opens a time-grid on today, When it appears, Then it is scrolled to the current time;</li>
+          <li>And given a non-today day is opened (via date picker or Month tap), Then it opens at the same time-of-day band;</li>
+          <li>And when the user switches to another view and returns, Then the prior scroll position is preserved. <em>(Mechanics graded in 5962; Week/3-Day adoption graded here.)</em></li>
+        </ul>
+      </div>
+
+      <div class="ac">
+        <div class="ach"><span class="num">AC-17 (QA #17)</span><span class="t">Refresh behavior</span><span class="frs">FR-23 · <a class="wsref" href="#ws4">WS4</a></span></div>
+        <ul>
+          <li>Given Day / 3-Day / Week / Month, When the user pulls down, Then a calendar sync is triggered and the refresh indicator shows until it completes;</li>
+          <li>And given Schedule, Then no pull-to-refresh gesture exists <b>but its "Refresh" overflow action still triggers a sync</b>. <em>(Day path graded in 5962; 3-Day/Week paths graded here; Month path in 5964 — added per PR #1884 review.)</em></li>
+        </ul>
+      </div>
+
+      <p class="sub" style="margin:8px 0 0">Numbering note: the module spec's AC numbers track QA numbers until the tail (spec AC-18 = QA #19, spec AC-19 = QA #20); every AC above is in the aligned range, and the calendar-spec.html anchors match the numbers shown.</p>
+    </div>
+  </section>
+
+  <div class="foot">
+    MMA-5963 · Calendar Week &amp; 3-Day Views · Plan generated from the Jira ticket (icseng) + calendar spec (MMA-5960, calendar-spec.html) + code audit of branch MMA-5962-new.
+    Depends on MMA-5962 (Day + engine); Month is MMA-5964. Companion to MMA-5962-day-view-plan.html.
+  </div>
+
+</div>
+</body>
+</html>

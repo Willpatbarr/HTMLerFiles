@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR #1915 — Location Screen</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="navlabel">Pages</span>
+  <a href="index.html">Overview</a>
+  <a href="pr-1915.html" class="current">1915 · Location <span class="tkt">MMA-5939</span></a>
+  <a href="pr-1913.html">1913 · Reminder <span class="tkt">MMA-5941</span></a>
+  <a href="pr-1912.html">1912 · Recurrence <span class="tkt">MMA-5938</span></a>
+  <a href="pr-1914.html">1914 · Public Evt <span class="tkt">MMA-5946</span></a>
+  <a href="pr-1820.html">1820 · CodeQL</a>
+  <span class="navlabel">Skip to</span>
+  <a href="#changed">What changed</a>
+  <a href="#files">Files</a>
+  <a href="#impact">Architecture</a>
+  <a href="#risks">Risks</a>
+  <a href="#questions">Open comments</a>
+  <a href="#checklist">Checklist</a>
+  <a href="#readfirst">Read first</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="kicker">PR Review · <span class="prio must">Must review</span></div>
+  <h1>#1915 — MMA-5939 Location: None / Address / Other</h1>
+  <p class="sub"><a href="https://github.com/ICS-Eng/MemberTools-Android/pull/1915">Open on GitHub</a> · branch <code>MMA-5939</code> · created Jul 24 · co-authored by Claude Opus 4.8</p>
+
+  <div class="card accent">
+    <h2>One-Sentence Version</h2>
+    <p class="onesent">Adds a dedicated <b>Location screen</b> (None / Address / Other tabs, drop-pin map picker) to the calendar add-event form, returning its result to the form via ResultStore — Church Facility is a placeholder shell for MMA-5940.</p>
+    <div class="meta">
+      <span><b>+1,732 / −8</b> · 56 files</span>
+      <span>Checks: <span class="badge">blank at fetch time — verify</span></span>
+      <span>Review: <span class="badge warn">Changes requested (sbrewerclan)</span></span>
+    </div>
+  </div>
+
+  <div class="card" id="changed">
+    <h2>What Changed</h2>
+    <ul>
+      <li><b>EventLocationModel</b> — serializable None/Address/Other/Facility embedded in <code>EventFormModel</code>; maps to wire <code>DtoEventLocation</code> (None/Facility send none).</li>
+      <li><b>LocationScreen + LocationViewModel</b> — segmented Facility/Address/Other tabs with per-field validation.</li>
+      <li><b>Drop-pin map picker</b> — auto-fills the address (street1→address1, street2→address2, state→stateProvince); pin coordinates shown read-only, <b>not persisted or sent</b> (per Q11).</li>
+      <li><b>Result flow</b> — <code>LocationResult.Selected</code> travels back via ResultStore; the form shows a <code>LocationSummaryRow</code>.</li>
+      <li><b>Nav3</b> — <code>LocationRoute</code> registered with <code>hideChrome</code> + <code>navKeySerializers("calendar")</code>.</li>
+      <li><b>Tests</b> — model, validator, VM, Robolectric screen test, plus new screenshot baselines (and updated EventEdit baselines for the new row).</li>
+    </ul>
+  </div>
+
+  <div class="card" id="files">
+    <h2>Files Changed (top of 56)</h2>
+    <table>
+      <tr><th>File</th><th>Δ</th></tr>
+      <tr><td><code>location/LocationScreen.kt</code></td><td class="num">+275</td></tr>
+      <tr><td><code>location/LocationViewModel.kt</code></td><td class="num">+238</td></tr>
+      <tr><td><code>location/LocationSummaryRow.kt</code></td><td class="num">+92</td></tr>
+      <tr><td><code>location/EventLocationModel.kt</code></td><td class="num">+85</td></tr>
+      <tr><td><code>location/LocationUiState.kt</code> + <code>LocationValidator.kt</code></td><td class="num">+106</td></tr>
+      <tr><td><code>app/.../Nav3CalendarKoinModule.kt</code></td><td class="num">+32 / −3</td></tr>
+      <tr><td>Tests: VM (277), Screen (145), Model (92), Validator (76) + screenshots</td><td class="num">~+700</td></tr>
+    </table>
+  </div>
+
+  <div class="card" id="impact">
+    <h2>Architecture Impact</h2>
+    <ul>
+      <li>New <code>location/</code> package in <code>:feature:calendar</code> — self-contained, follows the screen/VM/UiState/Validator pattern.</li>
+      <li>Only PR of the four to touch the <b>app module</b> (<code>Nav3CalendarKoinModule</code>) — check route registration and Koin wiring.</li>
+      <li>Extends <code>PublishEventUseCase</code> + <code>EventEditViewModel</code> — same files 1912/1913/1914 touch, so rebase conflicts are likely.</li>
+    </ul>
+  </div>
+
+  <div class="card warncard" id="risks">
+    <h2>Risks</h2>
+    <ul>
+      <li><b>CI status was blank</b> when fetched — confirm the build is actually green before deep review.</li>
+      <li><b>Wire mapping</b> — None and Facility both "send none"; verify the server treats absent location correctly vs. clearing an existing one on edit.</li>
+      <li><b>Map picker auto-fill</b> — geocoder field mapping (street2→address2 etc.) is easy to get subtly wrong for non-US addresses.</li>
+      <li><b>AI-co-authored</b> — largest genuinely new surface of the four; review strictly.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="questions">
+    <h2>Open Reviewer Comments (unresolved)</h2>
+    <div class="quote">"Why not use MapUtil.formatCoordinates?"<span class="who">sbrewerclan · LocationViewModel.kt:165</span></div>
+    <div class="quote">"Several of these strings are already translated in Core.Strings"<span class="who">sbrewerclan · strings.xml:36</span></div>
+    <p>Questions to add if unanswered: does Facility placeholder degrade gracefully if tapped? Is the read-only coordinate display intentional UX or a stopgap for Q11?</p>
+  </div>
+
+  <div class="card" id="checklist">
+    <h2>Checklist</h2>
+    <ul class="check">
+      <li><input type="checkbox"> <span>CI green? (was blank at fetch time)</span></li>
+      <li><input type="checkbox"> <span>sbrewerclan's two comments addressed?</span></li>
+      <li><input type="checkbox"> <span><code>EventLocationModel</code> ↔ <code>DtoEventLocation</code> mapping round-trips on edit (not just create)?</span></li>
+      <li><input type="checkbox"> <span>Nav3 route + Koin registration correct (KoinModuleTest covers it)?</span></li>
+      <li><input type="checkbox"> <span>Validation messages use existing Core.Strings where available?</span></li>
+    </ul>
+  </div>
+
+  <div class="card accent" id="readfirst">
+    <h2>What To Read First</h2>
+    <ol>
+      <li><code>EventLocationModel.kt</code> (+85) — the data model everything hangs off.</li>
+      <li><code>LocationViewModel.kt</code> (+238) — tab switching, validation, map auto-fill.</li>
+      <li><code>Nav3CalendarKoinModule.kt</code> — how it plugs into the app.</li>
+    </ol>
+    <p><b>Next:</b> <a href="pr-1913.html">PR #1913 — Contact &amp; email reminder →</a></p>
+  </div>
+
+</div>
+</body>
+</html>

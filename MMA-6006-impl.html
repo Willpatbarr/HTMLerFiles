@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6006 — Manage RSVPs Tab</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33; --g4:#8E7CC3;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+@media (max-width:1180px){ main{padding-top:72px} }
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.6rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media (max-width:900px){ .head{grid-template-columns:1fr} .head .lede{margin-top:1.1rem} }
+
+h2{font-size:1.32rem;margin:2.1rem 0 .9rem;font-weight:600;letter-spacing:-.01em}
+h2:first-child{margin-top:0}
+p{margin:0 0 .7rem}
+ul,ol{margin:0 0 .7rem;padding-left:1.2rem}
+li{margin:0 0 .28rem}
+a{color:var(--accent);overflow-wrap:anywhere}
+
+code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
+  border-radius:4px;overflow-wrap:anywhere}
+.m{font-family:var(--mono);font-size:.93em;letter-spacing:-.01em;overflow-wrap:anywhere}
+
+/* ---------- controls: CSS only, no script ---------- */
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.page{display:none}
+.tabpanel{display:none}
+
+#r-p-over:checked  ~ main #p-over {display:block}
+#r-p-steps:checked ~ main #p-steps{display:block}
+#r-p-close:checked ~ main #p-close{display:block}
+#r-p-flow:checked  ~ main #p-flow {display:block}
+
+#r-t-scope:checked ~ main #t-scope{display:block}
+#r-t-done:checked  ~ main #t-done {display:block}
+#r-t-out:checked   ~ main #t-out  {display:block}
+#r-t-s1:checked ~ main #t-s1{display:block}
+#r-t-s2:checked ~ main #t-s2{display:block}
+#r-t-s3:checked ~ main #t-s3{display:block}
+#r-t-s4:checked ~ main #t-s4{display:block}
+#r-t-gap:checked  ~ main #t-gap {display:block}
+#r-t-todo:checked ~ main #t-todo{display:block}
+#r-t-flow:checked ~ main #t-flow{display:block}
+#r-t-hops:checked ~ main #t-hops{display:block}
+
+/* ---------- floating page nav ---------- */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:700;padding:2px 10px 4px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+#r-p-over:checked  ~ .skipto label[for="r-p-over"],
+#r-p-steps:checked ~ .skipto label[for="r-p-steps"],
+#r-p-close:checked ~ .skipto label[for="r-p-close"],
+#r-p-flow:checked  ~ .skipto label[for="r-p-flow"]{background:var(--bg);color:var(--accent)}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+}
+
+/* ---------- tab bar ---------- */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+#r-t-scope:checked ~ main label[for="r-t-scope"],
+#r-t-done:checked  ~ main label[for="r-t-done"],
+#r-t-out:checked   ~ main label[for="r-t-out"]{
+  color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t-s1:checked ~ main label[for="r-t-s1"],
+#r-t-s2:checked ~ main label[for="r-t-s2"],
+#r-t-s3:checked ~ main label[for="r-t-s3"],
+#r-t-s4:checked ~ main label[for="r-t-s4"]{
+  color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t-gap:checked  ~ main label[for="r-t-gap"],
+#r-t-todo:checked ~ main label[for="r-t-todo"]{
+  color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+#r-t-flow:checked ~ main label[for="r-t-flow"],
+#r-t-hops:checked ~ main label[for="r-t-hops"]{
+  color:var(--g4);border-bottom-color:var(--g4);font-weight:600}
+
+/* ---------- the container ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:15px 17px;margin:0 0 14px;position:relative}
+.card > *:last-child{margin-bottom:0}
+
+.ct{font-size:1.06rem;font-weight:650;color:#f5f7f9;margin:0 0 .55rem;
+  letter-spacing:-.008em}
+.ct .m{font-size:.9em}
+.rail{font-weight:400}
+.r1{color:var(--g1)} .r2{color:var(--g2)} .r3{color:var(--g3)} .r4{color:var(--g4)}
+
+/* block type, parked in the top-right corner and faded back */
+.tag{position:absolute;top:12px;right:15px;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;font-weight:700;opacity:.6;pointer-events:none;
+  font-family:var(--mono)}
+.typed .ct{padding-right:5.4rem}
+
+/* raised surface — title separated from its own body by size, colour and a rule */
+.card.hi{background:#242a32;border-color:var(--border-strong)}
+.card.hi .ct{font-size:1.18rem;color:#ffffff;font-weight:680;padding:0 0 .52rem;
+  margin:0 0 .62rem;border-bottom:1px solid rgba(255,255,255,.14)}
+.card.hi p:not(.ct),.card.hi li{color:var(--muted)}
+
+/* substep containers tinted by block type */
+.card.c-new    {background:#16282b;border-color:#2c535b}
+.card.c-add    {background:#182a1f;border-color:#2f5a3e}
+.card.c-edit   {background:#2a2319;border-color:#5b4629}
+.card.c-run    {background:#231d2c;border-color:#4a3a5d}
+.card.c-replace{background:#2a1e1b;border-color:#5c3b32}
+
+.grid{display:grid;gap:14px;margin:0 0 14px;
+  grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.grid2{display:grid;gap:14px;margin:0 0 14px;
+  grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
+.grid .card,.grid2 .card,.grid .note,.grid2 .note{margin:0}
+
+/* ---------- block-type colours ---------- */
+.t-new{color:#2AB8C9} .t-new-g{color:#2E93DB} .t-add{color:#3DAF62}
+.t-add-g{color:#46B08C} .t-edit{color:#D98C3B} .t-replace{color:#C9705B}
+.t-replace-g{color:#C95B7A} .t-run{color:#A16BD9}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;max-width:100%;margin:0;border:1px solid var(--border);
+  border-radius:9px;background:rgba(0,0,0,.16)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--faint);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;background:rgba(0,0,0,.24)}
+tr:last-child td{border-bottom:0}
+td code{white-space:normal}
+
+/* ---------- file path: its own grey chip ---------- */
+.loc{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-family:var(--mono);
+  font-size:12.2px;line-height:1.5;color:var(--muted);background:rgba(0,0,0,.3);
+  border:1px solid rgba(255,255,255,.085);border-radius:6px;padding:3px 9px;
+  margin:0 0 .5rem}
+
+/* ---------- code ---------- */
+.desc{color:var(--muted);font-size:13.6px;margin:0 0 .5rem}
+.code{position:relative;margin:0 0 .6rem}
+.code pre{margin:0;background:var(--bg);border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;padding:13px 15px;overflow-x:auto;max-width:100%;
+  font-family:var(--mono);font-size:12.8px;line-height:1.56}
+.code .lang{position:absolute;top:6px;right:9px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--bg);
+  padding:1px 4px;border-radius:3px;pointer-events:none;font-family:var(--mono)}
+.k{color:#A25494} .ty{color:#4368A8} .ad{color:#2E8B62} .rm{color:#C24A4A}
+.cm{color:var(--faint)}
+.why{font-size:14px;margin:0}
+.why > li{margin:0 0 .2rem}
+
+/* ---------- callout kinds ---------- */
+.note{--nc:var(--warn);--ns:var(--warn-soft);
+  border:1px solid var(--nc);background:var(--ns);border-radius:12px;
+  padding:13px 17px;margin:0 0 14px;position:relative}
+.note b{display:block;color:var(--nc);font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;font-weight:700;margin:0 0 5px}
+.note > *:last-child{margin-bottom:0}
+.note.good{--nc:#5FBF8F;--ns:#13291f}   /* green  — good news, context */
+.note.calm{--nc:#8FD0E8;--ns:#152833}   /* ice    — nothing to worry about */
+.note.pre {--nc:#B79CE8;--ns:#221b33}   /* lilac  — preface, read me first */
+.note.ref {--nc:#5C9CD6;--ns:#141f2b}   /* slate  — precedent, reference */
+.note.drop{--nc:#C24A4A;--ns:#2a1414}   /* red    — cut from the plan */
+.note.pre b,.note.good b,.note.calm b,.note.ref b{
+  text-transform:none;font-size:1.04rem;letter-spacing:-.008em;font-weight:650;
+  margin:0 0 .45rem}
+.note.pre b .m,.note.good b .m,.note.calm b .m,.note.ref b .m{font-size:.9em}
+.note .tw{border-color:rgba(255,255,255,.1)}
+/* a tagged callout borrows its own kind colour for the corner tag */
+.note .tag{color:var(--nc)}
+.note.tagged b{padding-right:4.4rem}
+
+/* ---------- outline ---------- */
+.outline{color:var(--ink);font-size:14px;margin:0}
+.outline li{margin:0 0 .28rem}
+
+/* ---------- todo: real checkboxes, no script needed ---------- */
+.todo{list-style:none;padding-left:0;margin:0;font-size:14.2px}
+.todo li{margin:0 0 .5rem}
+.todo li:last-child{margin-bottom:0}
+.todo label{display:grid;grid-template-columns:1.1rem 1fr;gap:.6rem;align-items:start;
+  cursor:pointer}
+/* each row in its own low-contrast container */
+.todo.boxed li{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.065);
+  border-radius:8px;padding:8px 11px}
+.todo.boxed label{gap:.55rem}
+.cb{width:15px;height:15px;margin:.26rem 0 0;accent-color:var(--nc,var(--accent));
+  cursor:pointer;flex:none}
+.cb:checked + span{color:var(--faint);text-decoration:line-through}
+
+/* ---------- dropped: kept for reference, never an instruction ---------- */
+.card.dropped{background:#1b1d20;border-color:#32373d;border-style:dashed}
+.card.dropped .ct{color:#9aa2ab;text-decoration:line-through;
+  text-decoration-color:#5a636d;text-decoration-thickness:1px}
+.card.dropped .nd,.card.dropped .desc,.card.dropped p,.card.dropped li{color:var(--faint)}
+.card.dropped .loc{opacity:.65}
+.card.dropped .code pre{opacity:.72}
+.card.dropped .tag{color:#8a939c;opacity:.75}
+.droptag{display:inline-block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;padding:2px 7px;border-radius:3px;background:#3B1D1D;color:#E58A8A;
+  margin:0 0 .55rem}
+
+/* ---------- diagram ---------- */
+.dw{overflow-x:auto;max-width:100%;margin:0}
+.dw svg{display:block;width:100%;min-width:760px;height:auto}
+.n    {fill:#1d2126;stroke:var(--border-strong);stroke-width:1}
+.n-l1 {fill:#132428;stroke:#2a6d76}
+.n-l2 {fill:#241d12;stroke:#7a5426}
+.n-l3 {fill:#1b1d20;stroke:#41474e;stroke-dasharray:5 3}
+.n-cv {fill:#241f2e;stroke:#6b5a8c}
+.n-end{fill:#2a1414;stroke:#7a3535}
+.nt   {fill:#f2f4f7;font:600 12.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+.nd   {fill:#a4acb5;font:11px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.lh   {font:700 11px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+        letter-spacing:.09em}
+.lh1{fill:#1C8E9C} .lh2{fill:#B06A1E} .lh3{fill:#8a939c}
+.fl   {stroke:#5a636d;stroke-width:1.4;fill:none}
+.fl1{stroke:#2a6d76} .fl2{stroke:#7a5426}
+.fl3{stroke:#41474e;stroke-dasharray:5 3}
+.ah   {fill:#5a636d} .ah1{fill:#2a6d76} .ah2{fill:#7a5426} .ah3{fill:#41474e}
+.newtag{fill:#8E7CC3;font:700 9.5px ui-monospace,Menlo,monospace;letter-spacing:.08em}
+
+@media (max-width:720px){ .tabs{flex-wrap:wrap} .typed .ct{padding-right:0}
+  .note.tagged b{padding-right:0}
+  .tag{position:static;display:block;margin:0 0 .3rem} }
+</style>
+</head>
+<body>
+
+<input class="st" type="radio" name="pg" id="r-p-over" checked>
+<input class="st" type="radio" name="pg" id="r-p-steps">
+<input class="st" type="radio" name="pg" id="r-p-close">
+<input class="st" type="radio" name="pg" id="r-p-flow">
+<input class="st" type="radio" name="tover" id="r-t-scope" checked>
+<input class="st" type="radio" name="tover" id="r-t-done">
+<input class="st" type="radio" name="tover" id="r-t-out">
+<input class="st" type="radio" name="tsteps" id="r-t-s1" checked>
+<input class="st" type="radio" name="tsteps" id="r-t-s2">
+<input class="st" type="radio" name="tsteps" id="r-t-s3">
+<input class="st" type="radio" name="tsteps" id="r-t-s4">
+<input class="st" type="radio" name="tclose" id="r-t-gap" checked>
+<input class="st" type="radio" name="tclose" id="r-t-todo">
+<input class="st" type="radio" name="tflow" id="r-t-flow" checked>
+<input class="st" type="radio" name="tflow" id="r-t-hops">
+<input class="st" type="checkbox" id="navtoggle">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-over">Overview</label>
+    <label for="r-p-steps">Steps</label>
+    <label for="r-p-flow">Data Flow</label>
+    <label for="r-p-close">Close Out</label>
+  </div>
+</nav>
+
+<main>
+
+<!-- ================= PAGE 1 — OVERVIEW ================= -->
+<section class="page" id="p-over">
+
+<div class="head">
+  <h1>MMA-6006 — Manage RSVPs Tab</h1>
+  <p class="lede">The tab is built and the chips already read
+  <span class="m">Event.coordinatorPositions</span>. What was actually left: a rebase, and a label
+  table pointed at the wrong source.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-scope">Scope</label>
+  <label class="tab" for="r-t-done">Already Done</label>
+  <label class="tab" for="r-t-out">Left Out</label>
+</div>
+
+<!-- ---------------- SCOPE ---------------- -->
+<div class="tabpanel" id="t-scope">
+
+<h2><span class="rail r1">│</span> Scope</h2>
+
+<div class="grid2">
+
+  <div class="card hi">
+    <p class="ct">Outline</p>
+    <ol class="outline">
+      <li>Step 1 — Rebase Onto Current Main</li>
+      <li>Step 2 — Fix the Chip Label Source</li>
+      <li>Step 3 — Calendar Eligibility List <b>(cut — reference only)</b></li>
+      <li>Step 4 — Run the Gate</li>
+    </ol>
+  </div>
+
+  <div class="note">
+    <b>Verified, not assumed</b>
+    <p>The handoff was written against maltSync 26.x. Main now pins <span class="m">29.0.1</span>
+    and the enum still does not exist there — five hits in the sources jar, every one of them a
+    trailing comment.</p>
+    <p>MTMS-151 has not moved either. It is still Blocked, pending server changes.</p>
+  </div>
+
+</div>
+
+<div class="card">
+  <p class="ct">Which <span class="m">coordinatorPositions</span> source?</p>
+  <p class="desc">already decided — this box exists so the answer is not re-derived mid-step</p>
+  <div class="tw"><table>
+  <tr><th>Field</th><th>Server wording</th><th>Verdict</th></tr>
+  <tr>
+    <td><code>DtoEvent.coordinatorPositions</code></td>
+    <td>"Coordinator positions assigned to this event"</td>
+    <td><b>Not the source.</b> Already plumbed end to end, already renders the chips. Step 3
+        leaves it alone.</td>
+  </tr>
+  <tr>
+    <td><code>DtoCalendar.coordinatorPositions</code></td>
+    <td>Which calling types <b>may be</b> assigned</td>
+    <td><b>This is the source.</b> On the wire, dropped on the floor — no Room column, absent
+        from <code>toCalendar()</code>. Step 3 adds it.</td>
+  </tr>
+  </table></div>
+</div>
+
+</div><!-- /t-scope -->
+
+<!-- ---------------- ALREADY DONE ---------------- -->
+<div class="tabpanel" id="t-done">
+
+<h2><span class="rail r1">│</span> Already done on the branch</h2>
+
+<div class="note good">
+  <b>The rebase is smaller than "740 behind" suggests</b>
+  <p>Measured against the merge-base <span class="m">38d11660e1</span>, main touched the files
+  this branch edits by about forty lines in total. The 740 commits landed elsewhere.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Ticket requirements against six commits</p>
+  <div class="tw"><table>
+  <tr><th>Requirement</th><th>State</th></tr>
+  <tr><td>FR-1 — tab strip on public events</td>
+      <td>Done — gate is <code>isPublic &amp;&amp; calendar.editable</code></td></tr>
+  <tr><td>FR-2 — recipients section with info icon</td>
+      <td>Done — <code>RsvpInfoClicked</code> opens a real dialog, not a stopgap</td></tr>
+  <tr><td>FR-3 — removable recipient chips</td>
+      <td>Done — driven by <code>Event.coordinatorPositions</code></td></tr>
+  <tr><td>FR-4 — "+ Add Notification Recipient" row</td>
+      <td>Done — routed to <code>showUnderConstructionDialog()</code>, TODO(MMA-5952)</td></tr>
+  <tr><td>FR-6 — Total Attendees badge</td>
+      <td><b>Hardcoded 0</b> — no get-RSVP-responses call exists in the shared library</td></tr>
+  <tr><td>FR-7 — empty state</td>
+      <td>Done — covered by <code>EventDetailsScreenTest</code></td></tr>
+  <tr><td>FR-8 — per-tab scroll, FAB on both tabs</td>
+      <td>Done — two scroll states hoisted above the pager</td></tr>
+  </table></div>
+</div>
+
+<div class="card">
+  <p class="ct">Main-side churn, per file</p>
+  <div class="tw"><table>
+  <tr><th>File</th><th>Churn</th><th>What changed</th></tr>
+  <tr><td><code>GetEventDetailsUiStateUseCase.kt</code></td><td>+26 / −14</td>
+      <td>MMA-6034 added <code>eventPhotoResolver</code>, <code>shareInDefaults</code>,
+          <code>photoUriFlow</code></td></tr>
+  <tr><td><code>EventDetailsUiState.kt</code></td><td>+7 / −2</td>
+      <td><code>photoUrl</code> became <code>photoUriFlow</code></td></tr>
+  <tr><td><code>EventDetailsScreen.kt</code></td><td>+3 / −2</td>
+      <td>hero collects the flow</td></tr>
+  <tr><td><code>EventDetailsViewModel.kt</code></td><td>−1</td>
+      <td>one import removed</td></tr>
+  <tr><td><code>CallingRepository.kt</code></td><td>untouched</td><td>—</td></tr>
+  <tr><td><code>PositionDao.kt</code></td><td>untouched</td><td>—</td></tr>
+  <tr><td><code>CalendarSampleData.kt</code></td><td><b>deleted</b></td>
+      <td>removed wholesale by PR #2109</td></tr>
+  </table></div>
+</div>
+
+</div><!-- /t-done -->
+
+<!-- ---------------- LEFT OUT ---------------- -->
+<div class="tabpanel" id="t-out">
+
+<h2><span class="rail r1">│</span> Deliberately left out</h2>
+
+<div class="grid">
+
+  <div class="card hi">
+    <p class="ct">The recipient picker</p>
+    <p>MMA-6006 puts the picker and <code>coordinatorPositions</code> persistence explicitly out
+    of scope. MMA-5952 owns them, and it is escalated on blocked MTMS-151.</p>
+    <p>The Add row stays routed to <code>showUnderConstructionDialog()</code>.</p>
+  </div>
+
+  <div class="card hi">
+    <p class="ct">The calendar's eligibility list</p>
+    <p>Plumbed in Step 3 and then reverted — nothing consumed it, and it duplicated lane 1's field
+    name inside the same model. See <b>Steps → Step 3</b> for the full reasoning and how to
+    recover it.</p>
+    <p>Filtering the chips against it was never planned either: hiding a server-assigned recipient
+    would silently under-report who gets notified.</p>
+  </div>
+
+  <div class="card hi">
+    <p class="ct">A translated <span class="m">when</span> over known types</p>
+    <p>Built once and reverted. The six types were a guess against a vocabulary the shared
+    library never defined, and the service enum is far too large to hand-write.</p>
+    <p>Step 2 fixes the real problem: the lookup table was wrong, not the fallback.</p>
+  </div>
+
+  <div class="card hi">
+    <p class="ct">Total Attendees</p>
+    <p>Stays hardcoded <code>0</code>. No get-RSVP-responses call exists anywhere in maltSync
+    29.0.1 — <code>CalendarService</code> has no RSVP read and
+    <code>ActivitySharingService</code> only submits.</p>
+    <p>The row ships with the count it can prove.</p>
+  </div>
+
+  <div class="card hi">
+    <p class="ct">A <span class="m">PositionDao</span> boundary test</p>
+    <p>Preflight flagged the <code>unitNumber</code> scoping as untested.</p>
+    <p>Carried forward as a TODO rather than done here, because Step 2 rewrites the very query
+    it would test.</p>
+  </div>
+
+</div>
+
+</div><!-- /t-out -->
+</section>
+
+<!-- ================= PAGE 2 — STEPS ================= -->
+<section class="page" id="p-steps">
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-s1">Step 1 — Rebase</label>
+  <label class="tab" for="r-t-s2">Step 2 — Labels</label>
+  <label class="tab" for="r-t-s3">Step 3 — Cut</label>
+  <label class="tab" for="r-t-s4">Step 4 — Gate</label>
+</div>
+
+<!-- ---------------- STEP 1 ---------------- -->
+<div class="tabpanel" id="t-s1">
+
+<h2><span class="rail r2">│</span> Step 1 — Rebase Onto Current Main</h2>
+
+<div class="grid2">
+
+  <div class="card c-run typed">
+    <span class="tag t-run">Run</span>
+    <p class="ct">1.1 — Rebase <span class="m">MMA-6006</span> Onto <span class="m">upstream/main</span></p>
+    <p class="loc">MemberTools-Android-MMA-6006</p>
+    <p class="desc">fetch upstream and replay the six commits onto current main</p>
+    <div class="code"><span class="lang">bash</span><pre><span class="k">git</span> fetch <span class="ty">upstream</span>
+<span class="k">git</span> rebase <span class="ty">upstream/main</span></pre></div>
+  </div>
+
+  <div class="card c-run typed">
+    <span class="tag t-run">Run</span>
+    <p class="ct">1.2 — Resolve the <span class="m">CalendarSampleData</span> Delete Conflict</p>
+    <p class="loc">app/…/ux/calendar/sample/CalendarSampleData.kt (deleted on main)</p>
+    <p class="desc">accept the deletion; the branch's six-line change to it goes</p>
+    <div class="code"><span class="lang">bash</span><pre><span class="k">git</span> rm <span class="ty">app/…/ux/calendar/sample/CalendarSampleData.kt</span></pre></div>
+    <ul class="why"><li><b>Why:</b> PR #2109 removed the whole sample-data package, so the
+      branch's edit has no file to land in</li></ul>
+  </div>
+
+</div>
+
+<div class="card c-add typed">
+  <span class="tag t-add">Add</span>
+  <p class="ct">1.3 — Add <span class="m">recipientNamesFlow</span> to <span class="m">GetEventDetailsUiStateUseCase</span></p>
+  <p class="loc">feature/calendar/…/detail/GetEventDetailsUiStateUseCase.kt</p>
+  <p class="desc">resolves chip labels only for an event that will actually show the tab</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">return</span> detailsFlow.flatMapLatest { details -&gt;
+    ...
+    <span class="k">val</span> wardNameFlow = details.calendar?.<span class="k">let</span> { unitRepository.getUnitNameFlow(it.unitId) } ?: flowOf(<span class="k">null</span>)
+<span class="ad"> +  <span class="k">val</span> recipientNamesFlow = details.calendar</span>
+<span class="ad"> +      ?.takeIf { details.showsRsvpTab }</span>
+<span class="ad"> +      ?.<span class="k">let</span> { callingRepository.getPositionNamesByTypesFlow(details.coordinatorPositions, it.unitId) }</span>
+<span class="ad"> +      ?: flowOf(emptyMap())</span>
+    ...
+}</pre></div>
+  <ul class="why"><li><b>Why:</b> a null calendar has no <code>unitId</code> to scope the query
+    by, and cannot show the tab anyway</li></ul>
+</div>
+
+<div class="note">
+  <b>Hang it off the shared flow</b>
+  <p>Main made <code>detailsFlow</code> a <code>shareInDefaults</code> flow because three
+  consumers now read it. Any flow added here attaches to <code>detailsFlow</code>, never to the
+  raw <code>eventDetailsFlow</code> parameter — otherwise the Room query runs twice.</p>
+</div>
+
+<div class="card c-edit typed">
+  <span class="tag t-edit">Edit</span>
+  <p class="ct">1.4 — Swap <span class="m">mapLatest</span> for <span class="m">combine</span> in <span class="m">GetEventDetailsUiStateUseCase</span></p>
+  <p class="loc">feature/calendar/…/detail/GetEventDetailsUiStateUseCase.kt</p>
+  <p class="desc">two flows now feed the state, and main's photoUriFlow rides through unchanged</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">return</span> detailsFlow.flatMapLatest { details -&gt;
+    ...
+<span class="rm"> -  wardNameFlow.mapLatest { wardName -&gt; details.toUiState(wardName, menuItemsFlow, dialogFlow, photoUriFlow) }</span>
+<span class="ad"> +  combine(wardNameFlow, recipientNamesFlow) { wardName, recipientNames -&gt;</span>
+<span class="ad"> +      details.toUiState(wardName, recipientNames, menuItemsFlow, dialogFlow, photoUriFlow)</span>
+<span class="ad"> +  }</span>
+}</pre></div>
+</div>
+
+<div class="card c-add typed">
+  <span class="tag t-add">Add</span>
+  <p class="ct">1.5 — Restore the Tab Fields on <span class="m">EventDetailsUiState</span></p>
+  <p class="loc">feature/calendar/…/detail/EventDetailsUiState.kt</p>
+  <p class="desc">three fields land beside main's photoUriFlow, not instead of it</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">data class</span> <span class="ty">EventDetailsUiState</span>(
+    ...
+    <span class="k">val</span> photoUriFlow: <span class="ty">StateFlow</span>&lt;<span class="ty">String</span>?&gt; = MutableStateFlow(<span class="k">null</span>),
+    <span class="k">val</span> webLinkUrl: <span class="ty">String</span>? = <span class="k">null</span>,
+<span class="ad"> +  <span class="k">val</span> showRsvpTab: <span class="ty">Boolean</span> = <span class="k">false</span>,</span>
+<span class="ad"> +  <span class="k">val</span> notificationRecipients: <span class="ty">List</span>&lt;<span class="ty">RecipientChip</span>&gt; = emptyList(),</span>
+<span class="ad"> +  <span class="k">val</span> totalAttendees: <span class="ty">Int</span> = 0,</span>
+    ...
+)</pre></div>
+</div>
+
+<div class="card c-edit typed">
+  <span class="tag t-edit">Edit</span>
+  <p class="ct">1.6 — Delete the Stale Tabs Comment in <span class="m">EventDetailsScreen</span></p>
+  <p class="loc">feature/calendar/…/detail/EventDetailsScreen.kt:80-85</p>
+  <p class="desc">main still says the tabs are deliberately absent; this branch adds them</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="cm">// Laid out against the finished Event Details design… Three parts of that</span>
+<span class="cm">// design are NOT here because no data backs them yet:</span>
+<span class="rm"> -  <span class="cm">//  - the Details / Manage RSVPs tabs — MMA-5953 owns the RSVP surface</span></span>
+    <span class="cm">//  - the organizer's avatar and calling — the read contract is name only</span>
+    ...</pre></div>
+</div>
+
+<div class="card c-edit typed">
+  <span class="tag t-edit">Edit</span>
+  <p class="ct">1.7 — Remove the Dead <span class="m">transparentContainerColors</span> Import from <span class="m">ManageRsvpsTab</span></p>
+  <p class="loc">feature/calendar/…/detail/ManageRsvpsTab.kt:45</p>
+  <p class="desc">its only call site went with the ListItem the uncommitted diff deleted</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">import</span> androidx.compose.material3.SegmentedListItem
+<span class="rm"> -  <span class="k">import</span> org.lds.mobile.ui.compose.material3.listitem.transparentContainerColors</span>
+...</pre></div>
+</div>
+
+<div class="note">
+  <b>This one breaks the build</b>
+  <p><code>allWarningsAsErrors</code> is honored through
+  <code>build-logic/convention/…/KotlinAndroid.kt:123</code>, so the unused import is a compile
+  failure, not a lint nag. Check whether <code>MaterialTheme</code> is still referenced in
+  <code>EventDetailsScreen.kt</code> after the tab-colour revert — it may be newly unused too.</p>
+</div>
+
+</div><!-- /t-s1 -->
+
+<!-- ---------------- STEP 2 ---------------- -->
+<div class="tabpanel" id="t-s2">
+
+<h2><span class="rail r2">│</span> Step 2 — Fix the Chip Label Source</h2>
+
+<div class="grid2">
+
+  <div class="note pre">
+    <b>Why the <span class="m">Position</span> query is wrong</b>
+    <p>The branch resolves chip labels from <code>Position</code>, whose rows exist only where a
+    member <i>currently holds</i> that calling.</p>
+    <p>Every vacant coordinator position therefore falls through to the untranslated
+    title-caser — on a tab that lists callings rather than people.</p>
+  </div>
+
+  <div class="card">
+    <p class="ct">The two candidate tables</p>
+    <div class="tw"><table>
+    <tr><th>Table</th><th>One row per</th><th>Vacant</th><th>Name</th></tr>
+    <tr><td><code>Position</code></td><td>person holding a calling</td>
+        <td><b>absent</b></td><td><code>String</code></td></tr>
+    <tr><td><code>Calling</code></td><td><code>(type, unitNumber)</code></td>
+        <td><b>present</b></td><td><code>String?</code></td></tr>
+    </table></div>
+  </div>
+
+</div>
+
+<div class="card c-edit typed">
+  <span class="tag t-edit">Edit</span>
+  <p class="ct">2.1 — Repoint <span class="m">findPositionNamesByTypesFlow</span> at <span class="m">Calling</span></p>
+  <p class="loc">database/member/…/position/PositionDao.kt:56-57</p>
+  <p class="desc">names vacant callings too; the null guard keeps the projection non-null</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">interface</span> <span class="ty">PositionDao</span> {
+    ...
+<span class="rm"> -  @<span class="ty">Query</span>("SELECT type, MIN(name) AS name FROM Position " +</span>
+<span class="rm"> -      "WHERE type IN (:types) AND unitNumber = :unitNumber GROUP BY type")</span>
+<span class="ad"> +  @<span class="ty">Query</span>("SELECT type, name FROM Calling " +</span>
+<span class="ad"> +      "WHERE type IN (:types) AND unitNumber = :unitNumber AND name IS NOT NULL")</span>
+    <span class="k">fun</span> findPositionNamesByTypesFlow(types: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;, unitNumber: <span class="ty">UnitNumber</span>): <span class="ty">Flow</span>&lt;<span class="ty">List</span>&lt;<span class="ty">PositionTypeName</span>&gt;&gt;
+    ...
+}</pre></div>
+  <ul class="why">
+    <li><b>Why B:</b> the tab lists callings, and a vacant calling is still a recipient the
+        server notifies</li>
+    <li><b>Why C:</b> <code>CallingEntity.name</code> is <code>String?</code> while
+        <code>PositionTypeName.name</code> is not, so the null guard is load-bearing</li>
+    <li><b>Why C:</b> <code>Calling</code> is already one row per <code>(type, unitNumber)</code>,
+        so the aggregation goes</li>
+  </ul>
+</div>
+
+<div class="note ref">
+  <b>Example — <span class="m">findCallingNameByPositionType</span>, the query 2.1 generalizes</b>
+  <p class="loc">database/member/…/position/PositionDao.kt:1836-1844</p>
+  <p class="desc">the single-type variant, already in the file, unexposed on the repository</p>
+  <div class="code"><span class="lang">kotlin</span><pre>@<span class="ty">Query</span>("SELECT name FROM Calling WHERE type = :type AND unitNumber = :unitNumber LIMIT 1")
+<span class="k">suspend fun</span> findCallingNameByPositionType(type: <span class="ty">String</span>, unitNumber: <span class="ty">UnitNumber</span>): <span class="ty">String</span>?</pre></div>
+</div>
+
+<div class="card c-edit typed">
+  <span class="tag t-edit">Edit</span>
+  <p class="ct">2.2 — Rewrite the <span class="m">PositionTypeName</span> KDoc</p>
+  <p class="loc">database/member/…/entities/position/PositionTypeName.kt</p>
+  <p class="desc">the aggregation rationale it documents no longer exists</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="cm">/**</span>
+<span class="rm"> -  <span class="cm"> * The query collapses multiple holders of the same type with GROUP BY, so if two</span></span>
+<span class="rm"> -  <span class="cm"> * rows of one type carried different names SQLite would pick one arbitrarily.</span></span>
+<span class="ad"> +  <span class="cm"> * Read from `Calling`, the unit's calling definitions — one row per (type, unitNumber),</span></span>
+<span class="ad"> +  <span class="cm"> * present whether or not anyone holds it. Rows with a null name are filtered out by</span></span>
+<span class="ad"> +  <span class="cm"> * the query, which is what keeps [name] non-null here.</span></span>
+<span class="cm"> */</span>
+<span class="k">data class</span> <span class="ty">PositionTypeName</span>(
+    ...
+)</pre></div>
+</div>
+
+<div class="card c-edit typed">
+  <span class="tag t-edit">Edit</span>
+  <p class="ct">2.3 — Fix the Dead MockK Stub in <span class="m">GetEventDetailsUiStateUseCaseTest</span></p>
+  <p class="loc">feature/calendar/…/detail/GetEventDetailsUiStateUseCaseTest.kt:544-553</p>
+  <p class="desc">fixture defaults make showsRsvpTab false, so the repository is never called</p>
+  <div class="code"><span class="lang">kotlin</span><pre>@<span class="ty">Test</span>
+<span class="k">fun</span> `recipient chips use the unit's own name for the position`() = runBlocking {
+<span class="rm"> -  <span class="k">val</span> state = stateOf(eventDetails(coordinatorPositions = listOf("BISHOP")))</span>
+<span class="ad"> +  <span class="k">val</span> state = stateOf(</span>
+<span class="ad"> +      eventDetails(isPublic = <span class="k">true</span>, editable = <span class="k">true</span>, coordinatorPositions = listOf("BISHOP")),</span>
+<span class="ad"> +  )</span>
+    ...
+}</pre></div>
+  <ul class="why">
+    <li><b>Why C:</b> the fixture defaults to <code>isPublic = false, editable = false</code>, so
+        the <code>takeIf</code> short-circuits and the strict stub never runs</li>
+    <li><b>Why C:</b> it passes today only because <code>toTitleCase("BISHOP")</code> equals the
+        mocked <code>"Bishop"</code></li>
+  </ul>
+</div>
+
+<div class="card c-add typed">
+  <span class="tag t-add">Add</span>
+  <p class="ct">2.4 — Add a <span class="m">CUSTOM_POSITION</span> Differing-Name Test</p>
+  <p class="loc">feature/calendar/…/detail/GetEventDetailsUiStateUseCaseTest.kt</p>
+  <p class="desc">a label the title-caser could not produce, so the lookup is load-bearing</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> <span class="ty">GetEventDetailsUiStateUseCaseTest</span> {
+    ...
+<span class="ad"> +  @<span class="ty">Test</span></span>
+<span class="ad"> +  <span class="k">fun</span> `a custom calling's stored name wins over the title-cased enum`() = runBlocking {</span>
+<span class="ad"> +      every { callingRepository.getPositionNamesByTypesFlow(any(), any()) } returns</span>
+<span class="ad"> +          flowOf(mapOf("CUSTOM_POSITION" to "Activities Committee Chair"))</span>
+<span class="ad"> +      ...</span>
+<span class="ad"> +  }</span>
+    ...
+}</pre></div>
+  <ul class="why"><li><b>Why C:</b> every existing label is exactly the title-case of its enum, so
+    deleting the lookup leaves all four recipient tests green</li></ul>
+</div>
+
+</div><!-- /t-s2 -->
+
+<!-- ---------------- STEP 3 ---------------- -->
+<div class="tabpanel" id="t-s3">
+
+<h2><span class="rail r2">│</span> Step 3 — Calendar Eligibility List <b>(cut — reference only)</b></h2>
+
+<div class="note drop">
+  <b>Cut from the plan — kept here for reference</b>
+  <p>Built, then reverted. Commit <span class="m">3acad11ae3</span> is out of the branch; recover it
+  with <span class="m">git cherry-pick 3acad11ae3</span> or from the saved
+  <span class="m">step3-calendar-eligibility.patch</span>.</p>
+  <p><b>Why it went:</b> nothing consumes it. Its only consumer is MMA-5952's recipient picker, which
+  has no code, no branch and no PR, and is itself waiting on MTMS-151 — Blocked, pending server
+  changes, no date. MMA-6006 scopes this out explicitly too.</p>
+  <p><b>The deciding problem:</b> it puts a second field named
+  <span class="m">coordinatorPositions</span> on <span class="m">EventDetailsCalendar</span>, nested
+  inside the <span class="m">EventDetails</span> that already has one — same name, different meaning,
+  two lines apart in a debugger. If it returns for MMA-5952 it should return as
+  <span class="m">eligibleCoordinatorPositions</span>.</p>
+</div>
+
+<div class="grid2">
+
+  <div class="note pre">
+    <b>What it would have closed</b>
+    <p>The server publishes a per-calendar list of which calling types may be assigned, and
+    <code>toCalendar()</code> throws it away. That is the "hard list" Jordan's review comment asked
+    about — now answered in writing rather than in code.</p>
+  </div>
+
+  <div class="note calm">
+    <b>No shared-library work would have been needed</b>
+    <p><code>DtoCalendar.coordinatorPositions</code> already ships in maltSync
+    <span class="m">29.0.1</span> as <code>List&lt;String&gt;? = null</code>. The field arrives
+    on every calendar sync today — <code>toCalendar()</code> simply never reads it.</p>
+    <p>The shared-library work that <i>is</i> outstanding (the missing enum, the display-name
+    source) is tracked on MTMS-151 and blocked neither this nor Step 2. See
+    <b>Close Out → Contract Gap</b>.</p>
+  </div>
+
+</div>
+
+<div class="note">
+  <b>Schema v9 is still in flux</b>
+  <p><code>CalendarDatabase.version = 9</code> and <code>CalendarMigration9.kt</code> are
+  committed, but <code>schemas/…/9.json</code> is <b>untracked</b> — so v9 is not finalized.
+  Amend the existing migration; no v10 bump. Leave <code>9.json</code> untracked.</p>
+</div>
+
+<div class="card dropped typed">
+  <span class="tag">Ref</span>
+  <p class="ct">3.1 — Add <span class="m">coordinatorPositions</span> to the <span class="m">Calendar</span> Entity</p>
+  <p class="loc">database/calendar/…/entities/calendar/Calendar.kt</p>
+  <p class="desc">null means never synced, empty means none — same contract as eventLocations</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">data class</span> <span class="ty">Calendar</span>(
+    ...
+    <span class="k">val</span> timeZone: <span class="ty">String</span>? = <span class="k">null</span>,
+<span class="ad"> +  <span class="cm">// Which calling types the server will let this calendar assign as coordinator</span></span>
+<span class="ad"> +  <span class="cm">// positions. Nullable, and null rather than empty for a pre-sync row, matching</span></span>
+<span class="ad"> +  <span class="cm">// the shared List converter's contract.</span></span>
+<span class="ad"> +  <span class="k">val</span> coordinatorPositions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;? = <span class="k">null</span>,</span>
+)</pre></div>
+  <ul class="why"><li><b>Why C:</b> reuses <code>CalendarTypeConverters</code>, the database's
+    single <code>List</code> converter, already shared with <code>eventLocations</code></li></ul>
+</div>
+
+<div class="card dropped typed">
+  <span class="tag">Ref</span>
+  <p class="ct">3.2 — Add the <span class="m">Calendar</span> Column to <span class="m">CalendarMigration9</span></p>
+  <p class="loc">database/calendar/…/migration/CalendarMigration9.kt</p>
+  <p class="desc">appended to the in-flux v9 migration, no version bump</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">object</span> <span class="ty">CalendarMigration9</span> : <span class="ty">Migration</span>(8, 9) {
+    <span class="k">override suspend fun</span> migrate(connection: <span class="ty">SQLiteConnection</span>) {
+        ...
+<span class="ad"> +      <span class="cm">// The calendar's RSVP-recipient eligibility list (MMA-6006). Existing rows get</span></span>
+<span class="ad"> +      <span class="cm">// null, which readers treat as "never synced", not "none eligible".</span></span>
+<span class="ad"> +      connection.execSQL("ALTER TABLE `Calendar` ADD COLUMN `coordinatorPositions` TEXT")</span>
+    }
+}</pre></div>
+</div>
+
+<div class="card dropped typed">
+  <span class="tag">Ref</span>
+  <p class="ct">3.3 — Map <span class="m">coordinatorPositions</span> in <span class="m">DtoCalendar.toCalendar</span></p>
+  <p class="loc">repo/calendar/…/CalendarSyncRepository.kt:239-266</p>
+  <p class="desc">the wire field has been arriving and being dropped since MMA-5937</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">internal fun</span> <span class="ty">DtoCalendar</span>.toCalendar(proxy: <span class="ty">Boolean</span>): <span class="ty">Calendar</span>? {
+    ...
+        timeZone = timeZone,
+<span class="ad"> +      coordinatorPositions = coordinatorPositions,</span>
+    )
+}</pre></div>
+</div>
+
+<div class="note">
+  <b>Path moved since the handoff</b>
+  <p><code>CalendarSyncRepository.kt</code> is no longer under <code>:app</code> at
+  <code>model/sync/calendar/</code> — it now lives in <code>:repo:calendar</code>. Cover the
+  change in the existing <code>CalendarSyncRepositoryToCalendarTest</code>, whose fixture already
+  constructs <code>DtoCalendar(… coordinatorPositions = emptyList() …)</code>.</p>
+</div>
+
+<div class="card dropped typed">
+  <span class="tag">Ref</span>
+  <p class="ct">3.4 — Surface <span class="m">coordinatorPositions</span> on <span class="m">EventDetailsCalendar</span></p>
+  <p class="loc">repo/calendar/…/EventDetails.kt:82-90</p>
+  <p class="desc">carries the eligible set up to the tab beside the editable flag</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">data class</span> <span class="ty">EventDetailsCalendar</span>(
+    ...
+    <span class="k">val</span> editable: <span class="ty">Boolean</span>,
+    <span class="k">val</span> isPublicEventsEnabled: <span class="ty">Boolean</span>,
+<span class="ad"> +  <span class="k">val</span> coordinatorPositions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;,</span>
+)</pre></div>
+  <ul class="why">
+    <li><b>Why B:</b> closes Jordan's review comment with the server's own list, not a guessed
+        one</li>
+    <li><b>Why C:</b> non-null here with <code>.orEmpty()</code> at the mapper, matching how
+        <code>EventDetails.coordinatorPositions</code> already collapses its null</li>
+  </ul>
+</div>
+
+</div><!-- /t-s3 -->
+
+<!-- ---------------- STEP 4 ---------------- -->
+<div class="tabpanel" id="t-s4">
+
+<h2><span class="rail r2">│</span> Step 4 — Run the Gate</h2>
+
+<div class="note">
+  <b>Background, with a log file</b>
+  <p>Per <code>build-system.md</code>: a killed foreground Gradle run reports a misleading exit
+  code that masks the real failure. Write to a log, background it, then read the log for the
+  true <code>BUILD SUCCESSFUL</code>. <code>build.log</code> is disposable — do not commit it.</p>
+</div>
+
+<div class="card c-run typed">
+  <span class="tag t-run">Run</span>
+  <p class="ct">4.1 — Run the Unit Tests and <span class="m">KoinModuleTest</span></p>
+  <p class="loc">MemberTools-Android-MMA-6006</p>
+  <p class="desc">the three modules this branch touches, plus the Koin graph</p>
+  <div class="code"><span class="lang">bash</span><pre><span class="k">./gradlew</span> <span class="ty">:feature:calendar:testDebugUnitTest</span> \
+          <span class="ty">:repo:calling:testDebugUnitTest</span> \
+          <span class="ty">:repo:calendar:testDebugUnitTest</span> \
+          <span class="ty">:app:testDebugUnitTest</span> --tests KoinModuleTest &gt; build.log 2&gt;&amp;1 &amp;</pre></div>
+  <ul class="why"><li><b>Why C:</b> <code>GetEventDetailsUiStateUseCase</code> gained a
+    constructor parameter on main, so the Koin graph is a real risk, not a formality</li></ul>
+</div>
+
+<div class="grid2">
+
+  <div class="card c-run typed">
+    <span class="tag t-run">Run</span>
+    <p class="ct">4.2 — Run <span class="m">:database:calendar:jvmTest</span></p>
+    <p class="loc">database/calendar/src/jvmTest/…</p>
+    <p class="desc">JVM only; no longer strictly needed once Step 3 was cut — cheap insurance</p>
+    <div class="code"><span class="lang">bash</span><pre><span class="k">./gradlew</span> <span class="ty">:database:calendar:jvmTest</span> &gt; build.log 2&gt;&amp;1 &amp;</pre></div>
+  </div>
+
+  <div class="card c-run typed">
+    <span class="tag t-run">Run</span>
+    <p class="ct">4.3 — Run Detekt and Lint on <span class="m">:feature:calendar</span></p>
+    <p class="loc">:feature:calendar</p>
+    <p class="desc">catches the unused-import class of failure from substep 1.7</p>
+    <div class="code"><span class="lang">bash</span><pre><span class="k">./gradlew</span> <span class="ty">:feature:calendar:detektDebug</span> \
+          <span class="ty">:feature:calendar:lintDebug</span> &gt; build.log 2&gt;&amp;1 &amp;</pre></div>
+  </div>
+
+</div>
+
+<div class="note">
+  <b>Detekt does not cover the database layer</b>
+  <p>It is configured for <code>src/main/kotlin</code>, and the KMP <code>database/*</code>
+  modules use <code>src/commonMain/kotlin</code>. Step 2 touches
+  <code>database/member</code>, so a green detekt run says nothing about that change — the
+  Room KSP pass and the unit tests are what cover it.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Device pass</p>
+  <div class="tw"><table>
+  <tr><th>Case</th><th>Expected</th></tr>
+  <tr><td>Public event, editable calendar</td><td>tab strip, chips, FAB on both tabs</td></tr>
+  <tr><td>Public event, non-editable calendar</td><td>no tab strip</td></tr>
+  <tr><td>Non-public event</td><td>no tab strip</td></tr>
+  <tr><td>No recipients, no responses</td><td>add row, no chips, badge reads 0</td></tr>
+  <tr><td><b>Vacant coordinator calling</b></td>
+      <td>chip shows the unit's calling name, not the title-cased enum — proves Step 2</td></tr>
+  </table></div>
+</div>
+
+<div class="note">
+  <b>Known red on plain main</b>
+  <p><code>validateDebugScreenshotTest</code> fails with 23 pre-existing diffs, all in
+  <code>LocationScreenshotTest</code> (16) and <code>ManageEventsScreenshotTest</code> (7). Not
+  this branch. Verify against the clean worktree before debugging it.</p>
+</div>
+
+</div><!-- /t-s4 -->
+</section>
+
+<!-- ================= PAGE 3 — CLOSE OUT ================= -->
+<section class="page" id="p-close">
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-gap">Contract Gap</label>
+  <label class="tab" for="r-t-todo">TODO</label>
+</div>
+
+<!-- ---------------- CONTRACT GAP ---------------- -->
+<div class="tabpanel" id="t-gap">
+
+<h2><span class="rail r3">│</span> What app code cannot fix</h2>
+
+<div class="note pre">
+  <b>MTMS-151 — the maltSync ticket this waits on</b>
+  <p>MTMS-151 is "maltSync/service: define the RSVP-notification contract and
+  <code>PositionTypeEnum</code> for calendar coordinator positions". It is a shared-library
+  ticket, not an app one, filed by this team and currently <b>Blocked</b> — "pending server
+  changes", Jordan, 2026-08-24.</p>
+  <p>Two of its acceptance criteria stay open after every step in this document. Neither is
+  closable by this branch.</p>
+</div>
+
+<div class="note pre">
+  <b>The gaps, and what remains after Step 2</b>
+  <div class="tw"><table>
+  <tr><th>Gap</th><th>Evidence</th><th>Effect after Step 2</th></tr>
+  <tr>
+    <td><code>PositionTypeEnum</code> does not exist</td>
+    <td>maltSync 29.0.1 sources jar — five hits, all trailing comments</td>
+    <td>The app models a bounded server vocabulary as free strings, with no compile-time check
+        on any value it sends or receives.</td>
+  </tr>
+  <tr>
+    <td>No sanctioned display-name source</td>
+    <td>MTMS-151 acceptance criterion 3, unanswered</td>
+    <td>Much smaller. A type with <i>no</i> <code>Calling</code> row in the unit still
+        title-cases, untranslated.</td>
+  </tr>
+  </table></div>
+</div>
+
+<div class="grid">
+
+  <div class="card hi">
+    <p class="ct">The asymmetry worth citing</p>
+    <p><code>audience</code> is also <code>List&lt;String&gt;?</code> on the wire, and it
+    <i>did</i> get a real <code>EventAudience</code> enum in maltSync, used today by
+    <code>EventAudienceLabels.kt</code>.</p>
+    <p><code>coordinatorPositions</code> did not. That is the whole of gap 1.</p>
+  </div>
+
+  <div class="card hi">
+    <p class="ct">If a label map is ever sanctioned</p>
+    <p>The pattern already exists in the same module:
+    <code>feature/calendar/…/location/AssetLabels.kt:64</code> pairs a known-token map with a
+    <code>humanize</code> fallback.</p>
+    <p>It carries twin <code>@Composable</code> and <code>StringResources</code> overloads. Do
+    not invent a second shape.</p>
+  </div>
+
+  <div class="card hi">
+    <p class="ct">Answering Jordan</p>
+    <p>A hard list of eligible callings does exist:
+    <code>DtoCalendar.coordinatorPositions</code>. It is on the wire in maltSync 29.0.1 and
+    <code>toCalendar()</code> drops it — that is the answer, delivered as a comment rather than as
+    code MMA-5952 has no use for yet.</p>
+    <p>The second half — "drop the ones we don't know about" — is declined on the details screen,
+    with the reason in <b>Overview → Left Out</b>.</p>
+  </div>
+
+</div>
+
+</div><!-- /t-gap -->
+
+<!-- ---------------- TODO ---------------- -->
+<div class="tabpanel" id="t-todo">
+
+<h2><span class="rail r3">│</span> TODO</h2>
+
+<div class="grid2">
+
+  <div class="note tagged">
+    <span class="tag">Todo</span>
+    <b>Before the PR</b>
+    <ul class="todo boxed">
+      <li><label><input class="cb" type="checkbox"><span>Rebase and get the four unit-test
+          modules green</span></label></li>
+      <li><label><input class="cb" type="checkbox"><span>Re-verify
+          <code>SegmentedListItem</code> and <code>ListItemDefaults.segmentedShapes</code>
+          against Material3 <code>1.5.0-alpha27</code> — the branch was written against
+          <code>alpha24</code></span></label></li>
+      <li><label><input class="cb" type="checkbox"><span>Add preview-provider entries for the
+          new <code>EventDetailsUiState</code> fields, regenerate goldens</span></label></li>
+      <li><label><input class="cb" type="checkbox"><span>Device pass, including the
+          vacant-calling case</span></label></li>
+      <li><label><input class="cb" type="checkbox"><span>Attach screenshots to the PR body — the
+          August pass was done and the images never attached</span></label></li>
+    </ul>
+  </div>
+
+  <div class="note calm tagged">
+    <span class="tag">Todo</span>
+    <b>Carried forward, not blocking</b>
+    <ul class="todo boxed">
+      <li><label><input class="cb" type="checkbox"><span>Comment on MTMS-151 with the 29.0.1
+          verification and the <code>Position</code>-versus-<code>Calling</code>
+          finding</span></label></li>
+      <li><label><input class="cb" type="checkbox"><span>Reply to PR #2019 comment 6 with the
+          <code>DtoCalendar.coordinatorPositions</code> evidence — the written answer that replaced
+          the reverted Step 3</span></label></li>
+      <li><label><input class="cb" type="checkbox"><span><code>PositionDao</code> unit-boundary
+          test for the <code>unitNumber</code> scoping</span></label></li>
+      <li><label><input class="cb" type="checkbox"><span><code>SectionHeader</code> to
+          <code>core:ui</code> <code>CardHeader</code> swap — deferred because
+          <code>CardHeader</code> is a <code>ListItem</code> and the swap shifts tuned
+          spacing</span></label></li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="card c-run typed">
+  <span class="tag t-run">Run</span>
+  <p class="ct">Opening the PR Against <span class="m">ICS-Eng/MemberTools-Android</span></p>
+  <p class="desc">#2019 cannot be reopened — its base branch is gone; target upstream directly</p>
+  <div class="code"><span class="lang">bash</span><pre><span class="k">gh</span> auth switch --user <span class="ty">willbarr_church</span>
+FORK_OWNER=$(<span class="k">git</span> remote get-url origin | <span class="k">sed</span> 's/.*:\(.*\)\/.*/\1/')
+<span class="k">git</span> push -u origin <span class="ty">MMA-6006</span>
+<span class="k">gh</span> pr create --repo <span class="ty">ICS-Eng/MemberTools-Android</span> --base main \
+             --head ${FORK_OWNER}:<span class="ty">MMA-6006</span> --title "MMA-6006 ..."</pre></div>
+</div>
+
+</div><!-- /t-todo -->
+</section>
+
+<!-- ================= PAGE 4 — DATA FLOW ================= -->
+<section class="page" id="p-flow">
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-flow">Diagram</label>
+  <label class="tab" for="r-t-hops">Hop by hop</label>
+</div>
+
+<div class="tabpanel" id="t-flow">
+
+<h2><span class="rail r4">│</span> Coordinator positions, sync to screen</h2>
+
+<div class="note pre">
+  <b>Three flows, not one</b>
+  <p>The name <span class="m">coordinatorPositions</span> is reused for two different server fields,
+  and the labels come from a third place entirely. Lanes 1 and 2 converge to produce a chip — that is
+  the whole of what this ticket ships.</p>
+  <p><b>Lane 3 is drawn dashed because it was cut.</b> It is kept on the page so the shape is on
+  record for MMA-5952; no code on the branch does any of it.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Data flow</p>
+  <p class="desc">solid lanes ship; the dashed lane was built and reverted</p>
+  <div class="dw">
+    <svg viewBox="0 0 1040 756" role="img" aria-label="Data flow for coordinator positions, from sync to the Manage RSVPs tab">
+  <defs>
+    <marker id="a-ah"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ah"/></marker>
+    <marker id="a-ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ah1"/></marker>
+    <marker id="a-ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ah2"/></marker>
+    <marker id="a-ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ah3"/></marker>
+  </defs>
+  <text x="20" y="32" class="lh lh1">1 · ASSIGNED TO THE EVENT — DRIVES THE CHIPS</text>
+  <text x="380" y="32" class="lh lh2">2 · THE LABELS</text>
+  <text x="740" y="32" class="lh lh3">3 · ELIGIBLE ON THE CALENDAR — CUT</text>
+      <rect x="20" y="52" width="280" height="56" rx="9" class="n n-l1"/>
+      <text x="33" y="75" class="nt">DtoEvent</text>
+      <text x="33" y="93" class="nd">coordinatorPositions: List&lt;String&gt;?</text>
+      <line x1="160" y1="108" x2="160" y2="130" class="fl fl1" marker-end="url(#a-ah1)"/>
+      <rect x="20" y="138" width="280" height="56" rx="9" class="n n-l1"/>
+      <text x="33" y="161" class="nt">CalendarEventMapper</text>
+      <text x="33" y="179" class="nd">processAndSaveCalendarEvents</text>
+      <line x1="160" y1="194" x2="160" y2="216" class="fl fl1" marker-end="url(#a-ah1)"/>
+      <rect x="20" y="224" width="280" height="56" rx="9" class="n n-l1"/>
+      <text x="33" y="247" class="nt">Event</text>
+      <text x="33" y="265" class="nd">coordinatorPositions TEXT · JSON</text>
+      <line x1="160" y1="280" x2="160" y2="302" class="fl fl1" marker-end="url(#a-ah1)"/>
+      <rect x="20" y="310" width="280" height="56" rx="9" class="n n-l1"/>
+      <text x="33" y="333" class="nt">CalendarEventDao</text>
+      <text x="33" y="351" class="nd">findWithCalendarByIdFlow</text>
+      <line x1="160" y1="366" x2="160" y2="388" class="fl fl1" marker-end="url(#a-ah1)"/>
+      <rect x="20" y="396" width="280" height="56" rx="9" class="n n-l1"/>
+      <text x="33" y="419" class="nt">EventDetails</text>
+      <text x="33" y="437" class="nd">coordinatorPositions: List&lt;String&gt;</text>
+      <line x1="160" y1="452" x2="160" y2="484" class="fl fl1" marker-end="url(#a-ah1)"/>
+      <rect x="380" y="52" width="280" height="56" rx="9" class="n n-l2"/>
+      <text x="393" y="75" class="nt">DtoCallings</text>
+      <text x="393" y="93" class="nd">the unit's calling definitions</text>
+      <line x1="520" y1="108" x2="520" y2="130" class="fl fl2" marker-end="url(#a-ah2)"/>
+      <rect x="380" y="138" width="280" height="56" rx="9" class="n n-l2"/>
+      <text x="393" y="161" class="nt">CallingRepository</text>
+      <text x="393" y="179" class="nd">processAndSaveCallings</text>
+      <line x1="520" y1="194" x2="520" y2="216" class="fl fl2" marker-end="url(#a-ah2)"/>
+      <rect x="380" y="224" width="280" height="56" rx="9" class="n n-l2"/>
+      <text x="393" y="247" class="nt">Calling</text>
+      <text x="393" y="265" class="nd">type · unitNumber · name (nullable)</text>
+      <text x="647" y="240" class="newtag" text-anchor="end">step 2</text>
+      <line x1="520" y1="280" x2="520" y2="302" class="fl fl2" marker-end="url(#a-ah2)"/>
+      <rect x="380" y="310" width="280" height="56" rx="9" class="n n-l2"/>
+      <text x="393" y="333" class="nt">PositionDao</text>
+      <text x="393" y="351" class="nd">findPositionNamesByTypesFlow</text>
+      <text x="647" y="326" class="newtag" text-anchor="end">step 2</text>
+      <line x1="520" y1="366" x2="520" y2="388" class="fl fl2" marker-end="url(#a-ah2)"/>
+      <rect x="380" y="396" width="280" height="56" rx="9" class="n n-l2"/>
+      <text x="393" y="419" class="nt">Map&lt;String, String&gt;</text>
+      <text x="393" y="437" class="nd">type → display name</text>
+      <line x1="520" y1="452" x2="520" y2="484" class="fl fl2" marker-end="url(#a-ah2)"/>
+      <rect x="740" y="52" width="280" height="56" rx="9" class="n n-l3"/>
+      <text x="753" y="75" class="nt">DtoCalendar</text>
+      <text x="753" y="93" class="nd">coordinatorPositions: List&lt;String&gt;?</text>
+      <line x1="880" y1="108" x2="880" y2="130" class="fl fl3" marker-end="url(#a-ah3)"/>
+      <rect x="740" y="138" width="280" height="56" rx="9" class="n n-l3"/>
+      <text x="753" y="161" class="nt">CalendarSyncRepository</text>
+      <text x="753" y="179" class="nd">toCalendar() — was dropping it</text>
+      <text x="1007" y="154" class="newtag" text-anchor="end">cut</text>
+      <line x1="880" y1="194" x2="880" y2="216" class="fl fl3" marker-end="url(#a-ah3)"/>
+      <rect x="740" y="224" width="280" height="56" rx="9" class="n n-l3"/>
+      <text x="753" y="247" class="nt">Calendar</text>
+      <text x="753" y="265" class="nd">coordinatorPositions TEXT</text>
+      <text x="1007" y="240" class="newtag" text-anchor="end">cut</text>
+      <line x1="880" y1="280" x2="880" y2="302" class="fl fl3" marker-end="url(#a-ah3)"/>
+      <rect x="740" y="310" width="280" height="56" rx="9" class="n n-l3"/>
+      <text x="753" y="333" class="nt">JoinedCalendar</text>
+      <text x="753" y="351" class="nd">calendar_coordinatorPositions</text>
+      <text x="1007" y="326" class="newtag" text-anchor="end">cut</text>
+      <line x1="880" y1="366" x2="880" y2="388" class="fl fl3" marker-end="url(#a-ah3)"/>
+      <rect x="740" y="396" width="280" height="56" rx="9" class="n n-l3"/>
+      <text x="753" y="419" class="nt">EventDetailsCalendar</text>
+      <text x="753" y="437" class="nd">coordinatorPositions: List&lt;String&gt;</text>
+      <text x="1007" y="412" class="newtag" text-anchor="end">cut</text>
+      <line x1="880" y1="452" x2="880" y2="484" class="fl fl3" marker-end="url(#a-ah3)"/>
+      <rect x="20" y="492" width="640" height="64" rx="9" class="n n-cv"/>
+      <text x="33" y="515" class="nt">GetEventDetailsUiStateUseCase</text>
+      <text x="33" y="533" class="nd">combine(wardNameFlow, recipientNamesFlow) — only when isPublic &amp;&amp; calendar.editable</text>
+      <rect x="740" y="492" width="280" height="64" rx="9" class="n n-end"/>
+      <text x="753" y="515" class="nt">Not built</text>
+      <text x="753" y="533" class="nd">reverted — MMA-5952 owns it</text>
+      <line x1="340" y1="556" x2="340" y2="570" class="fl" marker-end="url(#a-ah)"/>
+      <rect x="180" y="578" width="320" height="56" rx="9" class="n n-cv"/>
+      <text x="193" y="601" class="nt">RecipientChip(type, label)</text>
+      <text x="193" y="619" class="nd">label = names[type] ?: type.toTitleCase()</text>
+      <line x1="340" y1="634" x2="340" y2="656" class="fl" marker-end="url(#a-ah)"/>
+      <rect x="180" y="664" width="320" height="56" rx="9" class="n n-cv"/>
+      <text x="193" y="687" class="nt">ManageRsvpsTab</text>
+      <text x="193" y="705" class="nd">one InputChip per recipient</text>
+    </svg>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card hi">
+    <p class="ct">Lane 1 — unchanged</p>
+    <p>Already plumbed end to end before this branch. It is what the chips have always rendered.</p>
+  </div>
+  <div class="card hi">
+    <p class="ct">Lane 2 — Step 2 moved its source</p>
+    <p>The label lookup read <span class="m">Position</span>, which has a row only where someone
+    holds the calling. It now reads <span class="m">Calling</span>, so a vacant calling still has a
+    name.</p>
+  </div>
+  <div class="card dropped">
+    <span class="droptag">Cut</span>
+    <p class="ct">Lane 3 — built, then reverted</p>
+    <p>Nothing consumed it, and it collided by name with lane 1 inside the same model. The field
+    still reaches <span class="m">toCalendar()</span> on main and is still discarded there.</p>
+  </div>
+</div>
+
+</div><!-- /t-flow -->
+
+<div class="tabpanel" id="t-hops">
+
+<h2><span class="rail r4">│</span> Hop by hop</h2>
+
+<div class="card">
+  <p class="ct">Lane 1 — what the event has assigned</p>
+  <div class="tw"><table>
+  <tr><th>Hop</th><th>Where</th><th>What happens</th></tr>
+  <tr><td>Wire</td><td><code>DtoEvent.coordinatorPositions</code></td>
+      <td><code>List&lt;String&gt;?</code> — "Coordinator positions assigned to this event"</td></tr>
+  <tr><td>Sync</td><td><code>ToolsPersister</code> → <code>processAndSaveCalendarEvents</code></td>
+      <td><code>CalendarEventMapper</code> copies it through verbatim</td></tr>
+  <tr><td>Room</td><td><code>Event.coordinatorPositions</code></td>
+      <td>TEXT, JSON via <code>StringListConverter</code></td></tr>
+  <tr><td>Read</td><td><code>CalendarEventDao.findWithCalendarByIdFlow</code></td>
+      <td><code>Event.*</code> in the LEFT JOIN with Calendar</td></tr>
+  <tr><td>Model</td><td><code>EventDetails.coordinatorPositions</code></td>
+      <td><code>.orEmpty()</code> collapses null to empty</td></tr>
+  </table></div>
+</div>
+
+<div class="card">
+  <p class="ct">Lane 2 — where the labels come from</p>
+  <div class="tw"><table>
+  <tr><th>Hop</th><th>Where</th><th>What happens</th></tr>
+  <tr><td>Wire</td><td><code>DtoCallings</code></td>
+      <td>the unit's calling definitions, names already localized by the server</td></tr>
+  <tr><td>Sync</td><td><code>ToolsPersister:159</code> → <code>processAndSaveCallings</code></td>
+      <td>writes the <code>Calling</code> table</td></tr>
+  <tr><td>Room</td><td><code>Calling(type, unitNumber, name)</code></td>
+      <td>keyed on <code>uuid</code>, so <code>(type, unitNumber)</code> is <b>not</b> unique</td></tr>
+  <tr><td>Read</td><td><code>PositionDao.findPositionNamesByTypesFlow</code></td>
+      <td><code>GROUP BY type</code>, <code>MIN(name)</code>, <code>name IS NOT NULL</code></td></tr>
+  <tr><td>Repo</td><td><code>getPositionNamesByTypesFlow</code></td>
+      <td><code>Map&lt;type, name&gt;</code>; a type the unit does not define is simply absent</td></tr>
+  </table></div>
+</div>
+
+<div class="card dropped">
+  <span class="droptag">Cut — never landed</span>
+  <p class="ct">Lane 3 — what the calendar allows</p>
+  <div class="tw"><table>
+  <tr><th>Hop</th><th>Where</th><th>What happens</th></tr>
+  <tr><td>Wire</td><td><code>DtoCalendar.coordinatorPositions</code></td>
+      <td><code>List&lt;String&gt;?</code> — which types <i>may be</i> assigned</td></tr>
+  <tr><td>Sync</td><td><code>CalendarSyncRepository.toCalendar()</code></td>
+      <td>would have been mapped here; still silently dropped on the branch</td></tr>
+  <tr><td>Room</td><td><code>Calendar.coordinatorPositions</code></td>
+      <td>would have been TEXT in <code>CalendarMigration9</code>; no such column exists</td></tr>
+  <tr><td>Read</td><td><code>JoinedCalendar</code></td>
+      <td>selected as <code>calendar_coordinatorPositions</code> in the details join</td></tr>
+  <tr><td>Model</td><td><code>EventDetailsCalendar.coordinatorPositions</code></td>
+      <td>would have reached the UI state and stopped there — which is why it went</td></tr>
+  </table></div>
+</div>
+
+<div class="note">
+  <b>Where a chip label actually comes from</b>
+  <p>The use case maps over lane 1's list, not lane 2's map, so the chip order and count come from
+  the event. Lane 2 only supplies labels: <code>names[type] ?: type.toTitleCase()</code>. Three
+  cases collapse into that fallback — the type is absent from the map, its stored name is blank, or
+  the lookup was skipped because the tab is not showing.</p>
+</div>
+
+</div><!-- /t-hops -->
+</section>
+
+</main>
+</body>
+</html>

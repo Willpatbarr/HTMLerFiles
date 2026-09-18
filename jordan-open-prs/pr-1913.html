@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR #1913 — Contact &amp; Email Reminder</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="navlabel">Pages</span>
+  <a href="index.html">Overview</a>
+  <a href="pr-1915.html">1915 · Location <span class="tkt">MMA-5939</span></a>
+  <a href="pr-1913.html" class="current">1913 · Reminder <span class="tkt">MMA-5941</span></a>
+  <a href="pr-1912.html">1912 · Recurrence <span class="tkt">MMA-5938</span></a>
+  <a href="pr-1914.html">1914 · Public Evt <span class="tkt">MMA-5946</span></a>
+  <a href="pr-1820.html">1820 · CodeQL</a>
+  <span class="navlabel">Skip to</span>
+  <a href="#changed">What changed</a>
+  <a href="#files">Files</a>
+  <a href="#impact">Architecture</a>
+  <a href="#risks">Risks</a>
+  <a href="#questions">Open comments</a>
+  <a href="#checklist">Checklist</a>
+  <a href="#readfirst">Read first</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="kicker">PR Review · <span class="prio must">Must review</span></div>
+  <h1>#1913 — MMA-5941 Contact &amp; Email Reminder</h1>
+  <p class="sub"><a href="https://github.com/ICS-Eng/MemberTools-Android/pull/1913">Open on GitHub</a> · branch <code>MMA-5941</code> · created Jul 24</p>
+
+  <div class="card accent">
+    <h2>One-Sentence Version</h2>
+    <p class="onesent">Adds an <b>organizer/contact picker and email-reminder chips</b> to the event form, backed by a new <code>GetCurrentUserContactUseCase</code> that reads from a new <code>IndividualDetailsRepository</code> surface in <code>:repo:individual</code>.</p>
+    <div class="meta">
+      <span><b>+1,223 / −13</b> · 40 files</span>
+      <span>Checks: <span class="badge green">Success</span></span>
+      <span>Review: <span class="badge warn">Changes requested (sbrewerclan, 5 comments)</span></span>
+    </div>
+  </div>
+
+  <div class="card" id="changed">
+    <h2>What Changed</h2>
+    <ul>
+      <li><b>ContactReminderSection</b> (+318) — new form section: organizer contact + email reminder chips.</li>
+      <li><b>New repo surface</b> — <code>CurrentUserContact</code> model + methods on <code>IndividualDetailsRepository</code> in <code>:repo:individual</code>.</li>
+      <li><b>GetCurrentUserContactUseCase</b> — feeds the current user's contact info into the form as the default organizer.</li>
+      <li><b>Validator + form model</b> — reminder/contact fields added to <code>EventFormModel</code>, <code>EventFormValidator</code>, and <code>PublishEventUseCase</code> wiring.</li>
+      <li><b>Tests</b> — screen (+201), publish use case (+113), VM (+112), validator (+94), plus screenshot test.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="files">
+    <h2>Files Changed (top of 40)</h2>
+    <table>
+      <tr><th>File</th><th>Δ</th></tr>
+      <tr><td><code>edit/ContactReminderSection.kt</code></td><td class="num">+318</td></tr>
+      <tr><td><code>edit/EventEditUiState.kt</code></td><td class="num">+59</td></tr>
+      <tr><td><code>edit/EventEditViewModel.kt</code></td><td class="num">+44</td></tr>
+      <tr><td><code>edit/PublishEventUseCase.kt</code></td><td class="num">+40 / −4</td></tr>
+      <tr><td><code>edit/EventFormValidator.kt</code></td><td class="num">+38 / −5</td></tr>
+      <tr><td><code>repo/individual/IndividualDetailsRepository.kt</code></td><td class="num">+30</td></tr>
+      <tr><td><code>edit/GetCurrentUserContactUseCase.kt</code> + <code>repo/individual/CurrentUserContact.kt</code></td><td class="num">+42</td></tr>
+      <tr><td>Tests (screen, VM, use cases, validator)</td><td class="num">~+560</td></tr>
+    </table>
+  </div>
+
+  <div class="card" id="impact">
+    <h2>Architecture Impact</h2>
+    <ul>
+      <li>Only PR of the four to <b>cross module boundaries into <code>:repo:individual</code></b> — new public repo API, so naming and shape matter beyond calendar.</li>
+      <li>Adds a Koin registration in <code>FeatureCalendarKoinModule</code> and a new gradle dependency in <code>feature/calendar/build.gradle.kts</code>.</li>
+      <li>Touches the shared event-form files (<code>EventFormModel</code>, <code>EventFormValidator</code>, <code>EventEditViewModel</code>) — conflict zone with 1912/1914/1915.</li>
+    </ul>
+  </div>
+
+  <div class="card warncard" id="risks">
+    <h2>Risks</h2>
+    <ul>
+      <li><b>Server values in UI state</b> — sbrewerclan says values in <code>EventEditUiState.kt:20</code> belong in <b>MaltSync</b>; that fix requires a shared-lib PR + toml bump, so this PR may block on another repo.</li>
+      <li><b>PII surface</b> — current-user contact info flowing into events; check nothing is logged.</li>
+      <li><b>ContactReminderSection at 318 lines</b> — likely needs decomposition; sbrewerclan already flagged two inline-able functions.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="questions">
+    <h2>Open Reviewer Comments (unresolved)</h2>
+    <div class="quote">"If these are actual server values sent to or received from the service, it should move to the MaltSync library."<span class="who">sbrewerclan · EventEditUiState.kt:20 — the big one; same theme as #1912</span></div>
+    <div class="quote">"Rename to GetCurrentUserContactFlowUseCase"<span class="who">sbrewerclan · GetCurrentUserContactUseCase.kt:13</span></div>
+    <div class="quote">"This can be inlined" / "Does this need to be its own function?"<span class="who">sbrewerclan · ContactReminderSection.kt:82, EventFormValidator.kt:92</span></div>
+    <div class="quote">"Several of these strings are already translated in Core.Strings"<span class="who">sbrewerclan · strings.xml:35</span></div>
+  </div>
+
+  <div class="card" id="checklist">
+    <h2>Checklist</h2>
+    <ul class="check">
+      <li><input type="checkbox"> <span>Is the MaltSync move happening in this PR or deferred? Get an explicit answer.</span></li>
+      <li><input type="checkbox"> <span>New <code>IndividualDetailsRepository</code> methods: right module, right naming, no PII in logs?</span></li>
+      <li><input type="checkbox"> <span>Reminder chips: what are the allowed values, and are they validated in <code>EventFormValidator</code>?</span></li>
+      <li><input type="checkbox"> <span>Koin + gradle wiring correct (KoinModuleTest green)?</span></li>
+    </ul>
+  </div>
+
+  <div class="card accent" id="readfirst">
+    <h2>What To Read First</h2>
+    <ol>
+      <li><code>EventEditUiState.kt</code> — the contested server-values enum (MaltSync question).</li>
+      <li><code>repo/individual/IndividualDetailsRepository.kt</code> — the new cross-module API.</li>
+      <li><code>ContactReminderSection.kt</code> — the big new composable.</li>
+    </ol>
+    <p><b>Next:</b> <a href="pr-1912.html">PR #1912 — Recurrence picker →</a></p>
+  </div>
+
+</div>
+</body>
+</html>

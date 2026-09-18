@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendar Views — Feature Spec (MMA-5930)</title>
+<style>
+  :root{
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f; --blue:#7fb0e6; --blue-soft:#20304a;
+    --purple:#b79bd0; --purple-soft:#2a2530;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:dark; scroll-behavior:smooth}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:48px 24px 96px}
+  .wrap{max-width:860px; margin:0 auto}
+  h1{font-size:30px; margin:0 0 6px; letter-spacing:-.4px}
+  h2{font-size:21px; margin:0 0 14px; letter-spacing:-.2px}
+  h3{font-size:15px; margin:0 0 8px; color:var(--ink)}
+  .sub{color:var(--muted); font-size:15px; margin:0 0 32px}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:22px 24px; margin:0 0 20px; box-shadow:var(--shadow); scroll-margin-top:90px}
+  .card:target{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset, var(--shadow)}
+  .card.hero{border-color:var(--border-strong)}
+  .card.warn{border-color:var(--warn); background:linear-gradient(0deg,var(--warn-soft),var(--card))}
+  .tag{display:inline-block; font-size:11px; font-weight:600; letter-spacing:.5px;
+    text-transform:uppercase; padding:3px 9px; border-radius:20px; margin-bottom:12px}
+  .tag.must{background:var(--accent-soft); color:var(--accent)}
+  .tag.imp{background:var(--blue-soft); color:var(--blue)}
+  .tag.opt{background:var(--purple-soft); color:var(--purple)}
+  .tag.warn{background:var(--warn-soft); color:var(--warn)}
+  .one-liner{font-size:18px; line-height:1.5}
+  .one-liner b{color:var(--accent)}
+  p{margin:0 0 12px}
+  ul{margin:0 0 6px; padding-left:20px} li{margin:0 0 7px}
+  a{color:var(--accent)}
+  code{background:#0f1215; border:1px solid var(--border); border-radius:6px;
+    padding:1px 6px; font-size:13px; color:#d8dee6}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; margin:4px 0}
+  th,td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--faint); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.4px}
+  .divider{height:1px; background:var(--border); margin:36px 0}
+  /* FR list */
+  .fr{display:grid; grid-template-columns:60px 1fr; gap:6px 12px; padding:11px 0;
+    border-bottom:1px solid var(--border); scroll-margin-top:90px}
+  .fr:target{background:var(--accent-soft); border-radius:8px;
+    box-shadow:0 0 0 1px var(--accent) inset; padding-left:10px; padding-right:10px}
+  .fr:last-child{border-bottom:none}
+  .fr .id{font-weight:700; color:var(--accent); font-size:13px}
+  .fr .body{font-size:14.5px}
+  .grp{font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--faint);
+    margin:18px 0 2px; font-weight:600}
+  .pill{display:inline-block; font-size:10.5px; font-weight:600; padding:1px 7px; border-radius:12px;
+    margin-left:6px; vertical-align:middle}
+  .pill.new{background:var(--accent-soft); color:var(--accent)}
+  .pill.chg{background:var(--blue-soft); color:var(--blue)}
+  .pill.div{background:var(--warn-soft); color:var(--warn)}
+  .ac{padding:9px 0; border-bottom:1px solid var(--border); font-size:14px; scroll-margin-top:90px}
+  .ac:target{background:var(--accent-soft); border-radius:8px;
+    box-shadow:0 0 0 1px var(--accent) inset; padding-left:10px; padding-right:10px}
+  .ac:last-child{border-bottom:none}
+  .ac b{color:var(--ink)}
+  /* floating nav */
+  .skipto{position:fixed; top:50%; left:18px; transform:translateY(-50%); z-index:60;
+    display:flex; flex-direction:column; gap:5px; background:var(--card);
+    border:1px solid var(--border); border-radius:14px; padding:12px 12px 13px;
+    box-shadow:var(--shadow); width:150px}
+  .skipto .lbl{font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:var(--faint); padding:2px 10px 6px}
+  .skipto a{text-decoration:none; color:var(--muted); font-size:12.5px; padding:5px 10px; border-radius:8px; transition:.15s}
+  .skipto a:hover{background:var(--bg); color:var(--accent)}
+  @media (max-width:1240px){
+    .skipto{top:0; left:0; right:0; transform:none; width:auto; flex-direction:row;
+      overflow-x:auto; border-radius:0; border-width:0 0 1px; padding:8px 10px}
+    .skipto .lbl{display:none}
+    body{padding-top:66px}
+  }
+  .legend{font-size:12px; color:var(--muted)}
+  .legend .pill{margin-left:0; margin-right:4px}
+</style>
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="lbl">Skip to</span>
+  <a href="#tldr">One-liner</a>
+  <a href="#status">Status</a>
+  <a href="#overview">Overview</a>
+  <a href="#scope">Scope</a>
+  <a href="#ux">UX decisions</a>
+  <a href="#fr">Requirements</a>
+  <a href="#restructure">Restructure</a>
+  <a href="#nfr">Non-functional</a>
+  <a href="#success">Ship gates</a>
+  <a href="#data">Data window</a>
+  <a href="#ac">Acceptance</a>
+  <a href="#test">Testing</a>
+</nav>
+
+<div class="wrap">
+  <h1>Calendar Views — Feature Spec</h1>
+  <p class="sub">MMA-5930 · take the PMG calendar prototype from sample data → production · <b>mixed audience</b></p>
+
+  <div class="card hero" id="tldr">
+    <span class="tag must">One-Sentence Version</span>
+    <p class="one-liner">Add four time-grid views (<b>Day / 3-Day / Week / Month</b>) alongside
+    today's agenda list so users can <b>see overlaps and plan around events</b> — wiring the built
+    prototype to <b>real, filterable data behind a rollout flag</b>, matching Google Calendar where it counts.</p>
+  </div>
+
+  <div class="card" id="status">
+    <span class="tag must">Status</span>
+    <h2>Content-complete — 0 open items</h2>
+    <p><b>27 functional requirements · 20 acceptance criteria · 20 test scenarios</b>, fully cross-linked.</p>
+    <p style="margin-bottom:0"><b>One external dependency:</b> past-data sync (see Data Window) is real
+    backend scope for the technical design doc + its own Jira ticket.</p>
+  </div>
+
+  <div class="card" id="overview">
+    <span class="tag imp">Overview & Goals</span>
+    <h2>Why</h2>
+    <p>Today the calendar is a <b>list-only agenda</b> — hard to see how events sit across days/weeks
+    or where they overlap. This adds the spatial/time context people expect from a real calendar.</p>
+    <h3>Goals</h3>
+    <ul>
+      <li>Understand how events relate in time (overlaps, gaps, multi-day) via grids, not a flat list</li>
+      <li>Preserve today's agenda unchanged as the "Schedule" view</li>
+      <li>Ship all views on real, filterable data behind a controlled rollout flag</li>
+    </ul>
+    <h3>Primary users</h3>
+    <p style="margin-bottom:0">Ward/stake <b>leaders coordinating events</b> (primary); general members
+    viewing unit events (secondary).</p>
+    <h3>Out of scope</h3>
+    <p style="margin-bottom:0">Event creation (the detail's "Add to Calendar" device-intent <b>stays</b>),
+    editing/deleting, pinch-to-zoom, arbitrary N-day spans.</p>
+  </div>
+
+  <div class="card" id="scope">
+    <span class="tag imp">Scope — 5 views, v1</span>
+    <h2>The five views</h2>
+    <table>
+      <tr><th>View</th><th>Behavior</th></tr>
+      <tr><td><b>Schedule</b></td><td>Today's agenda list, restructured into the "Schedule" view</td></tr>
+      <tr><td><b>Day</b></td><td>Swipeable single day; hour grid + all-day row + live now-line</td></tr>
+      <tr><td><b>3-Day</b></td><td>3-day sliding window; live now-line on today</td></tr>
+      <tr><td><b>Week</b></td><td>7-day grid; live now-line on today</td></tr>
+      <tr><td><b>Month</b></td><td>4–6 week grid (sized to month); as many chips/day as fit the cell + "N more"; tap day → Day</td></tr>
+    </table>
+  </div>
+
+  <div class="card" id="ux">
+    <span class="tag imp">Key UX decisions</span>
+    <h2>Cross-view behavior</h2>
+    <ul>
+      <li><b>Default view:</b> Schedule, every launch (view choice not persisted)</li>
+      <li><b>Week start:</b> device locale — Month + Week only (3-Day is a sliding window, exempt)</li>
+      <li><b>Time format:</b> device 12h/24h · <b>Timezone:</b> device timezone</li>
+      <li><b>Filter:</b> one shared, repo-backed filter — toggling anywhere affects every view</li>
+      <li><b>Overlaps:</b> shrink/stagger to fit, no cap, no overflow chip (like Google)</li>
+      <li><b>Empty:</b> Schedule keeps "No events" text; grids show the empty grid only</li>
+    </ul>
+  </div>
+
+  <div class="card" id="fr">
+    <span class="tag must">Functional Requirements (27)</span>
+    <h2>The "system shall…" list</h2>
+    <p class="legend"><span class="pill new">new</span>net-new work
+      <span class="pill chg">change</span>differs from prototype
+      <span class="pill div">google</span>Google-consistent choice</p>
+
+    <div class="grp">Views & switching</div>
+    <div class="fr" id="fr-1"><div class="id">FR-1</div><div class="body">Provide the 5 view modes via a selector in every view <b>when the flag is on</b> <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-2"><div class="id">FR-2</div><div class="body">Open to the Schedule view on each launch</div></div>
+
+    <div class="grp">Event data & rendering</div>
+    <div class="fr" id="fr-3"><div class="id">FR-3</div><div class="body">Display live repository events in all five views</div></div>
+    <div class="fr" id="fr-4"><div class="id">FR-4</div><div class="body">Place grid-eligible timed events at their day/time; split a midnight-crosser into a segment per day (routing → FR-16)</div></div>
+    <div class="fr" id="fr-5"><div class="id">FR-5</div><div class="body">Overlapping timed events → side-by-side shrinking columns, <b>no cap</b>, no overflow affordance <span class="pill div">google</span></div></div>
+    <div class="fr" id="fr-6"><div class="id">FR-6</div><div class="body">Live current-time line on today in Day / 3-Day / Week</div></div>
+
+    <div class="grp">Filtering</div>
+    <div class="fr" id="fr-7"><div class="id">FR-7</div><div class="body">Calendar color filter (chip + bottom sheet) in every view</div></div>
+    <div class="fr" id="fr-8"><div class="id">FR-8</div><div class="body">One <b>shared, repo-backed</b> filter — toggle writes the "displayed" flag, applies everywhere, persists <span class="pill new">new</span></div></div>
+
+    <div class="grp">Navigation & interaction</div>
+    <div class="fr" id="fr-9"><div class="id">FR-9</div><div class="body">Navigate to <b>any date</b> (unbounded) in grids/Month; display whatever data is loaded, empty otherwise <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-10"><div class="id">FR-10</div><div class="body">Tap event → detail; on wide layouts, seed the detail pane from the focused grid date <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-11"><div class="id">FR-11</div><div class="body">Tap a day header (Week/3-Day) or day cell (Month) → opens Day view</div></div>
+    <div class="fr" id="fr-12"><div class="id">FR-12</div><div class="body">Month cell: as many event chips as fit the cell's height + "N more" when they overflow (a day that overflows always reserves the last line for "N more"), ordered multi-day first then by start time <span class="pill div">google</span> <span class="pill chg">change</span></div></div>
+
+    <div class="grp">Localization & format</div>
+    <div class="fr" id="fr-13"><div class="id">FR-13</div><div class="body">Week starts on device locale's first day (Month + Week only) <span class="pill chg">change</span></div></div>
+    <div class="fr" id="fr-14"><div class="id">FR-14</div><div class="body">Times use the device 12h/24h setting</div></div>
+
+    <div class="grp">Empty states</div>
+    <div class="fr" id="fr-15"><div class="id">FR-15</div><div class="body">Schedule shows "no events" text; grids show the empty grid (no message)</div></div>
+
+    <div class="grp">Added during review</div>
+    <div class="fr" id="fr-16"><div class="id">FR-16</div><div class="body"><b>Event routing</b> (Day/3-Day/Week): all-day + timed ≥24h → all-day-row bar; everything else (incl. &lt;24h midnight-crossers) → hour grid, split per day <span class="pill div">google</span></div></div>
+    <div class="fr" id="fr-17"><div class="id">FR-17</div><div class="body">Initial visibility from repo "displayed" flag; thereafter <b>user toggle wins</b> — sync won't overwrite it <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-18"><div class="id">FR-18</div><div class="body">Open at current time-of-day band (today or not); preserve/restore scroll position across view switches <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-19"><div class="id">FR-19</div><div class="body">Preserve the focused date across all views incl. Schedule <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-20"><div class="id">FR-20</div><div class="body">3-Day = sliding window, focused date leads, advances one day at a time <span class="pill chg">change</span></div></div>
+    <div class="fr" id="fr-21"><div class="id">FR-21</div><div class="body">Render all events in the device timezone</div></div>
+    <div class="fr" id="fr-22"><div class="id">FR-22</div><div class="body">Chips "render what fits": name always, no times, location if space permits <span class="pill chg">change</span></div></div>
+    <div class="fr" id="fr-23"><div class="id">FR-23</div><div class="body">Pull-to-refresh in Day/3-Day/Week/Month (built from scratch); none in Schedule <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-24"><div class="id">FR-24</div><div class="body">Flag OFF → only Schedule, selector hidden (identical to today) <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-25"><div class="id">FR-25</div><div class="body">Local-first render (no blocking spinner); non-blocking snackbar on sync failure in all views <span class="pill new">new</span></div></div>
+    <div class="fr" id="fr-26"><div class="id">FR-26</div><div class="body">Sub-30-min events render at a minimum legible height (<code>MIN_EVENT_MINUTES=30</code>)</div></div>
+    <div class="fr" id="fr-27"><div class="id">FR-27</div><div class="body">Month sizes to the actual 4–6 weeks (no empty padding weeks) <span class="pill chg">change</span></div></div>
+  </div>
+
+  <div class="card" id="restructure">
+    <span class="tag imp">§6 Restructure</span>
+    <h2>Agenda → Schedule</h2>
+    <p style="margin-bottom:0">The agenda list <b>becomes</b> the Schedule view (logic largely unchanged),
+    but shared/common view code must move <b>out of the <code>agenda/</code> folder</b> into a shared
+    package. Target package structure → technical design doc.</p>
+  </div>
+
+  <div class="card" id="nfr">
+    <span class="tag opt">Non-functional</span>
+    <h2>Notes</h2>
+    <ul>
+      <li><b>Accessibility:</b> meet the app's existing bar. ⚠️ Time-grid screen-reader support is a
+        known hard problem — <b>no a11y acceptance criteria by design</b>; an accepted risk to name to the PO.</li>
+      <li><b>Analytics:</b> match today; no new view-usage analytics in v1 (revisit post-rollout)</li>
+      <li><b>Rollout:</b> behind a controlled flag; mechanics live in the tech design doc</li>
+    </ul>
+  </div>
+
+  <div class="card" id="success">
+    <span class="tag must">Ship gates (§8)</span>
+    <h2>Required to ship — equal weight</h2>
+    <ul>
+      <li><b>Real data</b> in all 5 views behind the flag; sample package removed</li>
+      <li><b>Filter persists</b> across restarts (repo-backed)</li>
+      <li><b>No regressions</b> — Schedule preserves agenda behavior (note: its pull-to-refresh gesture was never actually wired; the SmokeTest may need updating after the §6 move)</li>
+      <li><b>Parity</b> only on unchanged interactions (view-switch, column-packing, drill-down); FRs are truth where they diverge</li>
+    </ul>
+  </div>
+
+  <div class="card warn" id="data">
+    <span class="tag warn">Data window — resolved</span>
+    <h2>Unbounded nav, display-what's-loaded</h2>
+    <p>Navigation is unbounded — go to any date; grids show whatever data is loaded, empty otherwise.</p>
+    <ul>
+      <li><b>Backward ⚠️:</b> <b>past data will now be synced</b> — a real scope increase (sync change +
+        bounded date-range DAO query). Own ticket + tech design.</li>
+      <li><b>Forward:</b> grids show whatever's synced; the "Months to show" pref governs the sync
+        horizon; beyond it → empty.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="ac">
+    <span class="tag imp">Acceptance Criteria (Gherkin, 20)</span>
+    <h2>AC-1 … AC-20</h2>
+    <div class="ac" id="ac-1"><b>AC-1</b> — View switching & default (FR-1/2)</div>
+    <div class="ac" id="ac-2"><b>AC-2</b> — Real events render in grids (FR-3/4)</div>
+    <div class="ac" id="ac-3"><b>AC-3</b> — Event routing & multi-day edges: all-day + ≥24h → bar; &lt;24h midnight-crosser → grid split (FR-16)</div>
+    <div class="ac" id="ac-4"><b>AC-4</b> — Overlap rendering, no cap (FR-5)</div>
+    <div class="ac" id="ac-5"><b>AC-5</b> — Live now-line, advances; none in Month (FR-6)</div>
+    <div class="ac" id="ac-6"><b>AC-6</b> — Shared filter both directions + persist (FR-7/8/17)</div>
+    <div class="ac" id="ac-7"><b>AC-7</b> — Navigation & range; Schedule has none (FR-9)</div>
+    <div class="ac" id="ac-8"><b>AC-8</b> — Event tap phone (full-screen→back) & tablet (pane + pre-tap seed) (FR-10)</div>
+    <div class="ac" id="ac-9"><b>AC-9</b> — Drill-down to Day (FR-11)</div>
+    <div class="ac" id="ac-10"><b>AC-10</b> — Month cell contents & order (FR-12)</div>
+    <div class="ac" id="ac-11"><b>AC-11</b> — Localization both paths + timezone (FR-13/14/21)</div>
+    <div class="ac" id="ac-12"><b>AC-12</b> — Empty states (FR-15)</div>
+    <div class="ac" id="ac-13"><b>AC-13</b> — Initial scroll (today & non-today) + scroll memory (FR-18)</div>
+    <div class="ac" id="ac-14"><b>AC-14</b> — Cross-view date continuity both directions (FR-19)</div>
+    <div class="ac" id="ac-15"><b>AC-15</b> — 3-Day sliding window (FR-20)</div>
+    <div class="ac" id="ac-16"><b>AC-16</b> — Chip content "render what fits" (FR-22)</div>
+    <div class="ac" id="ac-17"><b>AC-17</b> — Refresh: gesture in all grid views incl. Month; Schedule overflow still syncs (FR-23)</div>
+    <div class="ac" id="ac-18"><b>AC-18</b> — Rollout flag off (FR-24)</div>
+    <div class="ac" id="ac-19"><b>AC-19</b> — Local-first load & sync-failure snackbar, all views (FR-25)</div>
+    <div class="ac" id="ac-20"><b>AC-20</b> — Time edges: min-height, midnight-crosser on grid, DST (FR-26/16)</div>
+  </div>
+
+  <div class="card" id="test">
+    <span class="tag imp">Testing Guide (20)</span>
+    <h2>Manual pass</h2>
+    <p class="legend">Data-agnostic — QA sources the data (in-app creation is out of scope).</p>
+    <table>
+      <tr><th>#</th><th>Scenario</th><th>Expected</th></tr>
+      <tr><td>1</td><td>View switch & default</td><td>Opens on Schedule; selector lists 5</td></tr>
+      <tr><td>2</td><td>Real events in grids</td><td>Correct day/time (routing → row 3)</td></tr>
+      <tr><td>3</td><td>Event routing & edges</td><td>All-day + ≥24h: bar; &lt;24h crosser: grid split; clipped/breaks at boundaries</td></tr>
+      <tr><td>4</td><td>Overlap rendering</td><td>Side-by-side shrinking; no cap/chip</td></tr>
+      <tr><td>5</td><td>Now-line</td><td>Live on today only; none in Month</td></tr>
+      <tr><td>6</td><td>Shared filter both ways</td><td>Hides/reappears everywhere; persists</td></tr>
+      <tr><td>7</td><td>Navigation & range</td><td>No bound; Schedule has no controls</td></tr>
+      <tr><td>8</td><td>Tap phone & tablet</td><td>Phone full-screen→back; tablet pane + pre-tap seed</td></tr>
+      <tr><td>9</td><td>Drill-down</td><td>Day view opens for tapped date</td></tr>
+      <tr><td>10</td><td>Month cell order</td><td>chips fill the cell (multi-day first) + "N more" on overflow</td></tr>
+      <tr><td>11</td><td>Locale & tz both paths</td><td>Monday/24h & Sunday/12h both correct; 3-Day unaffected</td></tr>
+      <tr><td>12</td><td>Empty states</td><td>Empty grid / Schedule "No events"</td></tr>
+      <tr><td>13</td><td>Scroll & memory</td><td>Today→now, non-today→same band, preserved on return</td></tr>
+      <tr><td>14</td><td>Date continuity both ways</td><td>Schedule↔grid keep the date</td></tr>
+      <tr><td>15</td><td>3-Day window</td><td>Focused date leads; advances one day</td></tr>
+      <tr><td>16</td><td>Chip content</td><td>Name always; no times; location if it fits</td></tr>
+      <tr><td>17</td><td>Refresh behavior</td><td>Gesture in grids; Schedule overflow still syncs</td></tr>
+      <tr><td>18</td><td>Flag off</td><td>Only Schedule; selector hidden</td></tr>
+      <tr><td>19</td><td>Load & error</td><td>DB render, no spinner; snackbar on failure</td></tr>
+      <tr><td>20</td><td>Time edges</td><td>Min height; crosser splits on grid; DST correct</td></tr>
+    </table>
+  </div>
+
+  <div class="card hero">
+    <span class="tag must">What To Do Next</span>
+    <ol>
+      <li><b>Technical design doc</b> — §6 restructure + net-new work (past sync, shared filter, sliding 3-Day, real pull-to-refresh, flag gating, snackbar, dynamic Month)</li>
+      <li><b>Jira breakdown</b> — epic + sequenced tickets in the MMA house style</li>
+      <li>Circulate the a11y accepted-risk note to the PO before build</li>
+    </ol>
+  </div>
+
+</div>
+</body>
+</html>

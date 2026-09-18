@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-5961 — Calendar Groundwork & Restructuring — Plan</title>
+<style>
+  :root{
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:dark; scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:48px 24px 96px;
+  }
+  .wrap{max-width:880px; margin:0 auto}
+  header.top{margin:0 0 34px}
+  .eyebrow{color:var(--accent); font-size:13px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; margin:0 0 6px}
+  h1{font-size:30px; line-height:1.2; margin:0 0 10px}
+  .sub{color:var(--muted); font-size:15px; margin:0}
+  .meta{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0}
+  .pill{font-size:12px; color:var(--muted); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:4px 11px}
+  .pill b{color:var(--ink); font-weight:600}
+
+  section{margin:0 0 26px}
+  h2{font-size:20px; margin:34px 0 12px; padding-top:8px; scroll-margin-top:80px}
+  h3{font-size:16px; margin:20px 0 8px}
+  p{margin:0 0 12px}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin:0 0 14px}
+  .card.tight{padding:14px 16px}
+  .onesent{border-left:3px solid var(--accent); background:var(--accent-soft)}
+  .onesent p{margin:0; font-size:17px}
+
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+  @media(max-width:720px){.grid3{grid-template-columns:1fr}}
+  .r3{background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px}
+  .r3 .n{color:var(--accent); font-weight:700; font-size:13px}
+  .r3 p{margin:6px 0 0; font-size:14px; color:var(--muted)}
+
+  ul,ol{margin:0 0 12px; padding-left:22px}
+  li{margin:0 0 7px}
+  .clean{list-style:none; padding-left:0}
+  .clean li{padding-left:20px; position:relative}
+  .clean li::before{content:"›"; position:absolute; left:2px; color:var(--accent)}
+
+  .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:2px 8px; border-radius:6px; vertical-align:middle}
+  .must{background:#3a1f22; color:#f0929b; border:1px solid #5a2c31}
+  .imp{background:var(--warn-soft); color:var(--warn); border:1px solid #574012}
+  .opt{background:#1a2833; color:#7fb6d6; border:1px solid #274056}
+
+  .ws{border:1px solid var(--border); border-radius:var(--radius); padding:0; margin:0 0 14px; overflow:hidden; background:var(--card)}
+  .ws > .head{display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid var(--border); background:#20252b}
+  .ws > .head .num{width:26px; height:26px; flex:0 0 26px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center}
+  .ws > .head .t{font-weight:600; font-size:16px; flex:1}
+  .ws > .body{padding:14px 18px}
+  .ws .fr{font-size:12px; color:var(--faint); margin:2px 0 10px}
+  .frlink,.acref,.secref{display:inline-block; text-decoration:none; border:1px solid; border-radius:6px; padding:0 6px; margin:0 3px 2px 0; font-size:11px; font-weight:700; letter-spacing:.02em; line-height:1.7; white-space:nowrap; transition:.15s}
+  .frlink{color:var(--accent); background:var(--accent-soft); border-color:#2c5340}
+  .frlink:hover{background:var(--accent); color:#0f1512; border-color:var(--accent)}
+  .acref{color:#7fb0e6; background:#1a2a40; border-color:#2f4a66}
+  .acref:hover{background:#7fb0e6; color:#0f1512; border-color:#7fb0e6}
+  .secref{color:var(--warn); background:var(--warn-soft); border-color:#574012}
+  .secref:hover{background:var(--warn); color:#241a08; border-color:var(--warn)}
+  .frlink::after,.acref::after,.secref::after{content:" \2197"; font-size:9px; opacity:.7}
+  .frkey{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--muted); align-items:center}
+  .frkey span{display:inline-flex; align-items:center; gap:5px}
+  .frkey i{width:22px; height:14px; border-radius:4px; border:1px solid; display:inline-block}
+  .frkey .kfr{background:var(--accent-soft); border-color:#2c5340}
+  .frkey .kac{background:#1a2a40; border-color:#2f4a66}
+  .frkey .ksec{background:var(--warn-soft); border-color:#574012}
+  code{background:#11151a; border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:13px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; color:#cbd3dc}
+  .path{color:#8fd0ac}
+
+  table{width:100%; border-collapse:collapse; font-size:14px; margin:0 0 12px; display:block; overflow-x:auto}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--faint); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap}
+  td code{white-space:nowrap}
+
+  .warnbox{border-left:3px solid var(--warn); background:var(--warn-soft)}
+  .warnbox strong{color:var(--warn)}
+
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; color:var(--muted)}
+  .flow .box{background:var(--bg); border:1px solid var(--border-strong); border-radius:8px; padding:6px 10px; color:var(--ink)}
+  .flow .arw{color:var(--accent)}
+
+  .check li{list-style:none; margin-left:-22px; padding-left:26px; position:relative}
+  .check li::before{content:"☐"; position:absolute; left:0; color:var(--faint)}
+
+  .skipto{position:fixed; top:50%; left:18px; transform:translateY(-50%); z-index:60; display:flex; flex-direction:column; gap:5px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 12px 13px; box-shadow:var(--shadow); width:172px}
+  .skipto .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--faint); padding:0 10px 4px}
+  .skipto a{text-decoration:none; color:var(--muted); font-size:13px; padding:6px 10px; border-radius:8px; transition:.15s}
+  .skipto a:hover{background:var(--bg); color:var(--accent)}
+  @media(max-width:1180px){
+    body{padding-top:64px}
+    .skipto{top:0; left:0; right:0; transform:none; width:auto; flex-direction:row; overflow-x:auto; border-radius:0; border-width:0 0 1px; padding:8px 10px}
+    .skipto .lbl{display:none}
+  }
+  .foot{color:var(--faint); font-size:12px; text-align:center; margin-top:40px; border-top:1px solid var(--border); padding-top:18px}
+
+  /* Spec coverage list */
+  .spec-item{display:grid; grid-template-columns:60px 1fr; gap:6px 12px; padding:11px 0; border-bottom:1px solid var(--border)}
+  .spec-item:last-child{border-bottom:none}
+  .spec-item .id{font-weight:700; color:var(--accent); font-size:13px}
+  .spec-item .id a{color:var(--accent); text-decoration:none}
+  .spec-item .id a:hover{text-decoration:underline}
+  .spec-item .body{font-size:14.5px}
+  .spec-item.ac .id{color:#7fb0e6}
+  .spec-item.ac .id a{color:#7fb0e6}
+  .spill{display:inline-block; font-size:10.5px; font-weight:600; padding:1px 7px; border-radius:12px; margin-left:6px; vertical-align:middle}
+  .spill.new{background:var(--accent-soft); color:var(--accent)}
+  .spill.chg{background:#20304a; color:#7fb0e6}
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <span class="lbl">Jump to</span>
+  <a href="#tldr">One-sentence</a>
+  <a href="#three">Remember 3</a>
+  <a href="#context">Context</a>
+  <a href="#scope">Scope in/out</a>
+  <a href="#work">Workstreams</a>
+  <a href="#files">File moves</a>
+  <a href="#order">Build order</a>
+  <a href="#risks">Risks</a>
+  <a href="#next">What to do next</a>
+  <a href="#coverage">Spec coverage</a>
+</nav>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">Implementation Plan</p>
+    <h1>MMA-5961 — Calendar: Groundwork &amp; Restructuring</h1>
+    <p class="sub">The foundation ticket for the calendar multi-view feature. Stand up the plumbing every grid view needs — without changing what the user sees yet.</p>
+    <div class="meta">
+      <span class="pill"><b>Type:</b> New Feature</span>
+      <span class="pill"><b>Epic:</b> LTS-2600</span>
+      <span class="pill"><b>Spec:</b> MMA-5930 (SPEC.md)</span>
+      <span class="pill"><b>Blocks:</b> MMA-5962 / 5963 / 5964</span>
+      <span class="pill"><b>Reference impl:</b> MMA-5930-2-CalendarFromPMG</span>
+    </div>
+  </header>
+
+  <!-- ONE SENTENCE -->
+  <section id="tldr">
+    <div class="card onesent">
+      <p><b>Take the PMG prototype's foundation and make it production-real</b> — restructure agenda into a "Schedule" view, wire live data + one shared repo-backed filter, add the rollout flag, shared loading/error + cross-view date state, and past-data sync — so 5962–5964 can build the actual grid views on top.</p>
+    </div>
+  </section>
+
+  <!-- REMEMBER 3 -->
+  <section id="three">
+    <h2>Remember Only 3 Things</h2>
+    <div class="grid3">
+      <div class="r3"><div class="n">1 — Nothing visible changes</div><p>With the rollout flag OFF the calendar looks <em>exactly</em> like today: Schedule only, selector hidden. This ticket is invisible-by-design plumbing.</p></div>
+      <div class="r3"><div class="n">2 — Kill the sample data</div><p>Both <code>USE_SAMPLE_DATA</code> flags come out, the <span class="path">sample/</span> package is deleted, real repo flows get wired in.</p></div>
+      <div class="r3"><div class="n">3 — One shared, durable filter + state</div><p>Filter writes the repo <code>displayed</code> flag (user's toggle wins). Focused date + loading/error live in one shared host, not per-view.</p></div>
+    </div>
+  </section>
+
+  <!-- CONTEXT -->
+  <section id="context">
+    <h2>Context <span class="tag opt">Optional</span></h2>
+    <div class="card">
+      <p>The prototype on <code>MMA-5930-2-CalendarFromPMG</code> renders <b>sample data</b>, keeps shared view code inside <span class="path">agenda/</span>, has no rollout gate, an in-memory grid filter that does nothing on real data, and no sync-error feedback. The repo also syncs current-month-forward only.</p>
+      <p>This ticket does <b>not</b> build the Day/3-Day/Week/Month grids — those are 5962–5964. It builds everything underneath them so those tickets drop in cleanly.</p>
+      <div class="flow" style="margin-top:6px">
+        <span class="box">MMA-5961 <b>(this)</b></span><span class="arw">→ unblocks →</span>
+        <span class="box">5962 Day</span><span class="box">5963 Week / 3-Day</span><span class="box">5964 Month</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCOPE -->
+  <section id="scope">
+    <h2>Scope — In vs Out</h2>
+    <div class="card tight">
+      <h3 style="margin-top:4px">In scope</h3>
+      <ul class="clean">
+        <li>Restructure agenda → <b>Schedule</b> view; move shared code out of <span class="path">agenda/</span> (spec <a class="secref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#restructure">§6</a>)</li>
+        <li>Rollout flag via <code>ToolsConfig</code> / Firebase Remote Config <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-24">FR-24</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-1">FR-1</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-2">FR-2</a></span></li>
+        <li>Real data: remove both <code>USE_SAMPLE_DATA</code>, wire combine-flows, delete <span class="path">sample/</span> <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-3">FR-3</a></span></li>
+        <li>Single shared repo-backed calendar filter <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-7">FR-7</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-8">FR-8</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-17">FR-17</a></span></li>
+        <li>Local-first render + non-blocking sync-failure snackbar (all views) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-25">FR-25</a></span></li>
+        <li>Cross-view date continuity incl. Schedule (shared host state) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-19">FR-19</a></span></li>
+        <li>Past-data sync + bounded date-range DAO query <a class="secref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#data">Data Window §9</a></li>
+        <li>Fix the instrumented smoke test after the package move (spec <a class="secref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#success">§8</a>)</li>
+      </ul>
+      <h3>Out of scope</h3>
+      <ul class="clean">
+        <li>The grid views themselves (Day/3-Day/Week/Month) → <b>MMA-5962–5964</b></li>
+        <li>Event creation / editing (deferred; keep the existing "Add to Calendar" intent)</li>
+        <li>Now-line, overlap column-packing, chip "render what fits", pull-to-refresh — those ship with the grid tickets</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- WORKSTREAMS -->
+  <section id="work">
+    <h2>The 8 Workstreams</h2>
+    <p class="sub" style="margin-bottom:10px">Priority tags mark what unblocks the sibling tickets vs. what can trail. Each maps to the ticket's FRs.</p>
+    <div class="frkey" style="margin-bottom:18px">
+      <span><i class="kfr"></i> FR button → spec requirement</span>
+      <span><i class="kac"></i> AC button → spec acceptance criterion</span>
+      <span><i class="ksec"></i> § button → spec section</span>
+      <span style="color:var(--faint)">All open the full spec (calendar-spec.html) at that anchor</span>
+    </div>
+
+    <!-- WS1 -->
+    <div class="ws">
+      <div class="head"><span class="num">1</span><span class="t">Restructure agenda → Schedule + shared package</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="secref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#restructure">Spec §6</a> · foundation for everything else</p>
+        <p>Rename the "agenda" concept to <b>Schedule</b> and pull genuinely shared code out of <span class="path">ux/calendar/agenda/</span> so it doesn't leak into every view. Schedule-specific code stays; shared code moves to a common package (prototype already uses <span class="path">ux/calendar/grid/</span>).</p>
+        <ul>
+          <li>Decide the target package layout <b>now</b> — 5962–5964 import from it. Confirm in tech design.</li>
+          <li>Keep the screen logic largely unchanged; this is mostly moves + renames.</li>
+          <li>Everything downstream (filter, state, snackbar) assumes this layout — do it first.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS2 -->
+    <div class="ws">
+      <div class="head"><span class="num">2</span><span class="t">Rollout flag (ToolsConfig / Remote Config)</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-24">FR-24</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-1">FR-1</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-2">FR-2</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-1">AC-1</a> <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-18">AC-18</a></p>
+        <p>Gate the whole multi-view surface behind a Firebase Remote Config flag read through <code>ToolsConfig</code>. <b>OFF</b> → only Schedule renders and the view-mode selector is hidden — pixel-identical to today.</p>
+        <ul>
+          <li>Flag OFF is the safe default and the rollback path — verify it looks like today.</li>
+          <li>Selector visibility is driven by the flag, not hardcoded.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS3 -->
+    <div class="ws">
+      <div class="head"><span class="num">3</span><span class="t">Real data — remove sample, wire live flows</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-3">FR-3</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-2">AC-2</a></p>
+        <p>Flip and remove both <code>USE_SAMPLE_DATA</code> flags, wire the real combine-flows, and delete the <span class="path">sample/</span> package entirely.</p>
+        <table>
+          <tr><th>Flag site</th><th>Real flow to wire</th></tr>
+          <tr><td><code>GetCalendarAgendaUiStateUseCase</code> (~L235)</td><td><code>calendarRepository.getCalendarMapFlow()</code> + <code>findAllAgendaEventsFlow()</code></td></tr>
+          <tr><td><code>GetCalendarGridUiStateUseCase</code> (~L90)</td><td>real events-by-date flow (grid ticket consumes it)</td></tr>
+        </table>
+        <p class="sub">Both flags currently default <code>true</code> and read <code>CalendarSampleData</code>. Delete the <code>flowOf(...)</code> sample branches and the <code>sample/</code> files.</p>
+      </div>
+    </div>
+
+    <!-- WS4 -->
+    <div class="ws">
+      <div class="head"><span class="num">4</span><span class="t">Single shared, repo-backed calendar filter</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-7">FR-7</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-8">FR-8</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-17">FR-17</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-6">AC-6</a></p>
+        <p>Replace the prototype grid's in-memory filter with the same repo-backed mechanism Schedule already uses. Toggling a calendar writes the <code>displayed</code> flag via the repository (<code>setCalendarDisplayed…</code> on <code>CalendarRepository</code>), so it applies everywhere and persists.</p>
+        <ul>
+          <li><b>Initial</b> visibility = repo <code>displayed</code> flag (server/subscription-driven).</li>
+          <li><b>Thereafter the user's toggle wins</b> — a later sync must not overwrite an explicit hide/show (pushed via <code>UPDATE_ATTRIBUTES_ONLY</code>, as the agenda does today).</li>
+          <li>The chip + bottom sheet become one shared component across views.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS5 -->
+    <div class="ws">
+      <div class="head"><span class="num">5</span><span class="t">Loading &amp; errors — local-first + snackbar</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-25">FR-25</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-19">AC-19</a></p>
+        <p>Render <b>local-first</b> from the DB with <b>no blocking spinner</b> (empty = no events). On a sync failure, show a <b>non-blocking snackbar (no retry action)</b> in all views including Schedule, leaving loaded events visible.</p>
+        <ul>
+          <li>Reuse the existing <code>HandleSnackbar</code> + <code>SnackbarUiModel</code> + <code>NavigationScaffold(snackbarHost=…)</code> pattern — copy how <span class="path">OrganizationScreen.kt</span> wires it.</li>
+          <li>Detect failure = branch on <code>WorkInfo.State.FAILED</code> in the worker-info observer (the agenda currently ignores it — this also fixes Schedule's silent-failure gap).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS6 -->
+    <div class="ws">
+      <div class="head"><span class="num">6</span><span class="t">Cross-view date continuity (shared host VM)</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-19">FR-19</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-14">AC-14</a></p>
+        <p>Lift focused-date into a shared host-level state so it survives view switches — including Schedule (switching to Schedule scrolls the list to that date; switching away uses the list's current date).</p>
+        <ul>
+          <li>This is the state seam 5962–5964 plug into — get the shape right now.</li>
+          <li>Scroll-position memory + non-today anchoring belong to the grid tickets, but the <em>date</em> lives here.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS7 -->
+    <div class="ws">
+      <div class="head"><span class="num">7</span><span class="t">Past-data sync + bounded date-range query</span><span class="tag imp">Important</span> <span class="tag opt">backend risk</span></div>
+      <div class="body">
+        <p class="fr"><a class="secref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#data">Data Window §9</a> · biggest unknown</p>
+        <p>The repo currently syncs <b>current-month-forward only</b>. To let history display, add past-month sync <b>and</b> a bounded date-range DAO query (<code>dateStart</code> / <code>dateEnd</code>). Navigation is unbounded; grids show whatever is loaded.</p>
+        <div class="card warnbox tight" style="margin-top:8px">
+          <p style="margin:0"><strong>Confirm before building:</strong> this is real backend scope and may need API/contract confirmation. It's the most likely place to slip — validate the sync + endpoint early.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- WS8 -->
+    <div class="ws">
+      <div class="head"><span class="num">8</span><span class="t">Fix the instrumented smoke test</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="secref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#success">Spec §8</a></p>
+        <p>The package move (WS1) will break the instrumented smoke test. Update <span class="path">app/src/androidTest/.../SmokeTest.kt</span> and its <span class="path">Pages/Calendar.kt</span> page object so the calendar-screen + Refresh flow still passes.</p>
+        <ul>
+          <li>No dedicated agenda-screen unit test exists — this smoke test is the safety net. Keep it green.</li>
+          <li>Existing calendar unit tests must also stay green (no regressions).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FILE MAP -->
+  <section id="files">
+    <h2>File Map — current vs. prototype vs. target</h2>
+    <div class="card">
+      <p class="sub">Current MMA-5961 tree only has <span class="path">agenda/</span>, <span class="path">event/</span>, <span class="path">manage/</span>. The prototype branch adds <span class="path">grid/ day/ week/ month/ sample/</span>. This ticket productionizes the shared/foundation half.</p>
+      <table>
+        <tr><th>Area</th><th>Where it is now</th><th>Action in 5961</th></tr>
+        <tr><td>Agenda screen</td><td><span class="path">agenda/CalendarAgenda*.kt</span></td><td>Rename concept → Schedule; keep logic</td></tr>
+        <tr><td>Sample data</td><td><span class="path">sample/CalendarSampleData.kt</span> (proto)</td><td><b>Delete</b> + remove both flags</td></tr>
+        <tr><td>Shared grid scaffold</td><td><span class="path">grid/</span> (proto: nav bar, date picker, view-mode selector, filter, measurements, UiState)</td><td>Bring in as the shared package; wire real data/filter</td></tr>
+        <tr><td>Filter</td><td><span class="path">grid/CalendarsFilter.kt</span> (in-memory)</td><td>Rewire to repo <code>displayed</code> flag</td></tr>
+        <tr><td>Grid/Day/Week/Month bodies</td><td><span class="path">day/ week/ month/</span> (proto)</td><td><b>Not this ticket</b> — 5962–5964</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- BUILD ORDER -->
+  <section id="order">
+    <h2>Suggested Build Order</h2>
+    <div class="card">
+      <ol>
+        <li><b>WS1 restructure first</b> — everything imports from the new layout.</li>
+        <li><b>WS7 spike in parallel</b> — validate the past-data sync/endpoint early since it's the biggest unknown (can start day one, independent of WS1).</li>
+        <li><b>WS3 real data</b> + <b>WS2 flag</b> — get live data behind the gate.</li>
+        <li><b>WS4 shared filter</b> then <b>WS6 shared date state</b> — the seams siblings depend on.</li>
+        <li><b>WS5 loading/error snackbar</b> — layer on once views render real data.</li>
+        <li><b>WS8 fix smoke test</b> — after the move settles; run it as the gate to "done".</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- RISKS -->
+  <section id="risks">
+    <h2>Risks &amp; Watch-outs</h2>
+    <div class="card">
+      <table>
+        <tr><th>Risk</th><th>Why it bites</th><th>Mitigation</th></tr>
+        <tr><td>Past-data sync scope</td><td>Backend/contract change, may need API confirmation; could balloon</td><td>Spike endpoint + DAO range query first; keep it its own commit</td></tr>
+        <tr><td>Package layout churn</td><td>5962–5964 import from it; changing it later = 3 tickets rebased</td><td>Lock layout in tech design before merging WS1</td></tr>
+        <tr><td>Filter "user wins" logic</td><td>Sync silently re-showing a hidden calendar is a subtle regression</td><td>Explicit test: toggle off → sync → stays off (<a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-6">AC-6</a>)</td></tr>
+        <tr><td>Smoke test breakage</td><td>Only automated coverage of the calendar screen</td><td>Update SmokeTest + Calendar page object in the same PR</td></tr>
+        <tr><td>Flag-off parity</td><td>Any drift = user-visible change on a "no-op" ticket</td><td><a class="secref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#test">QA row #1</a>: flag off must look identical to today</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- NEXT -->
+  <section id="next">
+    <h2>What To Do Next</h2>
+    <div class="card">
+      <ol>
+        <li><b>Confirm the target package structure</b> (spec <a class="secref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#restructure">§6</a> leaves it TBD) — this is the one decision that gates WS1 and all three sibling tickets.</li>
+        <li><b>Spike the past-data sync</b> (WS7): confirm the backend can serve past months and what the date-range query/endpoint looks like — flag any API dependency to the PO now.</li>
+        <li><b>Start WS1 restructure</b> on this branch, pulling the prototype's <span class="path">grid/</span> scaffold in as the shared package.</li>
+      </ol>
+      <p class="sub" style="margin-top:6px">Open checklist for the PR:</p>
+      <ul class="check">
+        <li>Flag OFF looks identical to today (selector hidden)</li>
+        <li>No <code>USE_SAMPLE_DATA</code> references remain; <span class="path">sample/</span> deleted</li>
+        <li>Filter toggle persists across restart and survives a sync</li>
+        <li>Sync failure shows snackbar in Schedule + grids; loaded events stay</li>
+        <li>Focused date survives Schedule ↔ grid switches</li>
+        <li>Past-month navigation shows history</li>
+        <li>SmokeTest + existing calendar unit tests green</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SPEC COVERAGE -->
+  <section id="coverage">
+    <h2>Spec Coverage — FRs &amp; ACs for this ticket</h2>
+    <p class="sub" style="margin-bottom:10px">Word-for-word from the in-repo spec: <span class="path">feature/calendar/spec/viewsspec/spec.md</span> (§5 Functional Requirements, §10 Acceptance Criteria). Note: spec.md's numbering differs from calendar-spec.html — the standalone rollout-flag FR was folded into FR-1, so local-first/snackbar is FR-24 here.</p>
+
+    <div class="card">
+      <h3 style="margin-top:4px">Functional Requirements this ticket completes (8)</h3>
+      <div class="spec-item"><div class="id">FR-1</div><div class="body">When the rollout flag is enabled (FR-24), the system shall provide five calendar view modes — Schedule, Day, 3-Day, Week, and Month — selectable from a view-mode selector available in every view. (When disabled, only Schedule shows and the selector is hidden — FR-24.)</div></div>
+      <div class="spec-item"><div class="id">FR-2</div><div class="body">The system shall open to the Schedule view on each launch.</div></div>
+      <div class="spec-item"><div class="id">FR-3</div><div class="body">The system shall display live calendar events from the repository in all five views.</div></div>
+      <div class="spec-item"><div class="id">FR-7</div><div class="body">The system shall provide a calendar color filter (chip + bottom sheet) in every view.</div></div>
+      <div class="spec-item"><div class="id">FR-8</div><div class="body">The system shall use a <b>single shared, repository-backed filter</b> across all views: toggling a calendar in any view writes the repository "displayed" flag (the same mechanism the Schedule chip already uses), so the change applies to every view and persists across restarts. <em>(Codex M3 — on real data the grid chip currently writes an in-memory sample set and has no effect; it must share Schedule's repo-backed filter.)</em></div></div>
+      <div class="spec-item"><div class="id">FR-17</div><div class="body">The system shall determine a calendar's <b>initial</b> visibility from its repository "displayed" flag (server/subscription-driven); a newly synced calendar follows its synced flag on first arrival. Thereafter the <b>user's toggle wins</b> — a later sync shall not overwrite a calendar the user has explicitly hidden or shown (the toggle is pushed to the server via <code>UPDATE_ATTRIBUTES_ONLY</code>, as the agenda does today). <em>(Codex #4, A6)</em></div></div>
+      <div class="spec-item"><div class="id">FR-19</div><div class="body">The system shall preserve the focused date across <b>all</b> views including Schedule (switching to Schedule scrolls the list to that date; switching from Schedule uses the list's current date). <em>(Codex #7; Schedule inclusion is new — prototype excludes it)</em></div></div>
+      <div class="spec-item"><div class="id">FR-24</div><div class="body">The system shall render grid views <b>local-first</b> from the database with no blocking loading spinner (an empty grid means no events, matching Schedule and Google Calendar). On a <b>sync failure</b>, the system shall show a <b>non-blocking snackbar (no retry action for now)</b> in <b>all views including Schedule</b>, while leaving already-loaded events visible. <em>(Codex #2, A12 resolved. Intentional improvement over the agenda, which surfaces NO sync-error feedback today — including Schedule here also fixes that gap; reuse the app's existing <code>HandleSnackbar</code> / <code>SnackbarUiModel</code> + <code>NavigationScaffold(snackbarHost=…)</code>, as <code>OrganizationScreen</code> does. Detecting failure = branch on <code>WorkInfo.State.FAILED</code> in the worker-info observer, which the agenda currently ignores.)</em></div></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:4px">Acceptance Criteria this ticket should cover (5)</h3>
+      <div class="spec-item ac"><div class="id">AC-1</div><div class="body"><b>(QA #1) — View switching &amp; default.</b> Given the calendar opens, When it first loads, Then the Schedule view is shown and the view-mode selector offers Schedule, Day, 3-Day, Week, and Month. <em>(FR-1, FR-2)</em></div></div>
+      <div class="spec-item ac"><div class="id">AC-2</div><div class="body"><b>(QA #2) — Real events render in the grids.</b> Given synced calendar events exist, When the user opens Day / Week / Month, Then each event appears on its correct day and time. (Multi-day / all-day event routing is covered by AC-3.) <em>(FR-3, FR-4)</em></div></div>
+      <div class="spec-item ac"><div class="id">AC-6</div><div class="body"><b>(QA #6) — Single shared filter (both directions).</b> Given multiple calendars, When the user toggles a calendar <b>off</b> in any view, Then its events hide in <b>all</b> views and the change persists across an app restart; And When the user toggles it <b>back on</b>, Then its events reappear in all views; And a calendar's initial visibility follows its repository "displayed" flag. <em>(FR-7, FR-8, FR-17)</em></div></div>
+      <div class="spec-item ac"><div class="id">AC-14</div><div class="body"><b>(QA #14) — Cross-view date continuity (both directions).</b> Given a focused date in a grid view, When switching to Schedule, Then the list scrolls to that date; And given Schedule scrolled to a date, When switching to a grid view, Then that grid opens on the same date. <em>(FR-19)</em></div></div>
+      <div class="spec-item ac"><div class="id">AC-18</div><div class="body"><b>(QA #19) — Local-first load &amp; sync-failure snackbar.</b> Given no cached data yet, When a view loads, Then it renders from the database with no blocking spinner; And given a sync fails in <b>any view (including Schedule)</b>, Then a non-blocking snackbar (no retry action) appears while already-loaded events remain visible. <em>(FR-24)</em></div></div>
+    </div>
+
+    <div class="card tight">
+      <p class="sub" style="margin:0">Also in scope but not FR-numbered in spec.md: the <b>§6 restructure</b> (agenda → Schedule, shared code out of <span class="path">agenda/</span>), the <b>§9 data window</b> (past-data sync + bounded date-range DAO query), and the smoke-test fix (§8 ship gates) — see the workstreams above.</p>
+    </div>
+  </section>
+
+  <div class="foot">
+    MMA-5961 · Calendar Groundwork &amp; Restructuring · Plan generated from the Jira ticket (icseng) + SPEC.md (MMA-5930) + prototype branch MMA-5930-2-CalendarFromPMG.
+    Grid views (Day/3-Day/Week/Month) are MMA-5962–5964 and out of scope here.
+  </div>
+
+</div>
+</body>
+</html>

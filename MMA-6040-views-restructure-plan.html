@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6040 — Calendar Views Folder Restructure</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+    --radius:14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 880px; margin-inline: auto; padding: 72px clamp(16px, 4vw, 40px) 80px; }
+  h1 { font-size: clamp(24px, 5vw, 34px); line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: clamp(19px, 3.5vw, 24px); margin: 0 0 14px; }
+  h3 { font-size: clamp(16px, 3vw, 18px); margin: 0 0 10px; }
+  p { max-width: 70ch; }
+  section { margin-bottom: 34px; scroll-margin-top: 80px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 14px; }
+  .kicker { color: var(--faint); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+  .lede { color: var(--muted); margin-top: 4px; }
+  .pill {
+    display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .04em;
+    padding: 3px 10px; border-radius: 999px; vertical-align: middle;
+  }
+  .pill-must { background: var(--accent-soft); color: var(--accent); }
+  .pill-imp { background: var(--warn-soft); color: var(--warn); }
+  .pill-opt { background: var(--bg); color: var(--faint); border: 1px solid var(--border); }
+  .pill-rec { background: var(--accent); color: #14171a; }
+  pre {
+    background: #111418; border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; max-width: 100%;
+    font: 12.5px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--ink);
+  }
+  pre .mv { color: var(--accent); }
+  pre .dim { color: var(--faint); }
+  pre .bad { color: var(--warn); }
+  code, a { overflow-wrap: anywhere; }
+  code {
+    background: #23282f; border: 1px solid var(--border); border-radius: 6px;
+    padding: 1px 6px; font-size: 13px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  a { color: var(--accent); }
+  ul, ol { padding-left: 22px; }
+  li { margin-bottom: 7px; }
+  li::marker { color: var(--faint); }
+  .three {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  }
+  .three .card { margin-top: 0; }
+  .big3 { font-size: 17px; font-weight: 600; }
+  .big3 .n {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 8px; margin-right: 10px;
+    background: var(--accent-soft); color: var(--accent); font-size: 14px;
+  }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .tablewrap { overflow-x: auto; }
+  .procon { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); margin-top: 12px; }
+  .procon div { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+  .procon b { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+  .skipto {
+    position: fixed; top: 50%; left: 18px; transform: translateY(-50%);
+    z-index: 60; display: flex; flex-direction: column; gap: 5px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 12px 13px; box-shadow: var(--shadow);
+    width: 172px;
+  }
+  .skipto a {
+    text-decoration: none; color: var(--muted); font-size: 13px;
+    padding: 6px 10px; border-radius: 8px; transition: .15s;
+  }
+  .skipto a:hover { background: var(--bg); color: var(--accent); }
+  .navlabel { color: var(--faint); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 0 10px 4px; }
+  .skipto-toggle {
+    display: none; align-items: center; justify-content: center;
+    width: 40px; height: 40px; padding: 0; background: none; border: 0;
+    color: var(--muted); cursor: pointer; border-radius: 9px;
+  }
+  .skipto-toggle:hover { color: var(--accent); background: var(--bg); }
+  .skipto-toggle svg { transition: .15s; }
+  .skipto-menu { display: flex; flex-direction: column; gap: 5px; }
+  @media (max-width: 1180px) {
+    .skipto { top:10px; left:10px; transform:none; width:auto; padding:5px; border-radius:12px; }
+    .skipto-toggle { display:flex; }
+    .skipto-menu { display:none; padding:4px 6px 8px; min-width:172px; }
+    .skipto:hover .skipto-menu, .skipto:focus-within .skipto-menu,
+    .skipto.open .skipto-menu { display:flex; }
+    .skipto:hover .skipto-toggle svg, .skipto:focus-within .skipto-toggle svg,
+    .skipto.open .skipto-toggle svg { transform:rotate(180deg); }
+  }
+  @media (max-width: 720px) {
+    .card { padding: 15px 16px; }
+    main { padding-top: 64px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <button class="skipto-toggle" aria-label="Skip to section menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">Skip to</div>
+    <a href="#three-things">3 Things</a>
+    <a href="#why">Why</a>
+    <a href="#current">Current Tree</a>
+    <a href="#rebaseline">Corrections</a>
+    <a href="#cleared">Cleared Risks</a>
+    <a href="#decision">The Structure</a>
+    <a href="#ridealongs">Ride-alongs</a>
+    <a href="#steps">Execution</a>
+    <a href="#verify">Verification</a>
+    <a href="#pr">PR Sequencing</a>
+    <a href="#outofscope">Out of Scope</a>
+    <a href="#next">What To Do Next</a>
+  </div>
+</nav>
+
+<main>
+
+<header style="margin-bottom:34px">
+  <div class="kicker">MMA-6040 · BUILT &amp; VERIFIED · Aug 27</div>
+  <h1>Calendar Views Folder Restructure</h1>
+  <p class="lede"><strong>One-sentence version:</strong> Every calendar view now has its own folder under
+  <code>views/</code> (Option B), the shared filter sheet is out of schedule's files, and the app side matches
+  — <strong>three commits, all green</strong>, on a branch stacked on MMA-6039 and waiting to be rebased onto
+  <code>main</code> once PR #2059 merges.</p>
+  <div class="card" style="margin-top:14px">
+    <h3>Built — what actually shipped <span class="pill pill-rec">Done</span></h3>
+    <div class="tablewrap">
+      <table>
+        <tr><th>Commit</th><th>Contents</th></tr>
+        <tr><td><code>58d1a10a9e</code> move the view modes under <code>views/</code></td><td>35 renames, 11 modified</td></tr>
+        <tr><td><code>c09eed66af</code> extract the filter sheet into <code>views/filter/</code></td><td>8 files, +182 / −164</td></tr>
+        <tr><td><code>c19a32fdc7</code> align the app-side use cases</td><td>3 renames, 4 consumers</td></tr>
+      </table>
+    </div>
+    <p style="margin-bottom:0"><strong>Combined: 50 files — 38 renames, 10 modified, 2 new.</strong> Each commit
+    was verified to compile and pass on its own before the next was built. <strong>Nothing is pushed.</strong></p>
+  </div>
+  <p class="lede" style="font-size:14.5px"><strong>Three deviations from the plan as written</strong>, all
+  recorded below: <code>layout/</code> was dropped, <strong>ride-along 2 was cancelled</strong> so
+  <code>edit/</code> stays untouched, and the base-branch question turned out to be moot.</p>
+</header>
+
+<section id="three-things">
+  <h2>Remember Only 3 Things</h2>
+  <div class="three">
+    <div class="card big3"><span class="n">1</span><strong>It's built and green.</strong> 3 commits, 50 files, 774 + 689 tests passing. <strong>Not pushed.</strong></div>
+    <div class="card big3"><span class="n">2</span><strong><code>edit/</code> was never touched</strong> — ride-along 2 cancelled. <code>nav/</code> stays put.</div>
+    <div class="card big3"><span class="n">3</span>Two things left: a <strong>device pass</strong>, then rebase + PR when #2059 merges.</div>
+  </div>
+</section>
+
+<section id="why">
+  <h2>Why This Change <span class="pill pill-must">Must Know</span></h2>
+  <div class="card">
+    <p><strong>Two goals, and they're the only two:</strong></p>
+    <ol>
+      <li><strong>Make the structure intuitive and less cluttered.</strong> Five tickets of calendar work grew the module one package at a time, so the root accumulated <strong>17 flat packages</strong> — six of them (<code>day/</code>, <code>week/</code>, <code>threeday/</code>, <code>month/</code>, <code>schedule/</code>, <code>grid/</code>) are all the same concern: how a calendar is rendered. Nothing at the root said so. They now sit under one <code>views/</code> parent, so "where does the week view live" has an obvious answer.</li>
+      <li><strong>Make genuinely common things common.</strong> Several things every view mode uses were filed as if they belonged to one of them:
+        <ul>
+          <li><code>CalendarConstants.kt</code> — its own doc says "shared across the calendar views," yet it sat inside <code>grid/</code> like an engine internal. <code>DAYS_IN_WEEK</code>/<code>MONTHS_IN_YEAR</code> are used only by month, week, and the app's sample data.</li>
+          <li><code>CalendarDateNavBar</code>, <code>CalendarViewMode</code>, <code>CalendarViewModeSelector</code> — chrome that frames <em>every</em> view mode, also buried in <code>grid/</code>.</li>
+          <li>The <strong>Calendars filter sheet</strong> serves all five view modes, but lived inside <code>ScheduleView.kt</code> / <code>ScheduleUiState.kt</code> — one view mode's files owning shared scaffolding.</li>
+        </ul>
+      </li>
+    </ol>
+    <p>That mis-filing had a concrete cost: a <strong>bidirectional dependency</strong>.
+    <code>grid/CalendarsFilterUiState.kt</code> imported <code>schedule.DisplayCalendarsUiState</code> while
+    <code>schedule/ScheduleView.kt</code> imported <code>grid.CalendarGridDefaults</code> — the two packages
+    pointed at each other purely because the shared sheet was stored in the wrong place.</p>
+    <p style="color:var(--muted);font-size:14px">Not a goal: <strong>deleting one-file packages</strong>.
+    <code>day/</code>, <code>week/</code> and <code>threeday/</code> keep their own folders under
+    <code>views/</code>, and <code>nav/</code> is left alone entirely. Small folders are fine; badly-placed
+    shared code is not.</p>
+    <p style="color:var(--muted);font-size:14px">The end state is a one-way graph:
+    <code>views/grid → views</code> (constants), <code>views/grid → views/filter</code>,
+    <code>views/schedule → views/grid</code>, and <code>views/filter</code> depending on nothing inside
+    <code>views/</code>. <strong>No behavior changes</strong> — the app must look and act identically after.</p>
+  </div>
+</section>
+
+<section id="current">
+  <h2>How It's Structured Today <span class="pill pill-imp">Important</span></h2>
+  <div class="card">
+    <p>The as-is tree, in-scope packages expanded. Orange notes mark the pain points the restructure removes.</p>
+<pre>
+feature/calendar/
+├── day/
+│   └── CalendarDayView.kt               <span class="bad">← a views concern, flat at the module root</span>
+├── detail/                              <span class="dim">Event Details — already coherent, stays put</span>
+│   ├── CalendarAnalytics.kt
+│   ├── EventDateTimeFormatter.kt
+│   ├── EventDetailsScreen.kt
+│   ├── EventDetailsUiState.kt
+│   ├── EventDetailsUiStatePreviewParameterProvider.kt
+│   ├── EventDetailsViewModel.kt
+│   ├── GetEventDetailsUiStateUseCase.kt
+│   └── RecurrenceSummaryFormatter.kt
+├── di/
+│   └── FeatureCalendarKoinModule.kt
+├── calendarpicker/                      <span class="dim">5 files — out of scope (new since 6034)</span>
+├── edit/                                <span class="dim">22 files — out of scope</span>
+├── grid/                                <span class="bad">← 18-file grab-bag, four jobs in one folder:</span>
+│   ├── AllDayBand.kt                    <span class="dim">engine</span>
+│   ├── AllDayLanes.kt                   <span class="dim">engine</span>
+│   ├── CalendarConstants.kt             <span class="dim">constants</span>
+│   ├── CalendarDateNavBar.kt            <span class="bad">← chrome, not engine</span>
+│   ├── CalendarDayColumn.kt             <span class="dim">engine</span>
+│   ├── CalendarDayHeaderCell.kt         <span class="dim">engine</span>
+│   ├── CalendarEventColumns.kt          <span class="dim">engine</span>
+│   ├── CalendarGridEventChip.kt         <span class="dim">engine</span>
+│   ├── CalendarGridSnap.kt              <span class="dim">engine</span>
+│   ├── CalendarGridStyle.kt             <span class="dim">style tokens</span>
+│   ├── CalendarGridUiState.kt           <span class="dim">state</span>
+│   ├── CalendarGridZoom.kt              <span class="dim">pure math</span>
+│   ├── CalendarHourLabelsColumn.kt      <span class="dim">engine</span>
+│   ├── CalendarTimeGrid.kt              <span class="dim">engine — the 544-line core</span>
+│   ├── CalendarViewMode.kt              <span class="bad">← chrome, not engine</span>
+│   ├── CalendarViewModeSelector.kt      <span class="bad">← chrome, not engine</span>
+│   ├── CalendarsFilterUiState.kt        <span class="bad">← imports FROM schedule/ (backwards dep)</span>
+│   └── EventBar.kt                      <span class="dim">engine</span>
+├── intent/
+│   └── CalendarIntents.kt               <span class="bad">← sits at the root though only Event Details uses it</span>
+├── location/                            <span class="dim">10 files — out of scope</span>
+├── manage/                              <span class="dim">8 files — out of scope</span>
+├── month/
+│   ├── CalendarMonthView.kt
+│   └── MonthGrid.kt
+├── nav/
+│   └── EventEditDraftNavKey.kt          <span class="bad">← belongs to the edit flow (left alone)</span>
+├── recurrence/                          <span class="dim">13 files — out of scope</span>
+├── richtext/                            <span class="dim">7 files — out of scope</span>
+├── timezonepicker/                      <span class="dim">8 files — out of scope (new since 6034)</span>
+├── schedule/
+│   ├── ScheduleUiState.kt               <span class="bad">← hides the DisplayCalendarUiModel sealed family (all-views state)</span>
+│   └── ScheduleView.kt                  <span class="bad">← hides 3 sheet composables (the all-views filter sheet)</span>
+├── threeday/
+│   └── CalendarThreeDayView.kt          <span class="bad">← a views concern, flat at the module root</span>
+└── week/
+    └── CalendarWeekView.kt              <span class="bad">← a views concern, flat at the module root</span>
+</pre>
+    <p style="color:var(--muted);font-size:14px">App side (for ride-along 4): <code>ux/calendar/grid/GetCalendarGridUiStateUseCase.kt</code> and
+    <code>ux/calendar/schedule/GetScheduleUiStateUseCase.kt</code> mirror the old feature packages.</p>
+  </div>
+</section>
+
+<section id="rebaseline">
+  <h2>Corrections From the Live Tree <span class="pill pill-must">Read This</span></h2>
+  <div class="card">
+    <p>Every claim in the earlier draft was re-checked against the working tree. <strong>Three were wrong.</strong>
+    None change the approach; all change what to expect.</p>
+    <div class="tablewrap">
+      <table>
+        <tr><th>Earlier claim</th><th>What's actually true</th></tr>
+        <tr>
+          <td>"Cut once #2059 lands — the last remaining gate." Open question: is #2059 targeting <code>main</code> intentional?</td>
+          <td><strong>Moot.</strong> <code>upstream/alpha-5.7</code> is fully merged into <code>upstream/main</code> — main is <strong>55 commits ahead</strong>, alpha-5.7 is <strong>0 ahead</strong>. Targeting <code>main</code> is correct, and this branch is already <code>upstream/main</code> + the 4 MMA-6039 commits. Nothing to wait on.</td>
+        </tr>
+        <tr>
+          <td>"Goldens only exist for edit / location / manage / recurrence."</td>
+          <td><strong>Seven packages, not four</strong> — add <code>calendarpicker</code>, <code>richtext</code>, <code>timezonepicker</code>. 188 PNGs under <code>src/screenshotTestDebug/reference/</code>. The conclusion still holds: <strong>zero goldens for any in-scope package</strong>. Worth checking because golden paths embed <code>&lt;pkg&gt;/&lt;ClassName&gt;Kt/</code>.</td>
+        </tr>
+        <tr>
+          <td>"4 androidTest files — mechanical import updates."</td>
+          <td><strong><code>feature/calendar</code> has no androidTest source set at all.</strong> Those files are in <code>app/src/androidTest/</code> and have <strong>zero</strong> imports of the moving packages. <code>ManageEventsIsolatedTest.kt:29</code> mentions <code>EventEditDraftNavKey</code> in KDoc prose only. Nothing to update.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Other facts confirmed while scanning</h3>
+    <ul>
+      <li><strong>Test packages exist only for <code>day</code>, <code>grid</code>, <code>month</code></strong> — there is no <code>test/week</code>, <code>test/threeday</code>, <code>test/schedule</code>, <code>test/intent</code>, or <code>test/nav</code>. Nine test files move, not more.</li>
+      <li><strong><code>GetScheduleUiStateUseCase</code> has no test anywhere in the repo.</strong> Ride-along 4 moves 2 production files + 1 test, not 2 + 2.</li>
+      <li><strong><code>nav</code> is a dangerous path token.</strong> The module-root <code>nav/</code> holds one file, but <code>calendarpicker/</code>, <code>location/</code>, <code>recurrence/</code>, <code>richtext/</code> and <code>timezonepicker/</code> all have their own nested <code>nav/</code> sub-packages that a naive <code>**/nav/**</code> glob would sweep up.</li>
+      <li><strong>All references are plain <code>import</code> lines.</strong> No fully-qualified usages, no ProGuard rules, no XML, no Gradle/lint/detekt baselines anywhere in the blast radius.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>What MMA-6039 does to the filter-sheet extraction</h3>
+    <p>It lands squarely on <code>ScheduleView.kt</code> + <code>ScheduleUiState.kt</code> — ride-along 3's exact source files.</p>
+    <ul>
+      <li><code>DisplayCalendarUiModel</code> became a <strong>sealed interface</strong> (<code>Header</code> + <code>Calendar</code>), so we extract a sealed family, not one data class.</li>
+      <li><code>onCalendarClick</code> now takes <code>DisplayCalendarUiModel.Calendar</code>.</li>
+      <li>New private <code>DisplayCalendarsContent</code> + <code>DisplayCalendarsContentPreview</code> — so the new file receives <strong>3 composables, not 1</strong>.</li>
+      <li><strong>This helps us:</strong> 6039 already split the sheet body out of the <code>ModalBottomSheet</code>, so the cut is cleaner than originally planned.</li>
+      <li>Ride-along 4's <code>GetCalendarGridUiStateUseCase.kt</code> gained the section-grouping logic — bigger file, still just a move.</li>
+      <li><code>segmentedShapes</code>/<code>SegmentedGap</code> are Material3 APIs, not new shared helpers — nothing extra to extract.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>The nav/ convention — moot now <span class="pill pill-opt">Superseded</span></h3>
+    <p>The plan argued <code>EventEditDraftNavKey.kt</code> should land in <code>edit/nav/</code> to match a
+    3-for-3 convention (<code>location/</code>, <code>calendarpicker/</code>, <code>timezonepicker/</code> — main
+    has since added <code>location/facilityrooms/nav/</code>, making it 4-for-4). <strong>That move was
+    cancelled</strong>, so the convention argument no longer applies here. Kept for the record in case the nav key
+    is ever relocated in a ticket that legitimately owns <code>edit/</code>.</p>
+  </div>
+</section>
+
+<section id="cleared">
+  <h2>Risks Checked and Cleared <span class="pill pill-imp">Important</span></h2>
+  <div class="card tablewrap">
+    <table>
+      <tr><th>Concern</th><th>Finding</th></tr>
+      <tr><td>Screenshot goldens (path-keyed by package)</td><td>Exist for 7 packages (edit, location, manage, recurrence, calendarpicker, richtext, timezonepicker) — all out of scope. <strong>Zero golden moves.</strong> Any golden diff during verification means something out of scope moved.</td></tr>
+      <tr><td><strong>Konsist — "package name must match file path"</strong></td><td><span class="pill pill-imp">The real gate</span> <code>GeneralKonsistTest.kt:71</code>, using <code>Konsist.scopeFromProject()</code>. Every directory move must match its <code>package</code> declaration, tests included. This is the rule that fails if a move is half-done.</td></tr>
+      <tr><td>Other Konsist rules</td><td>The use-case package rule is <strong>commented out</strong>. The <code>ext</code> ban doesn't apply. <code>NavApiModuleTest</code> filters on <code>/api/src/</code>, and <code>:feature:calendar</code> has no api module. All inert.</td></tr>
+      <tr><td><code>EventEditDraftNavKey</code> serialization</td><td>Registered by class reference at <code>Nav3CalendarEventKoinModule.kt:159</code> — compile-safe. FQN serial name changes, but saved back stacks don't survive app updates anyway.</td></tr>
+      <tr><td>R class / namespace</td><td><code>org.lds.ldstools.feature.calendar</code> unchanged — untouched.</td></tr>
+      <tr><td><code>feature/calendar/spec/</code></td><td>Someone else's — never touched.</td></tr>
+      <tr><td>External referencers</td><td><strong>5 app files, 4 app tests, 5 feature files, 3 feature tests</strong> — all plain import lines. <strong>androidTest: zero changes.</strong></td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="decision">
+  <h2>The Structure — Option B <span class="pill pill-rec">Chosen</span></h2>
+
+  <div class="card">
+    <h3>Folder per view</h3>
+    <p>Every view mode gets its own folder under <code>views/</code>; chrome sits at the views root; the engine stays boxed in <code>views/grid/</code>. Uniform and predictable — and the one-file folders give each view room to grow.</p>
+<pre>
+feature/calendar/
+├── detail/                          <span class="dim">Event Details (content unchanged)</span>
+│   ├── CalendarAnalytics.kt
+│   ├── CalendarIntents.kt           <span class="mv">← from intent/ (only detail + DI use it)</span>
+│   ├── EventDateTimeFormatter.kt
+│   ├── EventDetailsScreen.kt
+│   ├── EventDetailsUiState.kt
+│   ├── EventDetailsUiStatePreviewParameterProvider.kt
+│   ├── EventDetailsViewModel.kt
+│   ├── GetEventDetailsUiStateUseCase.kt
+│   └── RecurrenceSummaryFormatter.kt
+├── views/
+│   ├── CalendarConstants.kt         <span class="mv">← from grid/ (shared: month, week, sample)</span>
+│   ├── CalendarDateNavBar.kt        <span class="mv">← from grid/ (chrome)</span>
+│   ├── CalendarViewMode.kt          <span class="mv">← from grid/ (chrome)</span>
+│   ├── CalendarViewModeSelector.kt  <span class="mv">← from grid/ (chrome)</span>
+│   ├── day/
+│   │   └── CalendarDayView.kt
+│   ├── threeday/
+│   │   └── CalendarThreeDayView.kt
+│   ├── week/
+│   │   └── CalendarWeekView.kt
+│   ├── month/
+│   │   ├── CalendarMonthView.kt
+│   │   └── MonthGrid.kt
+│   ├── schedule/
+│   │   ├── ScheduleUiState.kt       <span class="dim">filter states extracted out</span>
+│   │   └── ScheduleView.kt          <span class="dim">filter sheet extracted out</span>
+│   ├── filter/
+│   │   ├── CalendarsFilterUiState.kt    <span class="mv">← from grid/ (fixes backwards import)</span>
+│   │   ├── DisplayCalendarsSheet.kt     <span class="mv">← new; cut from ScheduleView.kt</span>
+│   │   └── DisplayCalendarsUiState.kt   <span class="mv">← new; cut from ScheduleUiState.kt</span>
+│   └── grid/                        <span class="dim">time-grid engine — 13 files, content unchanged</span>
+│       ├── AllDayBand.kt
+│       ├── AllDayLanes.kt
+│       ├── CalendarDayColumn.kt
+│       ├── CalendarDayHeaderCell.kt
+│       ├── CalendarEventColumns.kt
+│       ├── CalendarGridEventChip.kt
+│       ├── CalendarGridSnap.kt
+│       ├── CalendarGridStyle.kt     <span class="dim">tokens + @Composable measurements</span>
+│       ├── CalendarGridUiState.kt
+│       ├── CalendarGridZoom.kt
+│       ├── CalendarHourLabelsColumn.kt
+│       ├── CalendarTimeGrid.kt      <span class="dim">the 544-line core</span>
+│       └── EventBar.kt              <span class="dim">shared with month/ — stays put</span>
+├── nav/
+│   └── EventEditDraftNavKey.kt      <span class="dim">STAYS — ride-along 2 cancelled (see below)</span>
+└── di/ edit/ location/ manage/ recurrence/ richtext/
+    calendarpicker/ timezonepicker/               <span class="dim">untouched</span>
+</pre>
+    <p style="color:var(--muted);font-size:14px">Tests mirror the moves: <code>test/day/</code> (2 files) →
+    <code>test/views/day/</code>, <code>test/month/</code> (1) → <code>test/views/month/</code>,
+    <code>test/grid/</code> (all 6, together) → <code>test/views/grid/</code>. <code>test/detail/</code> stays.
+    Considered and dropped: A (flat views root) and C (no views/ parent).</p>
+  </div>
+
+  <div class="card">
+    <h3>Why grid/ stays one folder <span class="pill pill-rec">Changed</span></h3>
+    <p>The earlier draft added a <code>views/grid/layout/</code> sub-folder for "pure math, zero Compose."
+    Checked against the files — <strong>that rationale is false for half of them</strong>:</p>
+    <ul>
+      <li><code>CalendarGridSnap.kt</code> imports <code>androidx.compose.foundation.pager.PagerSnapDistance</code>.</li>
+      <li><code>CalendarGridZoom.kt</code> declares <code>Modifier.calendarPinchToZoom</code> using <code>pointerInput</code> and the gesture APIs. That is not math.</li>
+      <li>Worse, the split is <strong>cyclic</strong>: <code>AllDayLanes.kt</code> and <code>CalendarEventColumns.kt</code> both operate on <code>CalendarGridEvent</code>, which lives in <code>grid/CalendarGridUiState.kt</code> — so <code>layout/</code> would import <code>grid/</code> while <code>grid/</code> imports <code>layout/</code>. That's the same smell ride-along 3 exists to remove.</li>
+    </ul>
+    <p>Making it acyclic means moving <code>CalendarGridEvent</code> down into <code>layout/</code> — which
+    <strong>breaks a real convention</strong>. In this codebase a <code>XxxUiState.kt</code> holds its whole state
+    family, item models included: <code>SettingsUiState.kt</code> 9 declarations,
+    <code>ProfileImagePreviewUiState.kt</code> 7, <code>AutoUpdateUiState.kt</code> /
+    <code>ActionInterviewUiState.kt</code> / <code>SyncOptionsUiState.kt</code> 5 each. It would be the only
+    case in the repo of a UiState importing its own item model from another package.</p>
+    <div class="procon">
+      <div><b>Also</b>A <code>layout/</code> split would be a structural line drawn on a rule that is not actually true of its contents — the opposite of making the tree intuitive.</div>
+      <div><b>And</b>13 files matches <code>recurrence/</code> exactly, and sits under <code>edit/</code>'s 22. A normal folder for this module, not an outlier.</div>
+    </div>
+    <p style="color:var(--muted);font-size:14px">If <code>grid/</code> grows past ~18 again, splitting it is a
+    clean standalone ticket. Note the filter extraction does <em>not</em> break the UiState convention:
+    <code>ScheduleUiState</code> holds no display-calendars state, so <code>DisplayCalendarsUiState.kt</code>
+    lands in <code>filter/</code> as a complete, self-contained family with no import back.</p>
+  </div>
+
+  <div class="card">
+    <h3>What does move out of grid/, and why</h3>
+    <ul>
+      <li><strong>Chrome</strong> — <code>CalendarDateNavBar</code>, <code>CalendarViewMode</code>, <code>CalendarViewModeSelector</code> are not the engine; they frame every view mode. They go to the views root.</li>
+      <li><strong><code>CalendarConstants.kt</code></strong> was never grid-internal — its own doc says "shared across the calendar views," and <code>DAYS_IN_WEEK</code>/<code>MONTHS_IN_YEAR</code> are used <em>only</em> by month/, week/, and the app's sample data. Views root.</li>
+      <li><strong><code>CalendarsFilterUiState.kt</code></strong> → <code>views/filter/</code>, which is what kills the backwards import.</li>
+      <li>Everything else stays. <code>EventBar.kt</code> and <code>AllDayLanes.kt</code> are reached into by <code>month/</code>, and only <code>CalendarGridSnap.kt</code> is truly grid-private — <strong>grid/ was never a black box</strong>, and pretending otherwise with sub-folders just misnames things.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="ridealongs">
+  <h2>Ride-Alongs (all options) <span class="pill pill-imp">Important</span></h2>
+  <div class="card">
+    <ol>
+      <li><strong>intent/ → detail/</strong> — <code>CalendarIntents.kt</code>'s only consumers are <code>EventDetailsViewModel</code> + DI, so it belongs with them rather than at the module root. Note two files (<code>EventDetailsViewModel.kt</code> and its test) end up <em>same-package</em>, so their imports get <strong>deleted</strong>, not rewritten.</li>
+      <li style="opacity:.75"><strong><s>nav/ → edit/nav/</s></strong> <span class="pill pill-imp">CANCELLED</span> — <code>edit/</code> is someone else's code, so nothing moves into it. <code>EventEditDraftNavKey.kt</code> stays at the module root and the one-file <code>nav/</code> package survives. <strong>This shrank the PR more than the file count suggests:</strong> the move's only footprint in <code>Nav3CalendarEventKoinModule</code>, <code>EventEditViewModel</code>, <code>ManageEventsViewModel</code>, <code>KoinTest</code> and 2 feature tests was a single import line each, so cancelling it took all six back to untouched — 16 modified files became 10.</li>
+      <li><strong>Extract the filter sheet</strong> (part 2 of the ticket — a content edit, not a move): the <strong>3 sheet composables</strong> out of <code>ScheduleView.kt</code>, the <code>DisplayCalendarUiModel</code> sealed family + its UiState out of <code>ScheduleUiState.kt</code>, joining <code>CalendarsFilterUiState.kt</code>. Fixes the bidirectional grid ↔ schedule import.</li>
+      <li><strong>Align app side</strong> <span class="pill pill-rec">Included</span> — <code>ux/calendar/grid/</code> + <code>ux/calendar/schedule/</code> use cases → <code>ux/calendar/views/</code> (flat). That's <strong>2 production files + 1 test</strong> (<code>GetScheduleUiStateUseCase</code> has none), plus imports in <code>UxCalendarKoinModule.kt</code> and <code>CalendarViewModel.kt</code>, and KDoc links in <code>CalendarSampleConfig.kt</code>. <code>manage/</code> + <code>sample/</code> stay. Isolated in commit 3 so it can be dropped in review without touching the rest.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="steps">
+  <h2>Execution Steps <span class="pill pill-imp">Important</span></h2>
+  <div class="card">
+    <ol>
+      <li><strong>Commit 1 — pure moves.</strong> <code>git mv</code> everything (tests mirror their sources), then a scripted package/import rewrite across feature + app + tests. 100% rename commit → Git rename detection stays clean for reviewers and teammates' rebases.</li>
+      <li><strong>Commit 2 — content extraction.</strong> The filter-sheet split, kept separate so commit 1 stays pure.</li>
+      <li><strong>Commit 3 — app alignment.</strong> The <code>ux/calendar/</code> use-case move.</li>
+      <li><strong>Rebase, then PR.</strong> Once #2059 merges, drop the 4 borrowed commits and retarget — see below.</li>
+    </ol>
+    <p>Nothing is committed or pushed until everything is verified green and you give the word.</p>
+  </div>
+
+  <div class="card">
+    <h3>The gotcha in commit 1 — it was <em>five</em>, not four <span class="pill pill-must">Must Know</span></h3>
+    <p>A regex rewrite of existing <code>import</code> lines misses these — they were <em>same-package</em>
+    references that became cross-package once the constants and chrome left <code>grid/</code>:</p>
+    <div class="tablewrap">
+      <table>
+        <tr><th>File (after the move)</th><th>New import needed</th></tr>
+        <tr><td><code>views/grid/CalendarDayColumn.kt</code></td><td><code>views.MINUTES_PER_HOUR</code></td></tr>
+        <tr><td><code>views/grid/CalendarEventColumns.kt</code></td><td><code>views.MINUTES_PER_HOUR</code>, <code>views.MIN_EVENT_MINUTES</code></td></tr>
+        <tr><td><code>views/grid/CalendarGridStyle.kt</code></td><td><code>views.HOURS_PER_DAY</code>, <code>views.MINUTES_PER_HOUR</code></td></tr>
+        <tr><td><code>views/grid/CalendarGridUiState.kt</code></td><td><code>views.filter.CalendarsFilterUiState</code></td></tr>
+        <tr><td><code>views/grid/CalendarTimeGrid.kt</code></td><td><span class="mv">views.CalendarDateNavBar</span> — <strong>the plan's table missed this one</strong> (line 449 calls it)</td></tr>
+      </table>
+    </div>
+    <p style="color:var(--muted);font-size:14px"><strong>Two false positives worth not "fixing":</strong>
+    <code>location/FacilityDuration.kt</code> and <code>edit/EventDateTimeDefaults.kt</code> both reference
+    <code>MINUTES_PER_HOUR</code>, but each declares its own <code>private const val</code> — adding an import
+    would have been a compile error. <code>GetScheduleUiStateUseCase.kt</code> names
+    <code>CalendarsFilterUiState</code> in a comment only. Derive this list from <em>usage</em>, not from a
+    symbol-name grep.</p>
+  </div>
+
+  <div class="card">
+    <h3>Commit 2, precisely</h3>
+    <ul>
+      <li><strong>New <code>views/filter/DisplayCalendarsUiState.kt</code></strong> — cut <code>DisplayCalendarsUiState</code> (L55–60) and the <code>DisplayCalendarUiModel</code> sealed family (L62–81) out of <code>ScheduleUiState.kt</code>. <strong>Reword the KDoc at L63–65</strong> — it says "matching <code>[ScheduleUiModel]</code>", which would dangle; drop the cross-reference rather than importing a type purely for a doc link.</li>
+      <li><strong>New <code>views/filter/DisplayCalendarsSheet.kt</code></strong> — cut <code>DisplayCalendarsBottomSheet</code> (L102–140, the one public entry point), <code>DisplayCalendarsContent</code> (L142–185, private) and <code>DisplayCalendarsContentPreview</code> (L293–313, private) out of <code>ScheduleView.kt</code>. These reach only core/ui, core/designsystem, Material3 and core/strings — <strong>zero grid dependencies</strong>, so <code>views/filter/</code> stays a leaf.</li>
+      <li><strong>Delete <code>CalendarsFilterUiState.kt</code>'s import</strong> of <code>DisplayCalendarsUiState</code> — same package now. <em>That single deletion is the backwards-dependency fix.</em></li>
+      <li><strong>Prune leftovers</strong> — <code>ScheduleUiState.kt</code> loses <code>StringRes</code>; <code>ScheduleView.kt</code> loses ~20 imports used only by the sheet trio. Keep <code>ExperimentalMaterial3Api</code> — <code>ScheduleView</code> itself opts in. Let detekt/lint confirm.</li>
+      <li><strong>3 files, 4 import lines update</strong> — <code>CalendarScreen.kt:62</code>, <code>GetCalendarGridUiStateUseCase.kt:26,27</code>, <code>GetCalendarGridUiStateUseCaseTest.kt:43</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="verify">
+  <h2>Verification — Results <span class="pill pill-rec">Green</span></h2>
+  <div class="card tablewrap">
+    <table>
+      <tr><th>Gate</th><th>Result</th></tr>
+      <tr><td><code>:feature:calendar:testDebugUnitTest</code></td><td><strong>774 tests, 0 failures</strong></td></tr>
+      <tr><td><code>:app:testDebugUnitTest</code></td><td><strong>689 tests, 0 failures</strong></td></tr>
+      <tr><td><strong>Konsist "package name must match file path"</strong></td><td><strong>PASSED</strong> — the structural gate for the whole refactor</td></tr>
+      <tr><td><code>KoinModuleTest</code></td><td>4 tests, 0 failures</td></tr>
+      <tr><td><code>detektDebug</code> (both modules)</td><td>clean</td></tr>
+      <tr><td><code>:feature:calendar:lintDebug</code></td><td>2 warnings, both <strong>pre-existing</strong> <code>PluralsCandidate</code> on edit/recurrence strings (0 res files touched)</td></tr>
+      <tr><td><code>:app:compileDebugAndroidTestSources</code></td><td>compiles</td></tr>
+      <tr><td><code>validateDebugScreenshotTest</code></td><td><span class="pill pill-imp">RED — not ours</span> see below</td></tr>
+      <tr><td>Golden files changed by this branch</td><td><strong>0</strong></td></tr>
+      <tr><td>Device pass</td><td><span class="pill pill-imp">NOT DONE</span> — the one gate with real residual risk</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>The screenshot failure is pre-existing on main <span class="pill pill-must">Must Know</span></h3>
+    <p><code>validateDebugScreenshotTest</code> fails <strong>23 of 212</strong> —
+    <code>LocationScreenshot</code> 16, <code>ManageEventsScreenshot</code> 7. <strong>Proven not ours:</strong>
+    the entire restructure was stashed and the task re-run against a clean tree — <em>identical</em> result, same
+    classes, same counts. It arrived with main's MMA-5874 location rework. Tracked separately; deliberately not
+    fixed here, because regenerating goldens inside a pure-refactor PR would undermine the "no behavior changes"
+    claim reviewers need to trust.</p>
+    <p style="color:var(--muted);font-size:14px"><strong>Trap that cost a cycle:</strong> backgrounding
+    <code>./gradlew … &gt; build.log 2&gt;&amp;1</code> and reading the shell's exit code reports success even when
+    Gradle failed. Echo Gradle's own status:</p>
+<pre>./gradlew &lt;tasks&gt; &gt; build.log 2&gt;&amp;1; echo "GRADLE_EXIT=$?"</pre>
+    <p style="color:var(--muted);font-size:14px">Also: the two known-flaky <code>:app</code> tests
+    (<code>GetWelcomeUiStateUseCaseTest</code>, <code>GetSacramentAttendanceCounterUiStateUseCaseTest</code>)
+    never bit across six full runs. <code>build.log</code> is <strong>not gitignored</strong> despite CLAUDE.md
+    calling it disposable — keep it unstaged.</p>
+  </div>
+</section>
+
+<section id="pr">
+  <h2>PR Sequencing <span class="pill pill-must">Must Know</span></h2>
+  <div class="card">
+    <p>PR #2059 (MMA-6039) is still <strong>open</strong> and is cross-fork
+    (<code>willbarr_church:MMA-6039</code> → <code>ICS-Eng:main</code>), so a stacked upstream PR with
+    <code>--base MMA-6039</code> <strong>is not available</strong> — the base would have to be a branch in
+    <code>ICS-Eng</code>. That's fine: do the work now, retarget later.</p>
+    <p>Once #2059 merges, drop the 4 borrowed commits:</p>
+<pre>git fetch upstream &amp;&amp; git rebase --onto upstream/main MMA-6039 MMA-6040</pre>
+    <p>Then push to <code>origin</code> and open the PR against <code>ICS-Eng/MemberTools-Android</code>
+    <code>main</code>, with an <strong>old → new path mapping table for every moved file</strong> in the body,
+    announced so it merges before it rots.</p>
+    <p style="color:var(--muted);font-size:14px">Check <code>gh auth status</code> first — MemberTools PRs need
+    <code>gh auth switch --user willbarr_church</code>.</p>
+  </div>
+</section>
+
+<section id="outofscope">
+  <h2>Explicitly Out of Scope <span class="pill pill-opt">Optional Detail</span></h2>
+  <div class="card">
+    <ul>
+      <li><strong>edit / location / manage / recurrence / richtext / calendarpicker / timezonepicker content</strong> — import lines only, no logic or layout changes.</li>
+      <li><strong><code>feature/calendar/spec/</code></strong> — someone else's folder, never touched.</li>
+      <li><strong>Composable renames</strong> — e.g. schedule's <code>CalendarEvent</code> colliding with the database entity name. Worth a separate ticket if you want it.</li>
+      <li><strong>The stale KDoc</strong> at <code>app/src/androidTest/kotlin/ManageEventsIsolatedTest.kt:29</code> — it says <code>navKeySerializers("calendar")</code>; the real scope string is <code>"calendarEvent"</code>. Noticed in passing, not fixed here.</li>
+      <li><strong>Behavior changes of any kind</strong> — this is a move-and-extract refactor; the app should look and act identically after.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="next">
+  <h2>What To Do Next</h2>
+  <div class="card">
+    <ol>
+      <li><strong>Device pass</strong> — the only gate not yet run, and the one unit tests can't stand in for: a moved <code>@Composable</code> can regress at runtime without failing a JVM test. Check all 5 view modes, the filter sheet (open / toggle / dismiss), and Event Details.</li>
+      <li><strong>Run <code>/preflight</code></strong> as the final review gate.</li>
+      <li><strong>Wait for #2059 to merge</strong>, then drop the 5 borrowed commits:
+<pre>git fetch upstream &amp;&amp; git rebase --onto upstream/main MMA-6039 MMA-6040</pre></li>
+      <li><strong>Push and open the PR</strong> against <code>ICS-Eng/MemberTools-Android</code> <code>main</code>, with the old → new path map in the body. Check <code>gh auth status</code> first — MemberTools needs <code>gh auth switch --user willbarr_church</code>.</li>
+    </ol>
+    <p style="color:var(--muted);font-size:14px"><strong>For the PR body:</strong> frame it as the two real goals —
+    <em>a more intuitive, less cluttered structure</em> and <em>making genuinely common things common</em>.
+    <strong>Do not frame it as removing one-file packages</strong>; that was never the goal, and
+    <code>day/</code>, <code>week/</code>, <code>threeday/</code> and <code>nav/</code> all remain single-file.
+    Say <code>nav/</code> was <em>deliberately</em> left alone because it belongs to the edit flow.</p>
+    <div class="procon">
+      <div><b>Safety net</b>Tag <code>backup/MMA-6040-prerebase-main</code> holds the pre-rebase tip if the rebase goes sideways.</div>
+      <div><b>Local only</b>3 commits on <code>MMA-6040</code>, <strong>0 pushed</strong>. <code>origin/MMA-6040</code> is untouched.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+  var nav=document.querySelector('.skipto');
+  nav.querySelector('.skipto-toggle').addEventListener('click',function(){nav.classList.toggle('open')});
+  document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+  nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',function(){
+    nav.classList.remove('open');
+    requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});})});
+</script>
+
+</body>
+</html>

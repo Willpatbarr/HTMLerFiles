@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Structures Tutor — requirements as built</title>
+<style>
+:root{
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.65 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif}
+
+/* hidden state inputs — every control is CSS only */
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0;color:var(--accent);font-weight:600;
+  letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.6rem}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media(max-width:900px){.head{grid-template-columns:1fr}.head .lede{margin-top:1.1rem}}
+
+h2{font-size:1.3rem;margin:0 0 .5rem;font-weight:600;letter-spacing:-.01em}
+h3{font-size:1rem;margin:0 0 .55rem;font-weight:600}
+p{margin:0 0 .9rem;max-width:62ch}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+/* ---------- floating page nav ---------- */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer;display:block}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 10px 4px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media(max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+  main{padding-top:72px}
+}
+#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+
+/* ---------- pages and tabs ---------- */
+.page{display:none}
+.tabpanel{display:none}
+#r-p-scope:checked ~ main #p-scope{display:block}
+#r-p-behaviour:checked ~ main #p-behaviour{display:block}
+#r-p-test:checked ~ main #p-test{display:block}
+#r-p-scope:checked ~ .skipto label[for="r-p-scope"]{background:var(--bg);color:var(--accent)}
+#r-p-behaviour:checked ~ .skipto label[for="r-p-behaviour"]
+  {background:var(--bg);color:var(--accent)}
+#r-p-test:checked ~ .skipto label[for="r-p-test"]{background:var(--bg);color:var(--accent)}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+
+#r-t-purpose:checked ~ main #t-purpose{display:block}
+#r-t-source:checked ~ main #t-source{display:block}
+#r-t-excluded:checked ~ main #t-excluded{display:block}
+#r-t-display:checked ~ main #t-display{display:block}
+#r-t-colour:checked ~ main #t-colour{display:block}
+#r-t-docks:checked ~ main #t-docks{display:block}
+#r-t-manip:checked ~ main #t-manip{display:block}
+#r-t-structures:checked ~ main #t-structures{display:block}
+#r-t-ops:checked ~ main #t-ops{display:block}
+#r-t-flow:checked ~ main #t-flow{display:block}
+#r-t-editing:checked ~ main #t-editing{display:block}
+#r-t-grading:checked ~ main #t-grading{display:block}
+#r-t-coverage:checked ~ main #t-coverage{display:block}
+
+/* active tab takes its group's colour — the tab bar is the colour index */
+#r-t-purpose:checked ~ main label[for="r-t-purpose"],
+#r-t-source:checked ~ main label[for="r-t-source"],
+#r-t-excluded:checked ~ main label[for="r-t-excluded"]
+  {color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t-display:checked ~ main label[for="r-t-display"],
+#r-t-colour:checked ~ main label[for="r-t-colour"],
+#r-t-docks:checked ~ main label[for="r-t-docks"],
+#r-t-manip:checked ~ main label[for="r-t-manip"],
+#r-t-structures:checked ~ main label[for="r-t-structures"],
+#r-t-ops:checked ~ main label[for="r-t-ops"]
+  {color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t-flow:checked ~ main label[for="r-t-flow"],
+#r-t-editing:checked ~ main label[for="r-t-editing"],
+#r-t-grading:checked ~ main label[for="r-t-grading"],
+#r-t-coverage:checked ~ main label[for="r-t-coverage"]
+  {color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+
+/* ---------- groups and units ---------- */
+.gh{margin:0 0 1.4rem}
+.gh.c1 h2{color:var(--g1)} .gh.c2 h2{color:var(--g2)} .gh.c3 h2{color:var(--g3)}
+.gh p{margin:0;color:var(--muted);font-size:14px}
+
+.units{display:grid;gap:16px;
+  grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));margin:0 0 22px}
+.u{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:15px 17px 6px;overflow-x:auto;max-width:100%}
+.u h3{display:flex;gap:.5rem;align-items:baseline}
+.rail{font-weight:400}
+.c1 .rail{color:var(--g1)} .c2 .rail{color:var(--g2)} .c3 .rail{color:var(--g3)}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--faint);font-weight:600;font-size:12px;letter-spacing:.06em;
+  text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+.u table th{width:8.5rem;color:var(--muted);text-transform:none;letter-spacing:0;
+  font-size:13px;font-weight:600}
+.scroll{overflow-x:auto;max-width:100%;margin:0 0 22px;
+  border:1px solid var(--border);border-radius:var(--radius);background:var(--card)}
+.scroll table{font-size:13.5px}
+.scroll th,.scroll td{padding:9px 12px}
+
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:#12161a;border:1px solid var(--border);border-radius:5px;padding:1px 5px;
+  overflow-wrap:anywhere;max-width:100%}
+q{color:var(--ink);font-style:italic}
+q::before{content:"\201C"} q::after{content:"\201D"}
+
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+  padding:13px 17px;margin:0 0 22px}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;margin:0 0 5px}
+.note p{margin:0 0 .6rem} .note p:last-child{margin:0}
+
+ol.seq{padding-left:0;list-style:none;counter-reset:s;margin:0 0 22px;max-width:70ch}
+ol.seq li{counter-increment:s;display:grid;grid-template-columns:2rem 1fr;gap:.6rem;
+  margin:0 0 12px}
+ol.seq li::before{content:counter(s) ".";color:var(--faint);
+  font-variant-numeric:tabular-nums}
+ul.plain{margin:0 0 22px;padding-left:1.1rem;max-width:70ch}
+ul.plain li{margin:0 0 7px}
+@media(max-width:720px){.units{grid-template-columns:1fr}.u{padding:14px}}
+</style>
+</head>
+<body>
+
+<input class="st" type="radio" name="pg" id="r-p-scope" checked>
+<input class="st" type="radio" name="pg" id="r-p-behaviour">
+<input class="st" type="radio" name="pg" id="r-p-test">
+<input class="st" type="checkbox" id="navtoggle">
+
+<input class="st" type="radio" name="t-scope" id="r-t-purpose" checked>
+<input class="st" type="radio" name="t-scope" id="r-t-source">
+<input class="st" type="radio" name="t-scope" id="r-t-excluded">
+
+<input class="st" type="radio" name="t-beh" id="r-t-display" checked>
+<input class="st" type="radio" name="t-beh" id="r-t-colour">
+<input class="st" type="radio" name="t-beh" id="r-t-docks">
+<input class="st" type="radio" name="t-beh" id="r-t-manip">
+<input class="st" type="radio" name="t-beh" id="r-t-structures">
+<input class="st" type="radio" name="t-beh" id="r-t-ops">
+
+<input class="st" type="radio" name="t-test" id="r-t-flow" checked>
+<input class="st" type="radio" name="t-test" id="r-t-editing">
+<input class="st" type="radio" name="t-test" id="r-t-grading">
+<input class="st" type="radio" name="t-test" id="r-t-coverage">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-scope">Scope</label>
+    <label for="r-p-behaviour">Behaviour</label>
+    <label for="r-p-test">Test mode</label>
+  </div>
+</nav>
+
+<main>
+
+<div class="head">
+  <h1>Data Structures Tutor — requirements as built</h1>
+  <p class="lede">Twelve structure pages built from the CSE 232 lab headers. What each page
+  must do, what it does, and what was deliberately left out.</p>
+</div>
+
+<!-- ============================== PAGE 1 ============================== -->
+<section class="page c1" id="p-scope">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-purpose">Purpose</label>
+    <label class="tab" for="r-t-source">Sourcing rule</label>
+    <label class="tab" for="r-t-excluded">Excluded</label>
+  </div>
+
+  <div class="tabpanel" id="t-purpose">
+    <div class="gh c1">
+      <h2>Scope · what the tutor is for</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Deliverable form</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Plain HTML pages opened in Chrome from the local
+            folder. Will: <q>rendered in chrome, don't need to worry about obsidian issues
+            and all that</q></td></tr>
+          <tr><th>Behaviour</th><td>No build step and no server. The pages are opened
+            directly from the folder they live in.</td></tr>
+          <tr><th>Because</th><td>B — the tutor is revision material for a test, used on one
+            machine by one reader.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> One page per structure</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>A page for each data structure that has a CSE 232 lab,
+            reached from a homepage index.</td></tr>
+          <tr><th>Behaviour</th><td>Twelve structure pages and one homepage. The homepage
+            groups the structures as sequential containers, adapters, trees and hashing, and
+            each card carries the structure's lab number and its main operations.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Study loop</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Original brief — a display that renders the structure,
+            a list of the structure's functions beneath the display, and running a function
+            changes the display.</td></tr>
+          <tr><th>Behaviour</th><td>Every page is display on top, operations underneath,
+            output log at the bottom. Pressing an operation's Run button changes the drawn
+            structure and prints the call and its return value.</td></tr>
+          <tr><th>Because</th><td>C — the return value alone does not show what moved; the
+            drawing alone does not show what was called.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Two things a reader can do</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Drive the structure with its own operations, or
+            rearrange it by hand.</td></tr>
+          <tr><th>Behaviour</th><td>Both are always available. Hand-rearrangement is
+            permitted even where the real structure has no such operation, because setting up
+            a state to study is worth more than protecting the invariant.</td></tr>
+          <tr><th>Supersedes</th><td>Nothing. Present from the original brief:
+            <q>the boxes should be moveable by clicking and dragging with the mouse</q></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-source">
+    <div class="gh c1">
+      <h2>Scope · where the content comes from</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Anything not from a lab is labelled</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>A reader must never mistake an invented convenience for
+            a method the lab declares.</td></tr>
+          <tr><th>Behaviour</th><td>The only non-method control on a structure page is
+            <code>reset display</code>, badged <q>not a method</q>. The queue page is badged
+            <q>no lab</q> on the page and on its homepage card.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Lab implementations are not trusted</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>DO NOT trust the implementations of these
+            methods, I was not the best back in the day and I don't even know what my partner
+            was doing</q></td></tr>
+          <tr><th>Behaviour</th><td>Each page implements the textbook behaviour. Where a lab
+            body disagrees with the textbook, the page follows the textbook and says so on
+            the page.</td></tr>
+          <tr><th>Because</th><td>B — reproducing a buggy lab would teach the wrong answer
+            before a test.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Method names come from the headers</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>each lab declares every method that is needed
+            to be present on this tutor. Use the names found in here for methods</q></td></tr>
+          <tr><th>Behaviour</th><td>Every operation on a structure page is declared in that
+            lab's header. Signatures, default arguments and the header's own section order
+            are carried across unchanged.</td></tr>
+          <tr><th>Section order</th><td>Construct · Assign · Iterator · Access · Insert ·
+            Remove · Status. A page reads in the same order as the file it came from.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Known divergences from the lab bodies</b>
+      <p>The vector lab reports <code>size()</code> and <code>capacity()</code> as 999 and
+      <code>empty()</code> as true. The hash lab reports <code>bucket_count()</code> as 100
+      while holding exactly ten buckets, and <code>bucket_size()</code> as 99. Each page does
+      the real thing and states the count it actually holds.</p>
+      <p>The hash lab's bucket function reinterprets a negative key as an unsigned 64-bit
+      value before taking the remainder, so −12 lands in bucket 4 rather than bucket 8. That
+      behaviour is reproduced exactly and called out on the page, because it is the kind of
+      thing a test asks about.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-excluded">
+    <div class="gh c1">
+      <h2>Scope · left out on purpose</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Implementation detail</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>This document records requirements and behaviour only.
+            Will: <q>don't include any implementation details</q></td></tr>
+          <tr><th>Behaviour</th><td>The <code>-ref</code> type would normally carry a location
+            line and a code block per unit. Both are dropped here, and the Why bullet block is
+            folded into a Because row.</td></tr>
+          <tr><th>Note</th><td>Interim reading of UB-137 and UB-138 — the invocation selects
+            the plainer reference of settled state rather than the decision-record shape.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> No queue lab exists</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>A queue page was asked for. CSE 232 has no queue
+            lab.</td></tr>
+          <tr><th>Behaviour</th><td>The queue page uses the <code>std::queue</code> names
+            rather than names taken from a header, and is marked as background rather than
+            revision. The page points at the deque as the lab to study beside it.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Red-black balancing</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>The BST lab's node carries a red-black flag.</td></tr>
+          <tr><th>Behaviour</th><td>The BST page performs plain insert and erase and does not
+            simulate rebalancing. The page states this rather than implying the shape shown is
+            a balanced one.</td></tr>
+          <tr><th>Because</th><td>C — the lab body does not settle the intended balancing, and
+            guessing it would be inventing an answer.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Staging is one-way</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>A node can be dragged from the staging tray into a tree.
+            The reverse is not supported.</td></tr>
+          <tr><th>Behaviour</th><td>A misplaced node is removed with Delete and staged again.
+            Dragging a node back to the tray would need a rule for what happens to its
+            children, which is unsettled.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== PAGE 2 ============================== -->
+<section class="page c2" id="p-behaviour">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-display">Display</label>
+    <label class="tab" for="r-t-colour">Colour</label>
+    <label class="tab" for="r-t-docks">Docks</label>
+    <label class="tab" for="r-t-manip">Manipulation</label>
+    <label class="tab" for="r-t-structures">Structures</label>
+    <label class="tab" for="r-t-ops">Operations</label>
+  </div>
+
+  <div class="tabpanel" id="t-display">
+    <div class="gh c2">
+      <h2>Behaviour · the display panel</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Elements are boxes</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Original brief — <q>a series of boxes each representing
+            an entry. the boxes will be a single filled color and a centered number</q></td></tr>
+          <tr><th>Behaviour</th><td>Each element is one box holding one number, filled with a
+            single colour. Linear structures draw a row or a column; tree structures draw a
+            node diagram with edges; the hash page draws ten bucket rows.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Scaled to four fifths</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>shrink the display by like 20% … just make
+            everything in it smaller to match so nothing is squished</q></td></tr>
+          <tr><th>Behaviour</th><td>Boxes, nodes, text, padding and the side panel all scale
+            together by one fifth, so no element is squeezed relative to another. The panel
+            still spans the full column width.</td></tr>
+          <tr><th>Measured</th><td>Panel height 492px → 391px on a 1440 × 900 window, a 21 per
+            cent reduction.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> State readout beside the structure</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>The status operations should be readable without
+            pressing anything.</td></tr>
+          <tr><th>Behaviour</th><td>A side panel shows the live value of that structure's
+            status operations — size, empty, and whichever of front, back, top, height and the
+            in-order traversal apply. It updates on every change.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Second instance for copy and swap</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Copy constructors, assignment and swap all take another
+            instance, which has to exist somewhere.</td></tr>
+          <tr><th>Behaviour</th><td>The side panel carries an editable list of values standing
+            in for the right-hand side. Swap exchanges it with the displayed structure; the
+            move operations empty it.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-colour">
+    <div class="gh c2">
+      <h2>Behaviour · the colour scale</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Colour encodes the value</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>have the color scale go from red -&gt; orange
+            -&gt; yellow -&gt; green -&gt; blue -&gt; purple and the number range be from -300
+            to 300</q></td></tr>
+          <tr><th>Behaviour</th><td>A value maps to a position on that spectrum. −300 renders
+            red and +300 renders purple; zero sits mid-spectrum at green. The same number is
+            the same colour on every page.</td></tr>
+          <tr><th>Supersedes</th><td>A signed diverging scale, red for negatives and blue for
+            positives with a neutral grey at zero; then the same scale with green replacing
+            blue.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Text contrast follows the fill</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Derived — a full spectrum makes one fixed text colour
+            unreadable at one end or the other.</td></tr>
+          <tr><th>Behaviour</th><td>Each box takes either white or near-black text, whichever
+            contrasts with its own fill. Yellow through teal fills carry dark text; red, blue
+            and purple carry white.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> The window is adjustable</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Values clustered near zero are indistinguishable on a
+            600-wide scale.</td></tr>
+          <tr><th>Behaviour</th><td>A multiplier slider zooms the window. At ×1 the ends are
+            exactly −300 and +300; the slider runs ×0.25 to ×5, which is ±1200 down to ±60. A
+            legend bar shows the current mapping and its end values.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Consequence of the ±300 range</b>
+      <p>The demo values 6, −12 and 38 all fall within about 24 degrees of hue at ×1, so they
+      read as three near-identical greens. That is arithmetic rather than a defect: 38 is six
+      per cent of the way up a 600-wide scale.</p>
+      <p>The multiplier is the intended remedy — at ×5 the window is ±60 and those same three
+      values separate into green, teal and blue. Changing the seed values or the range itself
+      are the other two ways out, and both remain open.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-docks">
+    <div class="gh c2">
+      <h2>Behaviour · the two docks</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Both docks collapse</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>make both the console output and the display
+            pieces sticky but have them be hideable and showable</q></td></tr>
+          <tr><th>Behaviour</th><td>The display rides the top edge of the screen, the console
+            rides the bottom, and each collapses to a slim bar that stays reachable. Both
+            states persist across pages and visits.</td></tr>
+          <tr><th>Supersedes</th><td>An unconditional sticky display; then a pin button that
+            toggled stickiness on and off.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Console counts its lines when closed</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>A console that is closed by default must still signal
+            that something was written to it.</td></tr>
+          <tr><th>Behaviour</th><td>The console bar carries a running count of output lines,
+            so an error from a closed console is still visible as a number that moved.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Defaults are display open, console closed</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>Have the display shown by default and the
+            console hidden by default</q></td></tr>
+          <tr><th>Behaviour</th><td>A first visit shows the structure and a one-line console
+            bar at the foot of the screen.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Sharing the screen</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Two open docks must not leave the operations with no
+            room.</td></tr>
+          <tr><th>Behaviour</th><td>With both open the display's height cap drops and the
+            console shortens, keeping a usable scrolling band of operations between them. Each
+            dock alone keeps its full size.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> The hide control costs no space</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>make it float underneath the display? that way
+            it doesn't force the display to take up more space</q></td></tr>
+          <tr><th>Behaviour</th><td>The control hangs off the bottom-right corner of the panel
+            instead of sitting in a bar above it, and clears the panel's own contents so it
+            never covers a control inside.</td></tr>
+          <tr><th>Measured</th><td>Overhead above the panel 18px, down from about 51px.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-manip">
+    <div class="gh c2">
+      <h2>Behaviour · direct manipulation</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Boxes drag and snap</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Original brief — <q>the boxes should be moveable by
+            clicking and dragging with the mouse. snapping to be in place</q></td></tr>
+          <tr><th>Behaviour</th><td>On every linear structure a box can be dragged to any
+            position. The others part around it and it snaps to the nearest slot on release.
+            The move is written to the console.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Heap nodes swap</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>priority queue needs fixing too</q></td></tr>
+          <tr><th>Behaviour</th><td>A heap's shape is fixed by the array's length, so a node
+            has nowhere to move to. Dragging one heap node onto another exchanges the two —
+            the move percolate up and percolate down each make. The heap-property banner
+            updates as the swap lands.</td></tr>
+          <tr><th>Also</th><td>The array strip and the heap tree share a selection, so clicking
+            a node in either view highlights the same value in both.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Illegal arrangements are allowed</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Setting up a state to study outranks protecting the
+            structure's invariant.</td></tr>
+          <tr><th>Behaviour</th><td>Hand-rearrangement is permitted wherever it is offered. On
+            the priority queue it deliberately breaks the heap so that heapify has something
+            to repair, and the page says so.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Tree nodes re-hang</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>let me drag trees in normal mode too</q></td></tr>
+          <tr><th>Behaviour</th><td>Dragging a node onto another re-hangs that node and
+            everything under it. Which side it lands on is decided by which half of the target
+            the drop falls on, and the target outlines as the pointer crosses it.</td></tr>
+          <tr><th>Refused</th><td>A move that would make a node its own descendant, and a move
+            onto a child slot that is already occupied. Each is refused with a message and the
+            tree is left untouched.</td></tr>
+          <tr><th>Supersedes</th><td>Tree nodes could not be dragged at all.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-structures">
+    <div class="gh c2">
+      <h2>Behaviour · the twelve structures</h2>
+      <p>Ordered by lab number, then the three without one, by name.</p>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Structure</th><th>Lab</th><th>What the display shows</th>
+          <th>Worth studying on this page</th></tr></thead>
+        <tbody>
+          <tr><td>Vector</td><td>02</td><td>A row of cells covering the whole buffer — filled
+            boxes for elements, dashed cells for spare capacity</td>
+            <td>The difference between size and capacity, and what a reallocation costs</td></tr>
+          <tr><td>Stack</td><td>03</td><td>A vertical column, top of the stack at the top,
+            container indices alongside</td>
+            <td>That the top is the back of the underlying vector</td></tr>
+          <tr><td>Node</td><td>04</td><td>A chain of boxes joined by next arrows, ending in a
+            null terminator</td>
+            <td>Pointer bookkeeping with no class wrapped around it</td></tr>
+          <tr><td>Binary Tree</td><td>06</td><td>A node diagram with left, right and parent
+            links; click a node to select it</td>
+            <td>That nothing is sorted — the ordering rule arrives with the BST</td></tr>
+          <tr><td>Binary Search Tree</td><td>07</td><td>An ordered node diagram with the
+            in-order traversal and the height shown</td>
+            <td>That insertion order decides the shape, and a lookup costs one comparison per
+            level</td></tr>
+          <tr><td>Set</td><td>08</td><td>The same tree, keys unique</td>
+            <td>That insert returns a flag saying whether anything happened</td></tr>
+          <tr><td>Map</td><td>09</td><td>A tree of pairs, key drawn above value</td>
+            <td>That ordering uses the key alone, and that index access inserts a missing
+            key</td></tr>
+          <tr><td>Deque</td><td>12</td><td>The logical order and, below it, the circular buffer
+            with the front index marked</td>
+            <td>Where the logical position and the buffer slot stop matching</td></tr>
+          <tr><td>Hash</td><td>13</td><td>Ten bucket rows, each a chain</td>
+            <td>That placement is the hash function's decision, negatives included</td></tr>
+          <tr><td>List</td><td>List lab</td><td>A chain with head and tail tagged, links drawn
+            both ways</td>
+            <td>Why both ends are cheap and the middle is not</td></tr>
+          <tr><td>Priority Queue</td><td>PQ lab</td><td>The array and the heap tree side by
+            side, with a live heap-property banner</td>
+            <td>One-based heap indices, and what percolation actually moves</td></tr>
+          <tr><td>Queue</td><td>no lab</td><td>A row, front on the left, back on the right</td>
+            <td>Background only — the names are standard-library names, not lab names</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-ops">
+    <div class="gh c2">
+      <h2>Behaviour · the operation list</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Cards are half the display width</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>can make the method boxes take up half the
+            width of the display area instead of a third?</q></td></tr>
+          <tr><th>Behaviour</th><td>Exactly two cards to a row, dropping to one below 760px
+            wide. Card heights became uniform as a side effect, because fewer descriptions
+            wrap at the wider size.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Every call is logged</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>A reader needs the return value, not just the
+            movement.</td></tr>
+          <tr><th>Behaviour</th><td>The console prints the call as written and its return
+            value. Errors print in the error colour. Hand-moves are logged too, marked as
+            drags rather than calls.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Operations are grouped as the header groups them</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Original brief — <q>under the display should be a list
+            of the common functions of the stack data structure</q></td></tr>
+          <tr><th>Behaviour</th><td>Each operation is a card carrying its signature, a
+            one-line description and a Run button. Cards sit under the header's own section
+            names.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Parameters get input fields</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Original brief — <q>if a function takes in a parameter
+            than it should have an input field for that parameter</q></td></tr>
+          <tr><th>Behaviour</th><td>One field per parameter, pre-filled with a usable default.
+            Enter runs the operation. A blank or non-numeric field is refused with a message
+            rather than guessed at.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Undefined behaviour is guarded</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Several lab operations are undefined on an empty
+            structure.</td></tr>
+          <tr><th>Behaviour</th><td>Calling top, front, back or pop on an empty structure logs
+            an error naming the undefined behaviour instead of crashing the page. Out-of-range
+            index access does the same and states the valid range.</td></tr>
+          <tr><th>Because</th><td>B — naming the undefined case teaches it; crashing the page
+            ends the study session.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== PAGE 3 ============================== -->
+<section class="page c3" id="p-test">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-flow">Workflow</label>
+    <label class="tab" for="r-t-editing">Manual editing</label>
+    <label class="tab" for="r-t-grading">Grading</label>
+    <label class="tab" for="r-t-coverage">Coverage</label>
+  </div>
+
+  <div class="tabpanel" id="t-flow">
+    <div class="gh c3">
+      <h2>Test mode · the workflow</h2>
+      <p>Ordered by the sequence a reader performs. The order is the requirement.</p>
+    </div>
+
+    <ol class="seq">
+      <li>A <b>Test</b> control sits in the top-left corner of the display. Pressing it
+        reveals <b>Start</b> and <b>Submit</b> beside it.</li>
+      <li>Every operation greys out and gains a checkbox. Ticking one highlights it. Nothing
+        can be run while test mode is on.</li>
+      <li>Pressing <b>Start</b> prints a numbered list of calls to the console, drawn from the
+        ticked operations, with every ticked operation appearing at least once and a minimum
+        of four calls in total.</li>
+      <li>The display returns to exactly the state it held before Start, so the printed list
+        is a question rather than a transcript.</li>
+      <li>The reader reproduces the end state by hand, using the manual controls and dragging.</li>
+      <li>Pressing <b>Submit</b> compares the structure against the expected answer and either
+        confirms it or asks for another attempt.</li>
+    </ol>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Arguments are generated, not fixed</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>A fixed question is memorised after two runs.</td></tr>
+          <tr><th>Behaviour</th><td>Arguments are random and checked to be valid for the state
+            at that point in the sequence, so a generated call never relies on an error path.
+            A call that acts on a particular node names that node in the printed line.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Toolbar placement and size</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>make the test mode buttons a little bigger and
+            put them in the top left of the display window instead of the middle</q></td></tr>
+          <tr><th>Behaviour</th><td>The toolbar is the first row of the display panel, hard
+            against its top-left corner and spanning the full width above both the structure
+            and the side panel.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-editing">
+    <div class="gh c3">
+      <h2>Test mode · editing by hand</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Deleting a tree node takes its subtree</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Removing a node with children must not hand the reader
+            the answer.</td></tr>
+          <tr><th>Behaviour</th><td>Delete on a node with children removes the whole subtree,
+            so reproducing an erase means rebuilding the children rather than watching a
+            successor get promoted.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Manual creation and removal are required</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>because manual manipulation is the way I want
+            the test to work when in test mode manual creation and removal of nodes must be
+            necessary</q></td></tr>
+          <tr><th>Behaviour</th><td>Test mode adds Add and Delete controls and click-to-select.
+            Every call the generator can produce is reproducible with those controls plus
+            dragging.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Selection</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>The manual controls act on something, so that something
+            has to be pickable.</td></tr>
+          <tr><th>Behaviour</th><td>Clicking a box, a node or a bucket entry selects it, and
+            the highlight survives a redraw. Selection is live as soon as Test is pressed,
+            before a question has been started.</td></tr>
+          <tr><th>Supersedes</th><td>Selection previously did nothing until Start had been
+            pressed, with no indication of why.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Staging zone on the trees</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Will: <q>spawning in a node should not place it in the
+            tree where it would be sorted to or the test doesn't work. ideally a staging zone
+            would be available for it to spawn to so I am forced to drag it into the tree
+            myself</q></td></tr>
+          <tr><th>Behaviour</th><td>Add puts the node in a staging tray and does not touch the
+            tree. The node enters only by being dragged onto the left or right half of a parent
+            the reader picks. Nothing infers a position from a value.</td></tr>
+          <tr><th>Empty tree</th><td>A staged node dropped anywhere in the tree area becomes
+            the root, since there is nothing to drop onto.</td></tr>
+          <tr><th>Supersedes</th><td>Add Left and Add Right buttons, which attached the node to
+            whichever node was selected.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-grading">
+    <div class="gh c3">
+      <h2>Test mode · how a submission is judged</h2>
+      <p>Units ordered alphabetically by title.</p>
+    </div>
+
+    <div class="units">
+      <div class="u">
+        <h3><span class="rail">│</span> Attempts are counted, answers are not shown</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Original brief — <q>if the nodes are in the correct
+            positions the test passes, if not the user is prompted to try again</q></td></tr>
+          <tr><th>Behaviour</th><td>A wrong submission reports the attempt number and invites
+            another. The expected state is never printed, so a failed attempt does not end the
+            question.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Linear structures are graded on order</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>The arrangement is the thing being tested.</td></tr>
+          <tr><th>Behaviour</th><td>The values and their positions are compared. Capacity, the
+            buffer's front index and other internal state are shown on the page but not
+            graded, since no manual control changes them.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Read-only operations contribute nothing</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>Stated limit rather than a behaviour.</td></tr>
+          <tr><th>Behaviour</th><td>Ticking a status operation such as size or capacity puts a
+            call in the printed list that needs no manipulation to satisfy. The reader chose
+            it, so it is allowed, but it makes the question shorter than it looks.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Staged nodes never count</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>A node in the tray is not in the structure.</td></tr>
+          <tr><th>Behaviour</th><td>The tray is excluded from the comparison, and a failed
+            submission says how many nodes are still sitting in it.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> The answer comes from the page itself</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>The expected result must never disagree with what the
+            page does when the same buttons are pressed.</td></tr>
+          <tr><th>Behaviour</th><td>The generated sequence is run against the page's own
+            operations to derive the answer, and the display is then rewound to its starting
+            state. Console output from that pass is discarded.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="u">
+        <h3><span class="rail">│</span> Trees are graded on shape</h3>
+        <table><tbody>
+          <tr><th>Requirement</th><td>The right values in the wrong tree is a wrong
+            answer.</td></tr>
+          <tr><th>Behaviour</th><td>The comparison covers the tree's structure including its
+            empty child slots, not just the values it holds. This is what makes placement in a
+            search tree testable at all.</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-coverage">
+    <div class="gh c3">
+      <h2>Test mode · manual controls by structure family</h2>
+      <p>Ordered by family size, largest first. The ordering is not the message.</p>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Family</th><th>Add</th><th>Delete</th><th>Drag</th>
+          <th>Staging tray</th></tr></thead>
+        <tbody>
+          <tr><td>Linear — vector, stack, queue, deque, node, list</td>
+            <td>Inserts beside the selected box, or at the end when nothing is selected</td>
+            <td>Removes the selected box</td>
+            <td>Reorders the sequence</td>
+            <td>None. A new box is placed directly</td></tr>
+          <tr><td>Trees — binary tree, BST, set, map</td>
+            <td>Puts the node in the tray and leaves the tree untouched</td>
+            <td>Removes the selected node and its subtree</td>
+            <td>Re-hangs a node and its subtree on a chosen side of a chosen parent</td>
+            <td>Yes. The only route into the tree</td></tr>
+          <tr><td>Priority queue</td>
+            <td>Appends to the array</td>
+            <td>Removes the selected element</td>
+            <td>Reorders the array, or swaps two nodes in the heap tree</td>
+            <td>None</td></tr>
+          <tr><td>Hash</td>
+            <td>Inserts into whichever bucket the hash function chooses</td>
+            <td>Removes the selected entry</td>
+            <td>None. Placement is not the reader's to choose</td>
+            <td>None</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <b>Why the hash page has no drag</b>
+      <p>Which bucket a value occupies is decided entirely by the bucket function, so
+      rearranging entries by hand would model something the structure cannot do. Add and
+      Delete are enough to reproduce every call the generator produces for that page.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

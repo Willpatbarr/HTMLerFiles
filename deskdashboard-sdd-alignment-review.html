@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeskDashboard — SDD v1.2 vs MacMiniDev Alignment Review</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px; line-height: 1.6;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 48px 28px 80px; }
+  @media (min-width: 1181px) { main { padding-left: 60px; } }
+  @media (max-width: 1180px) { main { padding-top: 90px; } }
+
+  header.doc { margin-bottom: 36px; }
+  header.doc h1 { font-size: 30px; line-height: 1.25; margin: 0 0 10px; }
+  header.doc .meta { color: var(--faint); font-size: 14px; }
+  header.doc .meta span { margin-right: 18px; }
+
+  section { margin-bottom: 40px; }
+  h2 { font-size: 21px; margin: 0 0 16px; padding-top: 8px; }
+  h3 { font-size: 16px; margin: 22px 0 8px; color: var(--ink); }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  code {
+    background: var(--card); border: 1px solid var(--border); border-radius: 5px;
+    padding: 1px 6px; font-size: 13.5px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow);
+    margin-bottom: 18px;
+  }
+  .card.accent { border-left: 3px solid var(--accent); }
+  .card.warn { border-left: 3px solid var(--warn); }
+
+  .pill {
+    display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; border-radius: 999px; padding: 3px 11px; margin-bottom: 12px;
+  }
+  .pill.must { background: var(--accent-soft); color: var(--accent); }
+  .pill.important { background: var(--warn-soft); color: var(--warn); }
+  .pill.optional { background: var(--bg); color: var(--faint); border: 1px solid var(--border); }
+
+  .skipto {
+    position: fixed; top: 50%; left: 18px; transform: translateY(-50%);
+    z-index: 60; display: flex; flex-direction: column; gap: 5px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 12px 13px; box-shadow: var(--shadow);
+    width: 172px;
+  }
+  .skipto .navtitle {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--faint); padding: 2px 10px 6px;
+  }
+  .skipto a {
+    text-decoration: none; color: var(--muted); font-size: 13px;
+    padding: 6px 10px; border-radius: 8px; transition: .15s;
+  }
+  .skipto a:hover { background: var(--bg); color: var(--accent); }
+  @media (max-width: 1180px) {
+    .skipto { top:0; left:0; right:0; transform:none; width:auto;
+      flex-direction:row; overflow-x:auto; border-radius:0; border-width:0 0 1px; }
+    .skipto .navtitle { display: none; }
+    .skipto a { white-space: nowrap; }
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin-bottom: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--faint); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  td:first-child { white-space: nowrap; }
+
+  .status { font-weight: 600; font-size: 13.5px; }
+  .status.ok { color: var(--accent); }
+  .status.partial { color: var(--warn); }
+  .status.missing { color: var(--faint); }
+
+  .phasebar { display: flex; gap: 8px; margin: 6px 0 4px; flex-wrap: wrap; }
+  .phase {
+    flex: 1 1 130px; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; background: var(--bg); font-size: 13px;
+  }
+  .phase b { display: block; font-size: 13px; margin-bottom: 3px; }
+  .phase.done { border-color: var(--accent); }
+  .phase.done b { color: var(--accent); }
+  .phase.half { border-color: var(--warn); }
+  .phase.half b { color: var(--warn); }
+  .phase.notyet b { color: var(--faint); }
+  .phase span { color: var(--muted); }
+
+  .three { counter-reset: three; list-style: none; padding-left: 0; }
+  .three li {
+    counter-increment: three; position: relative; padding-left: 48px; margin-bottom: 14px;
+  }
+  .three li::before {
+    content: counter(three); position: absolute; left: 0; top: 0;
+    width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft);
+    color: var(--accent); font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+
+  .todo { list-style: none; padding-left: 0; }
+  .todo li { padding-left: 30px; position: relative; }
+  .todo li::before {
+    content: ""; position: absolute; left: 0; top: 5px; width: 15px; height: 15px;
+    border: 1.5px solid var(--border-strong); border-radius: 4px;
+  }
+  footer { color: var(--faint); font-size: 13px; border-top: 1px solid var(--border); padding-top: 20px; }
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <span class="navtitle">Skip to</span>
+  <a href="#one-sentence">One-Sentence</a>
+  <a href="#verdict">Verdict</a>
+  <a href="#decisions">Decisions</a>
+  <a href="#matches">What Matches</a>
+  <a href="#divergences">Divergences</a>
+  <a href="#gaps">Gaps</a>
+  <a href="#remember">Remember 3</a>
+  <a href="#next">What To Do Next</a>
+</nav>
+
+<main>
+
+<header class="doc">
+  <h1>DeskDashboard: SDD v1.2 vs MacMiniDev Implementation</h1>
+  <div class="meta">
+    <span>Alignment review</span>
+    <span>Branch: MacMiniDev</span>
+    <span>Doc: DeskDashboard_SDD_v1.2.docx (frozen)</span>
+    <span>July 15, 2026</span>
+  </div>
+</header>
+
+<section id="one-sentence">
+  <div class="card accent">
+    <span class="pill must">One-Sentence Version</span>
+    <p style="font-size:18px; margin-bottom:0;">The implementation is remarkably faithful to the SDD — all six frozen architecture decisions are built and tested — and the two things that need a decision soon are the render contract's expressiveness and where observation will live.</p>
+  </div>
+</section>
+
+<section id="verdict">
+  <h2>Verdict and Roadmap Position</h2>
+  <span class="pill must">Must Know</span>
+  <p>The framework core reads like it was written with the SDD open. It passes the doc's own LEGO Test: a new widget requires zero changes to DashboardKit internals.</p>
+  <p>Measured against the SDD Section 17 roadmap:</p>
+  <div class="phasebar">
+    <div class="phase done"><b>Phase 1 — Core</b><span>Complete, well tested (~50 tests)</span></div>
+    <div class="phase half"><b>Phase 2 — Theme/Layout</b><span>About half done</span></div>
+    <div class="phase half"><b>Phase 3 — Widgets</b><span>1 of 5 (Clock)</span></div>
+    <div class="phase notyet"><b>Phase 4 — App</b><span>Not started</span></div>
+    <div class="phase notyet"><b>Phase 5 — Polish</b><span>Not started</span></div>
+  </div>
+</section>
+
+<section id="decisions">
+  <h2>Frozen Architecture Decisions</h2>
+  <span class="pill must">Must Know</span>
+  <p>All six are honored. Most are directly verified by unit tests.</p>
+  <div class="card">
+    <table>
+      <tr><th>Decision</th><th>Status</th><th>Evidence in code</th></tr>
+      <tr><td>AD-001 Generic widgets</td><td><span class="status ok">Aligned</span></td><td>DashboardKit never references a concrete widget; <code>WidgetID</code> auto-generates, <code>.id()</code> overrides. ClockWidget lives in the app target.</td></tr>
+      <tr><td>AD-002 Pipeline direction</td><td><span class="status ok">Aligned*</span></td><td><code>ClockService</code> knows nothing of widgets; the model is the only bridge. *The "publishes" leg is pull-based for now — see Divergences.</td></tr>
+      <tr><td>AD-003 Ownership</td><td><span class="status ok">Aligned</span></td><td>Services shared via <code>ServiceKey</code> in the environment; the model is created and owned inside <code>attach()</code>.</td></tr>
+      <tr><td>AD-004 Inert until attached</td><td><span class="status ok">Aligned</span></td><td>Model creation happens in <code>attach(environment:)</code>; a test asserts no model exists on plain construction.</td></tr>
+      <tr><td>AD-005 Composition</td><td><span class="status ok">Aligned</span></td><td><code>ClockWidget().showSeconds().timeZone(...)</code> — the SDD's own API example is nearly verbatim real code.</td></tr>
+      <tr><td>AD-006 Theme default layout</td><td><span class="status ok">Aligned</span></td><td>Implemented with <code>isLayoutPinned</code>; both "applies default" and "respects pin" paths are tested.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="matches">
+  <h2>What Else Matches</h2>
+  <span class="pill important">Important</span>
+  <ul>
+    <li><b>Modifier surface (Section 9):</b> widget modifiers <code>.id / .title / .size / .priority / .hidden / .refreshRate</code> and dashboard modifiers <code>.theme / .layout / .environment / .refreshRate</code> implemented almost name-for-name, plus a <code>.service()</code> addition.</li>
+    <li><b>Refresh system (Section 12):</b> shared dashboard clock, per-widget rate override, tick throttling, and no delivery to hidden widgets — all implemented and tested.</li>
+    <li><b>Theme tokens (Section 10.1):</b> colors, typography, spacing, shape, animation, and default layout match exactly. DarkDesk is the built-in default, per the doc.</li>
+    <li><b>Layout abstraction (Section 11):</b> the protocol is not grid-committed, exactly as the Evolution Point demands. <code>GridLayout</code> treats <code>.size()</code> as a hint via spans.</li>
+    <li><b>Hide, don't destroy (Section 11.3):</b> layout switches hide widgets without detaching them — verified by a test.</li>
+    <li><b>Success criteria (Section 18.1):</b> several are literally encoded as unit tests (inert widgets, removal cancels work, live theme/layout re-injection).</li>
+    <li><b>Design smells (Section 13):</b> no violations found. No widget references another widget; no service knows about widgets; no widget fetches data directly.</li>
+  </ul>
+</section>
+
+<section id="divergences">
+  <h2>Divergences</h2>
+  <span class="pill must">Must Know</span>
+
+  <div class="card accent">
+    <h3 style="margin-top:0;">Resolved: no SwiftUI is intentional, not a departure</h3>
+    <p>DashboardKit is pure Foundation — rendering stops at the <code>WidgetContent</code> / <code>AttachedWidgetSnapshot</code> data contract. Since the UI will be SwiftOpenUI (a SwiftUI-like framework on Linux/Raspberry Pi), a portable core with the UI framework isolated at the edge is the correct architecture.</p>
+    <p style="margin-bottom:0;">Part I of the SDD still says "builds on SwiftUI." Its planned Phase 5 revision should reword this to "a SwiftUI-like framework."</p>
+  </div>
+
+  <div class="card warn">
+    <h3 style="margin-top:0;">Open: the render contract is text-only</h3>
+    <p><code>WidgetContent</code> is strings and metadata. The gradient-clock HTML prototypes — gradient text, vertical seconds bar, thin fonts — cannot be expressed through it at all.</p>
+    <p style="margin-bottom:0;">Either <code>RenderableWidget</code> eventually produces views (via a companion UI target) or <code>WidgetContent</code> grows into a richer renderable description. Decide deliberately.</p>
+  </div>
+
+  <div class="card warn">
+    <h3 style="margin-top:0;">Open: no publish/observe mechanism</h3>
+    <p>AD-002 says the WidgetModel "publishes"; today snapshots are pulled and the framework never even references the <code>WidgetModel</code> protocol. A SwiftUI-like UI re-renders from observed state, so something must become observable.</p>
+    <p style="margin-bottom:0;">Best candidate: keep observation out of the core and put it in the UI adapter (e.g. <code>DashboardRunner</code> republishing snapshots per tick). Needed before the event-driven Music widget.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Minor</h3>
+    <ul style="margin-bottom:0;">
+      <li>The Environment omits the refresh clock (SDD Section 8.1 lists it); ticks are pushed via <code>tick()</code> instead. Covered by an Evolution Point — acceptable.</li>
+      <li>No service-push update strategy yet (Section 12) — only clock ticks exist.</li>
+      <li>The executable is a stub: it builds a runner but never calls <code>start()</code> and has no run loop.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="gaps">
+  <h2>Gaps (Expected at This Stage)</h2>
+  <span class="pill optional">Optional</span>
+  <ul>
+    <li>Widgets: 1 of 5 MVP widgets (Clock only — no Alarm, Music, Indoor/Outdoor Temperature).</li>
+    <li>Themes: 1 of 4 (DarkDesk). Layouts: 1 of 4 (Grid).</li>
+    <li><b>The Clock widget has zero test coverage</b> — the test target links only DashboardKit, not the executable. This matters because Section 18.2 designates Clock as the reference widget new developers copy.</li>
+    <li><code>WidgetPriority</code> and <code>accessoryText</code> are defined but nothing consumes them yet — consistent with the SDD's "leave a TODO" ethos.</li>
+    <li>No Raspberry Pi, hardware, or performance work (Phases 4–5). <code>Package.swift</code> declares no platforms, which keeps the Pi door open.</li>
+  </ul>
+</section>
+
+<section id="remember">
+  <h2>Remember Only 3 Things</h2>
+  <ol class="three">
+    <li>The architecture is faithful: all six frozen decisions are implemented and tested, and the LEGO Test passes.</li>
+    <li>The pure-Foundation core is the right call for the Linux/SwiftOpenUI target — but the text-only render contract cannot express the clock designs you have already prototyped.</li>
+    <li>The Clock widget — the designated reference widget — currently has zero tests because of target structure.</li>
+  </ol>
+</section>
+
+<section id="next">
+  <h2>What To Do Next</h2>
+  <ul class="todo">
+    <li>Move app widgets into a library target (e.g. <code>DeskDashboardWidgets</code>) so ClockWidget, its model, and its service can be tested.</li>
+    <li>Decide the render-contract strategy: views from a companion UI target vs. a richer <code>WidgetContent</code> — before building the UI adapter.</li>
+    <li>Add a push/observation path (likely in the UI adapter around <code>DashboardRunner</code>) before starting the event-driven Music widget.</li>
+    <li>During the SDD's Phase 5 revision, reword Part I's SwiftUI references to "a SwiftUI-like framework."</li>
+  </ul>
+</section>
+
+<footer>
+  Generated July 15, 2026 · Sources: DeskDashboard_SDD_v1.2.docx and a full inventory of Sources/ and Tests/ on the MacMiniDev branch.
+</footer>
+
+</main>
+</body>
+</html>

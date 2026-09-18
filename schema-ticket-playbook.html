@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schema ticket playbook — E-LAM-0003</title>
+<style>
+:root{color-scheme:dark;
+--bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+--border:#2b3138; --border-strong:#3a424b; --accent:#6bc280; --accent-soft:#1c3128;
+--warn:#e0a458; --warn-soft:#33280f;
+--shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+--g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
+--kw:#A25494; --ty:#4368A8; --add:#2E8B62; --blocked:#C24A4A;
+--run:#A16BD9; --guided:#2E93DB;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif}
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+h1{font-size:clamp(26px,5.4vw,38px);margin:0;color:var(--accent);font-weight:600;
+letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+align-items:start;margin:0 0 2.2rem}
+.head .lede{margin:.35rem 0 0;color:var(--muted);font-size:15.5px}
+@media(max-width:900px){.head{grid-template-columns:1fr}.head .lede{margin-top:1.1rem}}
+h2{font-size:1.3rem;margin:2.1rem 0 .8rem;font-weight:600;letter-spacing:-.01em}
+h2:first-child{margin-top:0}
+.stephead + h2{margin-top:0}
+h3{font-size:1.02rem;margin:0 0 .5rem;font-weight:600;letter-spacing:-.005em}
+h3.plain{margin:1.9rem 0 .5rem;color:var(--ink)}
+p{margin:0 0 .9rem;max-width:66ch}
+ul{margin:.2rem 0 1rem;padding-left:1.15rem;max-width:70ch}
+li{margin:0 0 .38rem}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.875em;
+background:#22272d;padding:1px 5px;border-radius:4px;overflow-wrap:anywhere;max-width:100%}
+a{color:var(--accent);overflow-wrap:anywhere}
+em{color:var(--muted);font-style:normal}
+/* nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+display:flex;flex-direction:column;gap:5px;background:var(--card);
+border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+box-shadow:var(--shadow);width:172px}
+.navlabel{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+color:var(--faint);padding:0 10px 3px;font-weight:700}
+.skipto-menu label{color:var(--muted);font-size:13px;padding:6px 10px;border-radius:8px;
+transition:.15s;cursor:pointer;display:block}
+.skipto-menu label:hover{background:var(--bg);color:var(--accent)}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+padding:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media(max-width:1180px){
+.skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+.skipto-toggle{display:flex}
+.skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+.skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+.skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+#navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+main{padding-top:72px}}
+/* pages + tabs */
+.page{display:none}
+.tabpanel{display:none}
+/* outline - persistent above the tab bar, the map every tab refers back to */
+.outline{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(270px,100%),1fr));
+gap:6px 18px;background:var(--card);border:1px solid var(--border);
+border-radius:12px 12px 0 0;border-bottom:0;padding:13px 14px 14px;margin:0}
+.ocol{min-width:0}
+.ohead{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+padding:0 0 5px 6px}
+.ocol.g1 .ohead{color:var(--g1)} .ocol.g2 .ohead{color:var(--g2)}
+.ocol.g3 .ohead{color:var(--g3)}
+.oline{display:grid;grid-template-columns:1.35rem 1fr;gap:0 6px;align-items:baseline;
+padding:3px 6px;border-radius:7px;cursor:pointer;transition:.15s}
+.oline:hover{background:var(--bg)}
+.onum{font-size:12px;font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+.ocol.g1 .onum{color:var(--g1)} .ocol.g2 .onum{color:var(--g2)}
+.ocol.g3 .onum{color:var(--g3)}
+.otitle{font-size:13px;line-height:1.42;color:var(--muted)}
+.oline:hover .otitle{color:var(--ink)}
+/* step header inside the panel - the tab is only a number, so the panel names itself */
+.stephead{margin:0 0 1.2rem;font-size:1.42rem;letter-spacing:-.015em}
+.stephead.g1{color:var(--g1)} .stephead.g2{color:var(--g2)} .stephead.g3{color:var(--g3)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.outline + .tabs{border-radius:0;border-top:1px solid var(--border)}
+.tab.tnum{min-width:2.5rem;text-align:center;font-variant-numeric:tabular-nums;
+font-size:14px;padding:9px 8px}
+.tab{border-bottom:2px solid transparent;color:var(--muted);font-size:13.5px;
+padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;transition:.15s;
+margin-bottom:-2px;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+/* substeps */
+.sub{border:1px solid var(--border);background:var(--card);border-radius:var(--radius);
+padding:16px 18px;margin:0 0 16px}
+.snum{color:var(--faint);font-variant-numeric:tabular-nums;margin-right:.5rem}
+.btype{display:inline-block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+font-weight:700;margin-right:.6rem}
+.btype.run{color:var(--run)} .btype.guided{color:var(--guided)}
+.loc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+margin:0 0 .3rem;overflow-wrap:anywhere;max-width:100%}
+.desc{color:var(--muted);font-size:14px;margin:0 0 .7rem}
+.hoist{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 .8rem}
+.hoist-skip{color:var(--warn);font-size:13px}
+.example{border:1px solid var(--border);border-radius:10px;padding:11px 14px;
+margin:0 0 1rem;font-size:13.5px;color:var(--muted)}
+.example b{color:var(--ink);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.example span{display:block;color:var(--faint);margin-top:2px}
+.skipline{color:var(--warn);font-size:14px}
+/* code */
+.code{position:relative;margin:0 0 16px}
+.code pre{margin:0;background:#181c21;border:1px solid var(--border);border-radius:10px;
+padding:13px 15px;overflow-x:auto;max-width:100%;font-size:13px;line-height:1.6;
+font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+text-transform:uppercase;font-weight:700;color:var(--faint);background:#181c21;
+padding:1px 4px;border-radius:3px;pointer-events:none;
+font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.c-kw{color:var(--kw)} .c-ty{color:var(--ty)} .c-cm{color:var(--faint)}
+.c-mk{color:var(--add)}
+/* tables */
+.tw{overflow-x:auto;margin:0 0 1.3rem;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+color:var(--faint);font-weight:700;padding:9px 13px;background:var(--card);
+border-bottom:1px solid var(--border-strong);white-space:nowrap}
+td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:0}
+/* pills, notes, todo */
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;
+letter-spacing:.06em;white-space:nowrap}
+.pill.ok{background:#2E8B6222;color:#2E8B62;border:1px solid #2E8B6266}
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+padding:13px 17px;margin:0 0 1rem;font-size:14px}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+text-transform:uppercase;margin:0 0 5px}
+ul.todo{list-style:none;padding-left:0;max-width:70ch}
+ul.todo li{border:1px solid var(--border);background:var(--card);border-radius:10px;
+padding:10px 13px;margin:0 0 8px}
+ul.todo label{display:flex;gap:11px;align-items:flex-start;cursor:pointer;font-size:14.5px}
+ul.todo input{margin-top:4px;accent-color:var(--accent);flex:0 0 auto}
+@media(max-width:720px){.sub{padding:14px}p,ul{max-width:none}}
+
+#r-a1:checked ~ main #t-a1{display:block}
+#r-a1:checked ~ main label[for="r-a1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-a2:checked ~ main #t-a2{display:block}
+#r-a2:checked ~ main label[for="r-a2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-s1:checked ~ main #t-s1{display:block}
+#r-s1:checked ~ main .o-s1{background:var(--bg)}
+#r-s1:checked ~ main .o-s1 .otitle{color:var(--ink)}
+#r-s1:checked ~ main label[for="r-s1"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-s2:checked ~ main #t-s2{display:block}
+#r-s2:checked ~ main .o-s2{background:var(--bg)}
+#r-s2:checked ~ main .o-s2 .otitle{color:var(--ink)}
+#r-s2:checked ~ main label[for="r-s2"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-s3:checked ~ main #t-s3{display:block}
+#r-s3:checked ~ main .o-s3{background:var(--bg)}
+#r-s3:checked ~ main .o-s3 .otitle{color:var(--ink)}
+#r-s3:checked ~ main label[for="r-s3"]{color:#1C8E9C;border-bottom-color:#1C8E9C;font-weight:600}
+#r-s4:checked ~ main #t-s4{display:block}
+#r-s4:checked ~ main .o-s4{background:var(--bg)}
+#r-s4:checked ~ main .o-s4 .otitle{color:var(--ink)}
+#r-s4:checked ~ main label[for="r-s4"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-s5:checked ~ main #t-s5{display:block}
+#r-s5:checked ~ main .o-s5{background:var(--bg)}
+#r-s5:checked ~ main .o-s5 .otitle{color:var(--ink)}
+#r-s5:checked ~ main label[for="r-s5"]{color:#B06A1E;border-bottom-color:#B06A1E;font-weight:600}
+#r-s6:checked ~ main #t-s6{display:block}
+#r-s6:checked ~ main .o-s6{background:var(--bg)}
+#r-s6:checked ~ main .o-s6 .otitle{color:var(--ink)}
+#r-s6:checked ~ main label[for="r-s6"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-s7:checked ~ main #t-s7{display:block}
+#r-s7:checked ~ main .o-s7{background:var(--bg)}
+#r-s7:checked ~ main .o-s7 .otitle{color:var(--ink)}
+#r-s7:checked ~ main label[for="r-s7"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-s8:checked ~ main #t-s8{display:block}
+#r-s8:checked ~ main .o-s8{background:var(--bg)}
+#r-s8:checked ~ main .o-s8 .otitle{color:var(--ink)}
+#r-s8:checked ~ main label[for="r-s8"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-s9:checked ~ main #t-s9{display:block}
+#r-s9:checked ~ main .o-s9{background:var(--bg)}
+#r-s9:checked ~ main .o-s9 .otitle{color:var(--ink)}
+#r-s9:checked ~ main label[for="r-s9"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-todo:checked ~ main #t-todo{display:block}
+#r-todo:checked ~ main label[for="r-todo"]{color:#5A8C33;border-bottom-color:#5A8C33;font-weight:600}
+#r-p-ticket:checked ~ main #p-ticket{display:block}
+#r-p-ticket:checked ~ .skipto label[for="r-p-ticket"]{background:var(--bg);color:var(--accent)}
+#r-p-steps:checked ~ main #p-steps{display:block}
+#r-p-steps:checked ~ .skipto label[for="r-p-steps"]{background:var(--bg);color:var(--accent)}</style></head>
+<body>
+<input class="st" type="radio" name="pg" id="r-p-ticket" checked>
+<input class="st" type="radio" name="pg" id="r-p-steps">
+<input class="st" type="checkbox" id="navtoggle">
+<input class="st" type="radio" name="tb1" id="r-a1" checked>
+<input class="st" type="radio" name="tb1" id="r-a2">
+<input class="st" type="radio" name="tb2" id="r-s1" checked>
+<input class="st" type="radio" name="tb2" id="r-s2">
+<input class="st" type="radio" name="tb2" id="r-s3">
+<input class="st" type="radio" name="tb2" id="r-s4">
+<input class="st" type="radio" name="tb2" id="r-s5">
+<input class="st" type="radio" name="tb2" id="r-s6">
+<input class="st" type="radio" name="tb2" id="r-s7">
+<input class="st" type="radio" name="tb2" id="r-s8">
+<input class="st" type="radio" name="tb2" id="r-s9">
+<input class="st" type="radio" name="tb2" id="r-todo">
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-ticket">The ticket</label>
+    <label for="r-p-steps">The nine steps</label>
+  </div>
+</nav>
+<main>
+  <div class="head">
+    <h1>Schema ticket playbook</h1>
+    <p class="lede">The order of operations for any <code>Schema: &lt;table&gt;</code> ticket
+    in E-LAM-0003. LAM-11 is the worked instance, and migration 0003 already did most of
+    LAM-11.</p>
+  </div>
+<section class="page" id="p-ticket"><div class="tabs" role="tablist"><label class="tab g1" for="r-a1">LAM-11 State</label><label class="tab g1" for="r-a2">Reuse Notes</label></div><div class="tabpanel" id="t-a1">
+<h2>LAM-11 is mostly already done</h2>
+<p>Migration <code>0003_workspace.sql</code> landed under LAM-4 and created the
+<code>workspace</code> table, the seed row, and the deliberate decision not to index.
+All three of LAM-11's <em>Do this</em> items are already covered.</p>
+<div class="tw"><table class=""><thead><tr><th>LAM-11 step</th><th>State</th><th>Where</th></tr></thead><tbody><tr><td>1. Migration creating <code>workspace</code></td><td><span class="pill ok">Done</span></td><td><code>migrations/0003_workspace.sql</code></td></tr><tr><td>2. Seed exactly one workspace row</td><td><span class="pill ok">Done</span></td><td>In the migration — see Step 3.4.1 for whether that counts</td></tr><tr><td>3. Unique-safe index if needed</td><td><span class="pill ok">Done</span></td><td>0003 decided none, in a comment, with the reason</td></tr></tbody></table></div>
+<p>So LAM-11 closes with a comment on the Linear issue and no commit at all. Step 3 is the
+whole ticket. Steps 4 through 7 are where LAM-12 through LAM-26 start.</p>
+
+<h2>Out of scope, flagged rather than fixed</h2>
+<ul><li>Enforcing "exactly one workspace" as a database constraint. Nothing enforces the count today, and <code>document_test.go</code> deliberately inserts a second workspace to test the tenancy boundary. A constraint would break that test and is a new decision.</li><li>Broad hierarchy integration tests. LAM-27 owns those.</li><li><code>workspace.name</code> uniqueness. The Database Schema notes are silent.</li></ul></div><div class="tabpanel" id="t-a2">
+<h2>Audit before you build</h2>
+<p>Step 2 is load-bearing for reuse, not boilerplate. Three of the fifteen schema tickets
+name a table that already exists, so for those three the ticket describes a target rather
+than a gap.</p>
+<div class="tw"><table class=""><thead><tr><th>Ticket</th><th>Table</th><th>Already created by</th><th>Under</th></tr></thead><tbody><tr><td>LAM-11</td><td><code>workspace</code></td><td><code>0003_workspace.sql</code></td><td>LAM-4</td></tr><tr><td>LAM-23</td><td><code>document</code></td><td><code>0001_document.sql</code></td><td>LAM-3</td></tr><tr><td>LAM-26</td><td><code>search_index</code></td><td><code>0002_search_index.sql</code></td><td>LAM-3</td></tr></tbody></table></div>
+<h2>Which steps a ticket skips</h2>
+<div class="tw"><table class=""><thead><tr><th>Case</th><th>Skip</th></tr></thead><tbody><tr><td>A table that already exists</td><td>Steps 4 and 7 — the migration is written and applied</td></tr><tr><td>A pure-SQL ticket</td><td>The XML wiki write in Step 8 — no Go changed</td></tr><tr><td>A ticket adding no constraint</td><td>Step 5 — a constraint test needs a constraint</td></tr><tr><td>Every ticket after LAM-11</td><td>Step 1.1 — the epic branch exists once</td></tr></tbody></table></div><div class="note"><b>Branch order</b>Ticket branches cut off the epic branch <code>E-LAM-0003-B</code>, never off <code>main</code>, and merged branches are left in place rather than deleted.</div></div></section>
+<section class="page" id="p-steps"><div class="outline"><div class="ocol g1"><div class="ohead">Prepare</div><label class="oline o-s1" for="r-s1"><span class="onum">1</span><span class="otitle">Cut the branches</span></label><label class="oline o-s2" for="r-s2"><span class="onum">2</span><span class="otitle">Audit what the table already has</span></label><label class="oline o-s3" for="r-s3"><span class="onum">3</span><span class="otitle">Settle the decisions the ticket leaves open</span></label></div><div class="ocol g2"><div class="ohead">Build</div><label class="oline o-s4" for="r-s4"><span class="onum">4</span><span class="otitle">Write the migration file</span></label><label class="oline o-s5" for="r-s5"><span class="onum">5</span><span class="otitle">Write the tests the migration earns</span></label></div><div class="ocol g3"><div class="ohead">Land</div><label class="oline o-s6" for="r-s6"><span class="onum">6</span><span class="otitle">Run the gate</span></label><label class="oline o-s7" for="r-s7"><span class="onum">7</span><span class="otitle">Apply the migration to the development database</span></label><label class="oline o-s8" for="r-s8"><span class="onum">8</span><span class="otitle">Write down what outlives the ticket</span></label><label class="oline o-s9" for="r-s9"><span class="onum">9</span><span class="otitle">Commit, push, and close the ticket</span></label></div></div><div class="tabs" role="tablist"><label class="tab g1 tnum" for="r-s1">1</label><label class="tab g1 tnum" for="r-s2">2</label><label class="tab g1 tnum" for="r-s3">3</label><label class="tab g2 tnum" for="r-s4">4</label><label class="tab g2 tnum" for="r-s5">5</label><label class="tab g3 tnum" for="r-s6">6</label><label class="tab g3 tnum" for="r-s7">7</label><label class="tab g3 tnum" for="r-s8">8</label><label class="tab g3 tnum" for="r-s9">9</label><label class="tab g3" for="r-todo">Checklist</label></div><div class="tabpanel" id="t-s1"><h2 class="stephead g1">Step 1 — Cut the branches</h2><p>Epic branch first, then the ticket branch off the epic. <code>E-LAM-0003-B</code> does not exist yet, so LAM-12 pays for it and every later schema ticket inherits it — LAM-11 produces no commit and needs no branch.</p><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">1.1</span>Create <code>E-LAM-0003-B</code> Off <code>main</code></h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">once per epic, not once per ticket</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">git</span> switch main &amp;&amp; <span class="c-kw">git</span> pull &amp;&amp; <span class="c-kw">git</span> switch -c E-LAM-0003-B</pre></div><ul><li><code>LAM-7-B</code> is the current branch and is unmerged. Schema work needs nothing from <code>LAM-7-B</code>, so <code>main</code> is the correct base.</li></ul></div><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">1.2</span>Create <code>LAM-11-B</code> Off The Epic Branch</h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">one ticket branch per ticket, based on the epic branch</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">git</span> switch E-LAM-0003-B &amp;&amp; <span class="c-kw">git</span> switch -c LAM-11-B</pre></div></div></div><div class="tabpanel" id="t-s2"><h2 class="stephead g1">Step 2 — Audit what the table already has</h2><p>Do this before reading the ticket's <em>Do this</em> list as work. See the Reuse Notes tab for the three tickets this step rewrites.</p><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">2.1</span>Grep The Migrations For The Table Name</h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">the cheapest check, and catches the three overlapping tickets</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">grep</span> -rn "CREATE TABLE workspace" migrations/</pre></div></div><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">2.2</span>Read The Live Table</h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">columns, indexes, constraints, and the table comment as Postgres holds them</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">set</span> -a &amp;&amp; <span class="c-kw">source</span> .env &amp;&amp; <span class="c-kw">set</span> +a &amp;&amp; <span class="c-kw">psql</span> "$DATABASE_URL" -c '\d+ workspace'</pre></div></div><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">2.3</span>Check The Runner Agrees With The Files</h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">a table that exists with no <code>schema_migrations</code> row means a hand-built database</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">set</span> -a &amp;&amp; <span class="c-kw">source</span> .env &amp;&amp; <span class="c-kw">set</span> +a &amp;&amp; <span class="c-kw">go</span> run <span class="c-ty">./cmd/migrate</span> status</pre></div><div class="note"><b>Hand-built database</b>If <code>status</code> shows the migration as never applied but <code>\d+</code> shows the table, <code>go run ./cmd/migrate baseline</code> is the fix. <code>migrations/README.md</code> covers the case under <em>Adopting a hand-built database</em>.</div></div></div><div class="tabpanel" id="t-s3"><h2 class="stephead g1">Step 3 — Settle the decisions the ticket leaves open</h2>
+<p>Three sources describe every schema table. Step 3 is where all three are made to agree,
+before any SQL is written.</p>
+
+<h2>3.1 — The three sources</h2>
+<div class="tw"><table class=""><thead><tr><th>Source</th><th>Lives in</th><th>Holds</th></tr></thead><tbody><tr><td>The ticket's <b>Fields</b> list</td><td>The Linear issue</td><td>The columns the ticket asks for</td></tr><tr><td>Database Schema notes</td><td>Linear document on E-LAM-0000</td><td>The design intent, by section</td></tr><tr><td><code>migrations/</code> as shipped</td><td>The repo</td><td>The columns Postgres actually has</td></tr></tbody></table></div><div class="note"><b>Reconciliation runs both directions</b>A column in the sources but not in the database is a gap to fill. A column in the database but not in the sources is a decision to make: read the why block of the migration that introduced the column, then decide whether the column survives, becomes derived, or goes.</div>
+<h2>3.2 — Build the comparison table</h2>
+<p>One row per column, one column per source, one verdict. LAM-11's instance:</p>
+<div class="tw"><table class=""><thead><tr><th>Column</th><th>LAM-11 asks</th><th>Notes §1</th><th>0003 shipped</th><th>Verdict</th></tr></thead><tbody><tr><td><code>id</code></td><td>PK</td><td>yes</td><td><code>uuid</code> PK, <code>gen_random_uuid()</code></td><td>Agree</td></tr><tr><td><code>name</code></td><td>yes</td><td>yes</td><td><code>text NOT NULL</code></td><td>Agree</td></tr><tr><td><code>created_at</code></td><td>yes</td><td>yes</td><td><code>timestamptz NOT NULL</code></td><td>Agree</td></tr><tr><td><code>updated_at</code></td><td>not listed</td><td>not listed</td><td><code>timestamptz NOT NULL</code></td><td>Keep — a superset</td></tr></tbody></table></div>
+<p>LAM-11's three sources differ by one column and contradict each other nowhere, so
+LAM-11's whole reconciliation is 3.4.</p>
+
+<h2>3.3 — Worked example: LAM-23 <code>document</code></h2>
+<p>Step 3 earns its place where the sources genuinely disagree, and LAM-23 is the sharpest
+case in E-LAM-0003.</p>
+<div class="tw"><table class=""><thead><tr><th>Column</th><th>LAM-23 asks</th><th>Notes §4</th><th>0001 shipped</th><th>To resolve</th></tr></thead><tbody><tr><td><code>project_id</code> / <code>team_id</code></td><td>“or”, unresolved</td><td>“or”, unresolved</td><td>Neither</td><td>Pick one</td></tr><tr><td><code>title</code></td><td>yes</td><td>yes</td><td>Missing</td><td>Add</td></tr><tr><td><code>type</code></td><td><code>normal</code> / <code>aspect</code></td><td>yes</td><td>Missing</td><td>Add</td></tr><tr><td><code>aspect_type_id</code></td><td>nullable</td><td>nullable</td><td>Missing</td><td>Add</td></tr><tr><td><code>workspace_id</code></td><td>not listed</td><td>not listed</td><td>Present, <code>NOT NULL</code></td><td>Decide the fate</td></tr><tr><td>The four that agree</td><td>yes</td><td>yes</td><td>Present</td><td>Nothing</td></tr></tbody></table></div>
+<p>Four of the five open rows are gaps to fill. <code>workspace_id</code> is the row
+running the other direction, and 0003 pre-wrote the terms of the decision: the why block
+calls the column an interim bridge toward a hierarchy ending at <code>document</code>, so
+LAM-23 either derives <code>workspace_id</code> from that chain or drops the column.</p>
+
+<h2>3.4 — LAM-11's four open calls</h2>
+<div class="tw"><table class=""><thead><tr><th>#</th><th>Decision</th><th>Recommendation</th></tr></thead><tbody><tr><td>3.4.1</td><td>Does 0003's seed satisfy “first-run/bootstrap logic”?</td><td>Yes — accept the seed</td></tr><tr><td>3.4.2</td><td>Add an index on <code>workspace</code>?</td><td>No — 0003 already decided</td></tr><tr><td>3.4.3</td><td>Make <code>workspace.name</code> unique?</td><td>Defer — the notes are silent</td></tr><tr><td>3.4.4</td><td>Is LAM-11 done?</td><td>Yes, once 3.4.1 is recorded</td></tr></tbody></table></div>
+<h3 class="plain">3.4.1 — why the migration-borne seed counts</h3>
+<p>The fresh-install path already runs migrations twice over: <code>ensureSchema</code> in
+<code>main.go</code> applies them at startup, and <code>TestMain</code> in
+<code>internal/document</code> applies them to an empty database on every test run.</p>
+<p>The <code>INSERT INTO workspace</code> in 0003 is therefore already on the first-run
+path, inside the same transaction as the <code>CREATE TABLE</code>. Go bootstrap logic
+would be a second mechanism for the same fact, needing its own idempotency check to avoid
+a second row on every restart.</p>
+
+<h3 class="plain">3.4.2 — the reason is already in the file</h3>
+<p>0003 says an index would be “guessing at a query pattern that does not exist” and
+names the ticket that should add the index — the one introducing workspace-scoped reads.
+Adding an index under LAM-11 would overrule that decision without new evidence.</p>
+
+<h3 class="plain">3.4.3 — what makes <code>workspace.name</code> different from <code>team.name</code></h3>
+<p>LAM-12 asks for uniqueness on <code>(workspace_id, name)</code> because a workspace holds
+many teams. A self-hosted instance holds one workspace, so there is no second name to
+collide with. Note the asymmetry rather than resolving it.</p>
+
+<h3 class="plain">3.4.4 — what recording it looks like</h3>
+<p>Step 8. A <code>docs/changes/LAM-11-changes.md</code> pair saying LAM-11 was satisfied by
+0003, and why the seed was left in the migration, is the deliverable. A future reader
+finding LAM-11 closed with no commit needs somewhere to look.</p>
+</div><div class="tabpanel" id="t-s4"><h2 class="stephead g2">Step 4 — Write the migration file</h2><div class="hoist"><span class="btype guided">NEW GUIDED</span><span class="hoist-skip">Skip for LAM-11 — Step 4 starts at LAM-12</span></div><div class="example"><b>Example</b> — <code>migrations/0001_document.sql:1-22</code><span>the cleanest migration in the repo, start to finish</span></div><div class="loc"><code>migrations/0005_&lt;table&gt;.sql (new)</code></div><div class="sub"><h3><span class="snum">4.1</span>The Why Block</h3><div class="code"><span class="lang">sql</span><pre><span class="c-cm">-- LAM-NN: the &lt;table&gt; table.</span>
+<span class="c-cm">--</span>
+<span class="c-cm">-- &lt;what this table is for, and what must not be assumed about it&gt;</span></pre></div><ul><li>Everything above the <code>Up</code> marker is ignored by the runner, so the why block is free space.</li><li>Write what the code cannot say: intent, and the assumption a reader would otherwise make. 0003's block exists to say “nothing may assume there is exactly one workspace”.</li></ul></div><div class="sub"><h3><span class="snum">4.2</span>The Up Marker And <code>CREATE TABLE</code></h3><div class="code"><span class="lang">sql</span><pre><span class="c-mk">-- +migrate Up</span>
+
+<span class="c-kw">CREATE TABLE</span> &lt;table&gt; (
+    id         <span class="c-ty">uuid</span>        <span class="c-kw">PRIMARY KEY</span> <span class="c-kw">DEFAULT</span> gen_random_uuid(),
+    name       <span class="c-ty">text</span>        <span class="c-kw">NOT <span class="c-kw">NULL</span></span>,
+    created_at <span class="c-ty">timestamptz</span> <span class="c-kw">NOT <span class="c-kw">NULL</span></span> <span class="c-kw">DEFAULT</span> now(),
+    updated_at <span class="c-ty">timestamptz</span> <span class="c-kw">NOT <span class="c-kw">NULL</span></span> <span class="c-kw">DEFAULT</span> now()
+);</pre></div><ul><li>Both markers are required. The runner rejects a file missing either marker.</li><li><code>uuid</code> PK with <code>gen_random_uuid()</code>, and <code>timestamptz</code> never <code>timestamp</code>, are what 0001 and 0003 both do.</li></ul></div><div class="sub"><h3><span class="snum">4.3</span>The Foreign Key Column</h3><div class="code"><span class="lang">sql</span><pre>    workspace_id <span class="c-ty">uuid</span> <span class="c-kw">NOT <span class="c-kw">NULL</span></span> <span class="c-kw">REFERENCES</span> workspace(id) <span class="c-kw">ON DELETE RESTRICT</span>,</pre></div><ul><li><code>ON DELETE RESTRICT</code> is 0003's choice for <code>document.workspace_id</code>. Pick <code>RESTRICT</code> or <code>CASCADE</code> deliberately and say which in the why block.</li></ul><div class="note"><b>Expand and contract</b><code>NOT NULL</code> inline is safe only because the table is new and has no rows. Adding a <code>NOT NULL</code> foreign key to an <b>existing</b> table is the expand-and-contract case in <code>migrations/README.md</code>, and is exactly what 0003 got wrong under LAM-4.</div></div><div class="sub"><h3><span class="snum">4.4</span>The Index Decision</h3><div class="code"><span class="lang">sql</span><pre><span class="c-cm">-- No index on &lt;column&gt; yet. &lt;the query pattern that does not exist yet&gt;,</span>
+<span class="c-cm">-- so indexing now would be guessing. Add it with the ticket that</span>
+<span class="c-cm">-- introduces &lt;the reads that need it&gt;.</span></pre></div><ul><li>The repo's convention is to write the decision down either way, so the absence of an index does not read as an oversight.</li><li>A <code>UNIQUE</code> constraint is a different question from an index and usually earns a yes — <code>(parent_id, name)</code> where the ticket calls for one.</li></ul></div><div class="sub"><h3><span class="snum">4.5</span>The Down Marker And Drops</h3><div class="code"><span class="lang">sql</span><pre><span class="c-mk">-- +migrate Down</span>
+
+<span class="c-kw">DROP TABLE</span> &lt;table&gt;;</pre></div><ul><li>Order matters when more than one object is dropped: anything holding a reference goes before the thing referenced. 0003 drops <code>document.workspace_id</code> before <code>workspace</code>.</li><li><code>TestRealMigrationsApplyToAnEmptyDatabase</code> reverses every real migration on every run, so a <code>Down</code> section that does not work fails the build.</li></ul></div><div class="sub"><h3><span class="snum">4.6</span><code>COMMENT ON TABLE</code>, When The Role Is Unclear</h3><div class="code"><span class="lang">sql</span><pre><span class="c-kw">COMMENT ON TABLE</span> &lt;table&gt; <span class="c-kw">IS</span>
+    '&lt;source of truth, or derived and disposable&gt;';</pre></div><ul><li>0004 set this precedent for <code>document</code> and <code>search_index</code>, so someone opening psql before reading the Go sees which table is authoritative.</li><li>Only worth it where the table is derived, disposable, or otherwise easy to mistake for a source of truth. A plain hierarchy table needs no comment.</li><li>If the comment is added, mirror the comment in the <code>Down</code> section with <code>COMMENT ON TABLE &lt;table&gt; IS NULL;</code>.</li></ul></div></div><div class="tabpanel" id="t-s5"><h2 class="stephead g2">Step 5 — Write the tests the migration earns</h2><p class="skipline">Skip for LAM-11. Migration 0003 adds no constraint that LAM-11 changes.</p><h2>5.1 — what is already covered, for free</h2><div class="tw"><table class=""><thead><tr><th>Test</th><th>Covers</th></tr></thead><tbody><tr><td><code>TestRealMigrationsApplyToAnEmptyDatabase</code></td><td>Every migration applies to an empty database</td></tr><tr><td>The same test's <code>Down</code> half</td><td>Every migration reverses cleanly</td></tr><tr><td><code>internal/document</code> <code>TestMain</code></td><td>The fresh-install path a self-hosted user takes</td></tr></tbody></table></div>
+<p>Do not write a test asserting the table exists —
+<code>TestRealMigrationsApplyToAnEmptyDatabase</code> already asserts every migration
+applies.</p>
+
+<h2>5.2 — the one test per ticket worth writing</h2>
+<p>The constraint the migration actually claims, asserted by trying to violate it: an orphan
+foreign key, a duplicate on the <code>UNIQUE</code> pair, a null in a <code>NOT NULL</code>
+column. A constraint with no test is a comment.</p>
+<p><code>tableExists</code> and <code>newPool</code> already exist in
+<code>internal/migrate/runner_test.go</code> and are the nearest helpers.</p>
+
+<h2>5.3 — where the test goes: <code>internal/migrate</code></h2>
+<p>Settled under LAM-12, and it holds for every remaining schema ticket. One file per table,
+<code>internal/migrate/schema_&lt;table&gt;_test.go</code>, so a ticket adds a file rather
+than editing a shared one.</p>
+<p>The reason is sequencing: the constraint gets asserted before any Go code that uses the
+constrained table exists. Waiting for an owning package would mean the constraint ships
+untested and stays untested until some later ticket happens to need it.</p>
+<p>LAM-27 still owns the broad hierarchy integration tests. These are narrower: one table's
+own constraints, asserted by trying to violate each one.</p>
+<div class="note"><b>Say why the file lives there</b><code>internal/migrate</code> is deliberately generic — the package doc notes it has no dependency on <code>migrations</code> outside of tests, which is what lets the runner serve any migration set. <code>real_test.go</code> crosses that boundary on purpose and explains itself in a comment. A schema test file should carry the same note.</div></div><div class="tabpanel" id="t-s6"><h2 class="stephead g3">Step 6 — Run the gate</h2><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">6.1</span><code>./scripts/test.sh</code></h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">gofmt, build, vet, staticcheck, and the database tests on a throwaway database</p><div class="code"><span class="lang">bash</span><pre><span class="c-ty">./scripts/test.sh</span></pre></div><div class="note"><b>A bare go test proves nothing</b><code>go test ./...</code> skips every database test, replays cached results, and still prints PASS. <code>scripts/test.sh</code> loads <code>.env</code>, passes <code>-count=1</code>, and refuses to run at all if the database tests would skip.</div></div></div><div class="tabpanel" id="t-s7"><h2 class="stephead g3">Step 7 — Apply the migration to the development database</h2><p class="skipline">Skip for LAM-11. Migration 0003 is already applied.</p><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">7.1</span>Apply The Migration</h3><div class="loc"><code>LaminarFlow-Backend</code></div><div class="code"><span class="lang">bash</span><pre><span class="c-kw">set</span> -a &amp;&amp; <span class="c-kw">source</span> .env &amp;&amp; <span class="c-kw">set</span> +a &amp;&amp; <span class="c-kw">go</span> run <span class="c-ty">./cmd/migrate</span> up</pre></div></div><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">7.2</span>Reverse The Migration</h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">proves <code>Down</code> works against a database that has rows in it</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">set</span> -a &amp;&amp; <span class="c-kw">source</span> .env &amp;&amp; <span class="c-kw">set</span> +a &amp;&amp; <span class="c-kw">go</span> run <span class="c-ty">./cmd/migrate</span> down</pre></div><ul><li><code>TestRealMigrationsApplyToAnEmptyDatabase</code> already proves <code>Down</code> works on an <b>empty</b> database. Step 7.2 is the different case: real data, real foreign key references, and a <code>DROP</code> those references can block.</li></ul></div><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">7.3</span>Apply The Migration Again</h3><div class="loc"><code>LaminarFlow-Backend</code></div><div class="code"><span class="lang">bash</span><pre><span class="c-kw">set</span> -a &amp;&amp; <span class="c-kw">source</span> .env &amp;&amp; <span class="c-kw">set</span> +a &amp;&amp; <span class="c-kw">go</span> run <span class="c-ty">./cmd/migrate</span> up</pre></div></div></div><div class="tabpanel" id="t-s8"><h2 class="stephead g3">Step 8 — Write down what outlives the ticket</h2><p>Four places, three of which are usually the wrong one. Pick deliberately.</p><div class="tw"><table class=""><thead><tr><th>Destination</th><th>Earns a write when</th></tr></thead><tbody><tr><td>A comment on the Linear issue</td><td>The ticket produced no code change</td></tr><tr><td><code>docs/changes/LAM-NN-changes.md</code> + <code>.html</code></td><td>The ticket changed code</td></tr><tr><td><code>migrations/README.md</code></td><td>The ticket taught a rule about migrations generally</td></tr><tr><td><code>docs/adr/NNNN-*.md</code></td><td>A decision is still in force and is not visible in the code</td></tr><tr><td><code>LaminarFlowXMLWIki</code></td><td>Go code changed. A SQL-only ticket updates nothing</td></tr></tbody></table></div><ul><li>Add the <code>docs/changes/README.md</code> table row alongside the pair. The table is the index and is easy to forget.</li><li>Architecture and product decisions spanning both repos are Linear documents on E-LAM-0000, not ADRs. <code>docs/adr/README.md</code> states that boundary.</li></ul><div class="note"><b>LAM-11's write is the Linear comment, not a changes pair</b><code>docs/changes/</code> records why a change was made, and LAM-11 makes none — a file describing a non-change misleads whoever finds it. The comment carries Step 3.4.1's reasoning: LAM-11 was satisfied by migration 0003, the seed stayed in the migration rather than moving into Go bootstrap logic, and the index was deferred deliberately.</div></div><div class="tabpanel" id="t-s9"><h2 class="stephead g3">Step 9 — Commit, push, and close the ticket</h2><p class="skipline">A ticket that produced no code change skips 9.1 through 9.3 and closes on the last bullet alone. LAM-11 is one.</p><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">9.1</span>Switch The GitHub Account Before Pushing</h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">LaminarFlow pushes go out as Willpatbarr, not the work account</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">gh</span> auth switch --user Willpatbarr</pre></div></div><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">9.2</span>Commit</h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc"><code>LAM-NN-B</code> prefix for work in progress, bare <code>LAM-NN</code> for the commit that completes the ticket</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">git</span> commit -m "LAM-11 - record that migration 0003 already satisfies the workspace schema"</pre></div></div><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">9.3</span>Open The Pull Request Against The Epic Branch</h3><div class="loc"><code>LaminarFlow-Backend</code></div><p class="desc">ticket branch merges into the epic branch, never straight into main</p><div class="code"><span class="lang">bash</span><pre><span class="c-kw">git</span> push -u origin LAM-11-B &amp;&amp; <span class="c-kw">gh</span> pr create --base E-LAM-0003-B</pre></div></div><div class="sub"><h3><span class="btype run">RUN</span><span class="snum">9.4</span>Switch The GitHub Account Back</h3><div class="loc"><code>LaminarFlow-Backend</code></div><div class="code"><span class="lang">bash</span><pre><span class="c-kw">gh</span> auth switch --user willbarr_church</pre></div><ul><li>Leave the merged branches alone. Stale LaminarFlow branches are not deleted.</li><li>Move the Linear ticket to Done last, once the pull request is merged.</li></ul></div></div><div class="tabpanel" id="t-todo"><h2>Checklist</h2><p>LAM-11 only. Steps 4, 6 and 7 have nothing to do on this ticket.</p><ul class='todo'><li><label><input type="checkbox">Step 2 — run the three audit commands against <code>workspace</code></label></li><li><label><input type="checkbox">Step 3.4.1 — decide whether the 0003 seed satisfies “first-run/bootstrap logic”</label></li><li><label><input type="checkbox">Step 3.4.3 — record the <code>workspace.name</code> uniqueness call as deferred</label></li><li><label><input type="checkbox">Step 5.3 — pick the home for constraint tests, once, for all fifteen tickets</label></li><li><label><input type="checkbox">Step 8 — comment on LAM-11 in Linear with Step 3.4.1's reasoning</label></li><li><label><input type="checkbox">Step 9 — move LAM-11 to Done. No branch, no commit, no pull request</label></li><li><label><input type="checkbox">LAM-12 — cut <code>E-LAM-0003-B</code>, then <code>LAM-12-B</code> off the epic branch</label></li></ul></div></section>
+</main>
+</body></html>

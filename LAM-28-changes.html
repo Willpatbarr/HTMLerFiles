@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LAM-28 — Same-Origin Frontend Serving</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  /* code palette */
+  --code-bg:#12151a; --code-ink:#c8d3dc;
+  --c-cm:#6a9955; --c-st:#ce9178; --c-kw:#569cd6; --c-ty:#4ec9b0;
+  --c-fn:#dcdcaa; --c-nu:#b5cea8; --c-va:#9cdcfe;
+  --c-add:#7ec699; --c-del:#e08a8a;
+  --c-add-bg:rgba(108,195,148,.09); --c-del-bg:rgba(224,138,138,.09);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15.5px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+main{max-width:900px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:56px 96px}
+h1{font-size:clamp(24px,5vw,34px);line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:clamp(18px,3.4vw,22px);margin:32px 0 12px;letter-spacing:-.01em}
+h3{font-size:clamp(15px,2.6vw,17px);margin:0 0 12px}
+p{margin:0 0 14px;max-width:70ch}
+.sub{color:var(--faint);font-size:14px;margin:0 0 28px}
+a{color:var(--accent);overflow-wrap:anywhere}
+code{overflow-wrap:anywhere}
+p code,li code,td code{background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:1.5px 5px;font-size:.88em;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#c8d3dc}
+
+/* code blocks */
+pre{overflow-x:auto;max-width:100%;background:var(--code-bg);border:1px solid var(--border);
+  border-radius:10px;padding:14px 0;font-size:12.8px;line-height:1.65;margin:0 0 16px}
+pre code{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--code-ink);
+  background:none;border:0;padding:0}
+.ln{display:block;padding:0 16px}
+.ln.add{background:var(--c-add-bg);box-shadow:inset 2px 0 0 var(--c-add)}
+.ln.del{background:var(--c-del-bg);box-shadow:inset 2px 0 0 var(--c-del)}
+.ln.add .mk{color:var(--c-add);font-weight:700}
+.ln.del .mk{color:var(--c-del);font-weight:700}
+.cm{color:var(--c-cm);font-style:italic}
+.st{color:var(--c-st)}
+.kw{color:var(--c-kw)}
+.ty{color:var(--c-ty)}
+.fn{color:var(--c-fn)}
+.nu{color:var(--c-nu)}
+.va{color:var(--c-va)}
+.langtag{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 6px}
+
+/* nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto a{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto a:hover{background:var(--bg);color:var(--accent)}
+.skipto a.active{background:var(--accent-soft);color:var(--accent)}
+.navlabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding:0 10px 5px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media(max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,.skipto.open .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  .skipto.open .skipto-toggle svg{transform:rotate(180deg)}
+  .skipto.closed .skipto-menu{display:none}
+  .skipto.closed .skipto-toggle svg{transform:none}
+  main{padding-top:72px}
+}
+
+/* pages + tabs */
+.page{display:none}.page.active{display:block}
+.tabpanel{display:none}.tabpanel.active{display:block}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;border-bottom:1px solid var(--border)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;transition:.15s;font-family:inherit}
+.tab:hover{color:var(--ink);background:var(--card)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* cards + change blocks */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 22px;margin:0 0 18px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));margin:0 0 18px}
+.one-sentence{background:var(--accent-soft);border:1px solid #2b5540;border-radius:var(--radius);
+  padding:18px 22px;margin:0 0 28px}
+.one-sentence .lbl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin:0 0 7px}
+.one-sentence p{margin:0;font-size:16.5px;line-height:1.55;max-width:none}
+.chg{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
+  padding:20px 22px;margin:0 0 20px;box-shadow:var(--shadow)}
+.chg.flag{border-color:#5a4520;background:linear-gradient(var(--warn-soft),var(--card) 60px)}
+.chg-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:0 0 3px}
+.chg-n{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.chg.flag .chg-n{color:var(--warn)}
+.file{display:block;font-size:12.4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#9fb3c4;overflow-wrap:anywhere;max-width:100%;margin:0 0 3px}
+.lines{display:inline-block;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:var(--faint);margin:0 0 12px}
+.mini{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);
+  margin:16px 0 7px;font-weight:700}
+ul{margin:0 0 12px;padding-left:20px}
+li{margin:0 0 6px}
+li::marker{color:var(--faint)}
+.why b{color:var(--accent);font-weight:700}
+.pri{display:inline-block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;border:1px solid var(--border-strong);color:var(--muted);
+  margin:0 0 10px;overflow-wrap:anywhere;max-width:100%}
+.pri.must{background:var(--accent-soft);border-color:#2b5540;color:var(--accent)}
+.pri.imp{background:var(--warn-soft);border-color:#5a4520;color:var(--warn)}
+.pri.opt{background:#1a1d21}
+.newfile{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);
+  background:var(--warn-soft);border:1px solid #5a4520;border-radius:5px;padding:2px 7px;margin-left:6px}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tablewrap{overflow-x:auto;margin:0 0 18px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700}
+td code{white-space:nowrap}
+
+.todo{list-style:none;padding:0;margin:0}
+.todo li{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border);margin:0}
+.todo li:last-child{border-bottom:0}
+.todo input{margin-top:4px;width:15px;height:15px;accent-color:var(--accent);flex-shrink:0}
+.todo label{cursor:pointer}
+.todo input:checked+label{color:var(--faint);text-decoration:line-through}
+@media(max-width:720px){.card,.chg{padding:15px 16px}main{padding-block:36px 72px}.ln{padding:0 12px}}
+</style>
+</head>
+<body>
+<nav class="skipto" aria-label="Pages">
+  <button class="skipto-toggle" aria-label="Page menu"><svg width="18" height="18"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <a data-page="p-overview" class="active">Overview</a>
+    <a data-page="p-backend">Backend</a>
+    <a data-page="p-frontend">Frontend</a>
+    <a data-page="p-verify">Verify &amp; TODO</a>
+  </div>
+</nav>
+<main>
+<section class="page active" id="p-overview">
+  <h1>LAM-28 — Same-Origin Frontend Serving</h1>
+  <p class="sub">Backend <code>LAM-28-B</code> → PR #7 · Frontend <code>LAM-28-F</code> → PR #2 · both CI green<br>
+    Backend: 11 files, +413 / −1 &nbsp;·&nbsp; Frontend: 2 files, +39 / −3</p>
+
+  <div class="one-sentence">
+    <div class="lbl">One-Sentence Version</div>
+    <p>The Go binary now embeds and serves the built React bundle alongside the API on one
+      port — and a test caught the classic SPA-server bug before it shipped.</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-decisions">Decisions</button>
+    <button class="tab" data-tab="t-bug">The Bug Caught</button>
+    <button class="tab" data-tab="t-pri">Priority Levels</button>
+  </div>
+
+  <div class="tabpanel active" id="t-decisions">
+    <span class="pri must">Must Know</span>
+    <h2>Three decisions taken before building</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="mini">Assets</div>
+        <p><b>Embed, with dir override.</b> Same reasoning as migrations in LAM-10 — the binary
+          is the whole deployment. <code>FRONTEND_DIR</code> overrides it for dev.</p>
+      </div>
+      <div class="card">
+        <div class="mini">Scope</div>
+        <p><b>Both repos.</b> Backend serves; frontend proxies <code>/api</code> in dev.
+          Without the proxy, same-origin holds in production but not in the dev loop.</p>
+      </div>
+      <div class="card">
+        <div class="mini">Build wiring</div>
+        <p><b>Script now, container in LAM-29.</b>
+          <code>scripts/build-frontend.sh</code> for local work; the multi-stage image is
+          LAM-29's job.</p>
+      </div>
+    </div>
+
+    <h3>Two calls made during the build</h3>
+    <ul>
+      <li><b><code>/api/</code> is registered though no API exists.</b> Otherwise Go's mux sends
+        <code>/api/anything</code> to the catch-all and a typo'd endpoint returns the app shell
+        with status 200 — which <code>fetch()</code> reports as a JSON parse error.</li>
+      <li><b><code>/healthz</code> stayed at the root.</b> Probes expect it there, and the ticket
+        only asked for <em>the API</em> to be prefixed. Costs one extra proxy entry.</li>
+    </ul>
+  </div>
+
+  <div class="tabpanel" id="t-bug">
+    <span class="pri must">Must Know</span>
+    <h2>A test failed first, and that was the point</h2>
+    <p>The SPA fallback was unconditional in the first implementation: any unmatched path got
+      <code>index.html</code>. That is the standard recipe, and it is subtly wrong.</p>
+
+    <div class="card">
+      <div class="mini">What goes wrong</div>
+      <p>A browser holding a cached shell requests <code>/assets/index-OldHash.js</code>. The
+        server returns HTML with status 200. The browser reports:</p>
+      <pre><code data-lang="txt">Uncaught SyntaxError: Unexpected token '&lt;'</code></pre>
+      <p style="margin-bottom:0">Which points nowhere near the stale hash that caused it.</p>
+    </div>
+
+    <div class="card">
+      <div class="mini">The fix — Change #0005</div>
+      <pre><code data-lang="go">+ // A missing file that looks like an asset is a 404, not a fallback.
++ if path.Ext(name) != "" && name != indexFile {
++ 	http.NotFound(w, r)
++ 	return
++ }</code></pre>
+      <p style="margin-bottom:0">Client routes are extensionless by convention, so the extension
+        is the signal. <code>/docs/readme.md</code> would 404 under this rule — the right trade
+        against silently breaking every asset 404.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-pri">
+    <h2>Priority Levels</h2>
+    <div class="card">
+      <span class="pri must">Must Know</span>
+      <ul style="margin-bottom:0">
+        <li>The SPA fallback only applies to <b>extensionless</b> paths (#0005)</li>
+        <li><code>/api/</code> is reserved so a typo'd endpoint can't return HTML 200 (#0008)</li>
+        <li>Frontend code must use <b>relative URLs</b> — never an absolute backend URL</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="pri imp">Important</span>
+      <ul style="margin-bottom:0">
+        <li><code>web/dist</code> is gitignored except <code>.gitkeep</code>, which
+          <code>go:embed</code> needs to compile (#0002)</li>
+        <li>Hashed assets get <code>immutable</code>; the shell gets <code>no-cache</code> (#0006)</li>
+        <li>The dev database still needs <code>migrate baseline</code> from LAM-10</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="pri opt">Optional</span>
+      <ul style="margin-bottom:0">
+        <li>The not-built 503 page (#0007) — a nicety, not load-bearing</li>
+        <li>README rewrites in both repos</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="page" id="p-backend">
+  <h1>Backend Changes</h1>
+  <p class="sub">LaminarFlow-Backend · 16 changes across 11 files</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-embed">Embedding</button>
+    <button class="tab" data-tab="t-handler">Handler</button>
+    <button class="tab" data-tab="t-routing">Routing &amp; Config</button>
+    <button class="tab" data-tab="t-build">Build Script</button>
+    <button class="tab" data-tab="t-tests">Tests</button>
+    <button class="tab" data-tab="t-docs">Docs</button>
+  </div>
+
+  <div class="tabpanel active" id="t-embed">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0001</span><span class="newfile">new file</span></div>
+      <span class="file">web/embed.go</span><span class="lines">:18-19</span>
+      <pre><code data-lang="go">+ //go:embed all:dist
++ var Dist embed.FS</code></pre>
+      <div class="mini">What</div>
+      <ul><li>embed the built bundle, using the <code>all:</code> prefix</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the binary is the whole deployment; LAM-29's image ships one file</li>
+        <li><b>C</b> — without <code>all:</code> the directive skips dotfiles, and on a fresh clone <code>.gitkeep</code> is the only file present — an empty match is a compile error</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0002</span></div>
+      <span class="file">.gitignore</span><span class="lines">:4-9</span>
+      <pre><code data-lang="txt"># Built frontend bundle, produced by scripts/build-frontend.sh.
++ /web/dist/*
++ !/web/dist/.gitkeep</code></pre>
+      <div class="mini">What</div>
+      <ul><li>ignore the build output but keep the directory marker</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — a 193 KB bundle does not belong in git</li>
+        <li><b>C</b> — <code>go:embed</code> fails to compile if the directory does not exist, so <em>something</em> must be committed</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-handler">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0003</span><span class="newfile">new file</span></div>
+      <span class="file">internal/frontend/frontend.go</span><span class="lines">:43-49</span>
+      <pre><code data-lang="go">+ func New(fsys fs.FS) http.Handler {
++ 	return &handler{files: fsys}
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>take an <code>fs.FS</code> rather than a concrete type</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — the same handler then serves the embedded bundle and an <code>os.DirFS</code> override with no branching</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0004</span></div>
+      <span class="file">internal/frontend/frontend.go</span><span class="lines">:51-73</span>
+      <pre><code data-lang="go">+ name := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
++ if name == "" { name = indexFile }
++ if !fs.ValidPath(name) {
++ 	http.NotFound(w, r)
++ 	return
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>normalise the path and reject anything escaping the bundle</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — <code>http.FileServer</code> does this for you; doing the lookup by hand means doing this by hand too</li>
+      </ul>
+    </div>
+
+    <div class="chg flag">
+      <div class="chg-head"><span class="chg-n">Change #0005</span><span class="pri imp" style="margin:0">caught a real bug</span></div>
+      <span class="file">internal/frontend/frontend.go</span><span class="lines">:77-80</span>
+      <pre><code data-lang="go">+ // A missing file that looks like an asset is a 404, not a fallback.
++ if path.Ext(name) != "" && name != indexFile {
++ 	http.NotFound(w, r)
++ 	return
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>restrict the SPA fallback to extensionless paths</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — <code>TestMissingAssetDoesNotFallBack</code> <b>failed</b> on the first implementation, where the fallback was unconditional</li>
+        <li><b>C</b> — serving HTML in answer to a <code>.js</code> request makes the browser report <code>Unexpected token '&lt;'</code>, which points nowhere near the stale asset hash that caused it</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0006</span></div>
+      <span class="file">internal/frontend/frontend.go</span><span class="lines">:121-127</span>
+      <pre><code data-lang="go">+ if hashed {
++ 	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
++ } else {
++ 	w.Header().Set("Cache-Control", "no-cache")
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>cache hashed assets forever, never cache the shell</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — a change renames a hashed asset, but <code>index.html</code> keeps its name and is what points at the new hashes</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0007</span></div>
+      <span class="file">internal/frontend/frontend.go</span><span class="lines">:24-38</span>
+      <pre><code data-lang="go">+ const notBuilt = `&lt;!doctype html&gt;
++ &lt;h1&gt;Frontend not built&lt;/h1&gt;
++ &lt;pre&gt;./scripts/build-frontend.sh &amp;&amp; go build ./...&lt;/pre&gt;`</code></pre>
+      <div class="mini">What</div>
+      <ul><li>serve an explanatory 503 when no bundle is embedded</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — a fresh clone has never run the build script</li>
+        <li><b>C</b> — a blank 404 on a healthy server with a working API is the confusing case; saying so costs one const</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-routing">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0008</span></div>
+      <span class="file">main.go</span><span class="lines">:72-78</span>
+      <pre><code data-lang="go">+ mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
++ 	w.Header().Set("Content-Type", "application/json")
++ 	w.WriteHeader(http.StatusNotFound)
++ 	w.Write([]byte(`{"error":"not found"}`))
++ })</code></pre>
+      <div class="mini">What</div>
+      <ul><li>reserve the <code>/api/</code> prefix although no API exists yet</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — ticket step 2: API and static routing must not collide</li>
+        <li><b>C</b> — without it Go's mux sends <code>/api/anything</code> to the catch-all, so a typo'd endpoint returns the app shell with status 200</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0009</span></div>
+      <span class="file">main.go</span><span class="lines">:80-84</span>
+      <pre><code data-lang="go">+ bundle, err := frontendFS(cfg.FrontendDir)
++ if err != nil { log.Fatalf("frontend: %v", err) }
++ mux.Handle("/", frontend.New(bundle))</code></pre>
+      <div class="mini">What</div>
+      <ul><li>mount the SPA handler as the catch-all</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — Go's mux prefers the more specific <code>/api/</code> and <code>/healthz</code> patterns regardless of registration order</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0010</span></div>
+      <span class="file">main.go</span><span class="lines">:129-145</span>
+      <pre><code data-lang="go">+ func frontendFS(dir string) (fs.FS, error) {
++ 	if dir != "" { return os.DirFS(dir), nil }
++ 	return fs.Sub(web.Dist, "dist")
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>choose the disk directory when set, else the embedded bundle</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — deployed binaries carry their own bundle; dev wants a rebuild visible without rebuilding Go</li>
+        <li><b>C</b> — <code>fs.Sub</code> strips <code>dist/</code> so <code>index.html</code> sits at the root the handler expects</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0011</span></div>
+      <span class="file">internal/config/config.go</span><span class="lines">:22-26, :40</span>
+      <pre><code data-lang="go">+ 	// FrontendDir overrides the embedded bundle with a directory on disk.
++ 	FrontendDir string
+  ...
++ 		FrontendDir:      os.Getenv("FRONTEND_DIR"),</code></pre>
+      <div class="mini">What</div>
+      <ul><li>read <code>FRONTEND_DIR</code>, empty meaning "use the embedded bundle"</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — empty-as-default keeps deployment the zero-config path</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-build">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0012</span><span class="newfile">new file</span></div>
+      <span class="file">scripts/build-frontend.sh</span><span class="lines">:14-22</span>
+      <pre><code data-lang="sh">+ FRONTEND_REPO="${FRONTEND_REPO:-../LaminarFlow-Frontend}"
++ if [ ! -d "$FRONTEND_REPO" ]; then
++ 	echo "✗ No frontend checkout at $FRONTEND_REPO" >&2
++ 	exit 1
++ fi</code></pre>
+      <div class="mini">What</div>
+      <ul><li>locate the frontend checkout, defaulting to the sibling layout</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the two repos stay separate; this only moves a build artifact</li>
+        <li><b>C</b> — a default, not an assumption — nothing in the Go code depends on the layout</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0013</span></div>
+      <span class="file">scripts/build-frontend.sh</span><span class="lines">:38-44</span>
+      <pre><code data-lang="sh">+ rm -rf web/dist
++ mkdir -p web/dist
++ touch web/dist/.gitkeep
++ cp -R "$FRONTEND_REPO/dist/." web/dist/</code></pre>
+      <div class="mini">What</div>
+      <ul><li>clear before copying, and restore the marker</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — without the clear, an asset deleted from the frontend survives here forever; without the marker, a clean checkout will not compile</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-tests">
+    <div class="chg flag">
+      <div class="chg-head"><span class="chg-n">Change #0014</span><span class="newfile">new file</span></div>
+      <span class="file">internal/frontend/frontend_test.go</span><span class="lines">:76-88</span>
+      <pre><code data-lang="go">+ func TestMissingAssetDoesNotFallBack(t *testing.T) {
++ 	rec := get(t, h, "/assets/index-OldHash.js")
++ 	if strings.Contains(rec.Body.String(), "&lt;div id=root&gt;") {
++ 		t.Error("a missing asset returned the app shell")
++ 	}
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>assert a stale asset hash 404s instead of returning HTML</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — <b>this test failed first and drove Change #0005</b></li>
+        <li><b>C</b> — it is the difference between a useful 404 and a misleading JS syntax error</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0015</span></div>
+      <span class="file">internal/frontend/frontend_test.go</span><span class="lines">:90-104</span>
+      <pre><code data-lang="go">+ func TestCacheHeaders(t *testing.T) {
++ 	// asset -> immutable ; shell and client routes -> no-cache
++ }</code></pre>
+      <div class="mini">What</div>
+      <ul><li>lock the caching contract for both file classes</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — a cached shell keeps requesting asset hashes that no longer exist</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-docs">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0016</span></div>
+      <span class="file">COMMANDS.md · README.md · .env.example</span><span class="lines">COMMANDS.md :15-32</span>
+      <pre><code data-lang="sh">+ ## Build the frontend into this repo, then embed it
++     ./scripts/build-frontend.sh && go build ./...
++ ## Run the server against a frontend bundle on disk
++     FRONTEND_DIR=../LaminarFlow-Frontend/dist go run .</code></pre>
+      <div class="mini">What</div>
+      <ul><li>document both the embed path and the dev override</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — the embed step is invisible otherwise and will silently serve a stale bundle</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="page" id="p-frontend">
+  <h1>Frontend Changes</h1>
+  <p class="sub">LaminarFlow-Frontend · 3 changes across 2 files</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-vite">vite.config.ts</button>
+    <button class="tab" data-tab="t-fereadme">README.md</button>
+  </div>
+
+  <div class="tabpanel active" id="t-vite">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0017</span></div>
+      <span class="file">vite.config.ts</span><span class="lines">:13</span>
+      <pre><code data-lang="ts">+ const apiTarget = process.env.VITE_API_TARGET ?? 'http://localhost:8080'</code></pre>
+      <div class="mini">What</div>
+      <ul><li>make the backend address configurable with a working default</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>C</b> — hardcoding 8080 breaks anyone running the backend on another port</li>
+      </ul>
+    </div>
+
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0018</span></div>
+      <span class="file">vite.config.ts</span><span class="lines">:17-24</span>
+      <pre><code data-lang="ts">+ server: {
++   proxy: {
++     '/api': { target: apiTarget, changeOrigin: true },
++     // Health endpoints sit at the root rather than under /api, where probes
++     // expect them, so they need their own entry to be reachable in dev.
++     '/healthz': { target: apiTarget, changeOrigin: true },
++   },
++ },</code></pre>
+      <div class="mini">What</div>
+      <ul><li>proxy the backend's paths from the Vite dev server</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — same-origin holds in production but not under <code>npm run dev</code>; without this, dev needs absolute URLs and CORS — the split-origin setup the decision exists to remove</li>
+        <li><b>C</b> — <code>/healthz</code> needs its own entry because health endpoints sit at the root, not under the API prefix</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="mini">The subtler cost this avoids</div>
+      <p style="margin-bottom:0">Without the proxy, dev and production would differ in
+        <b>exactly the layer the same-origin decision was made to protect</b> — cookies on
+        cross-site requests. A session bug would then reproduce in one environment and not the
+        other.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-fereadme">
+    <div class="chg">
+      <div class="chg-head"><span class="chg-n">Change #0019</span></div>
+      <span class="file">README.md</span><span class="lines">:1-18</span>
+      <pre><code data-lang="txt">- # React + TypeScript + Vite
+- This template provides a minimal setup...
++ # LaminarFlow — Frontend
++ ## Same-origin deployment
++ Application code should always use relative URLs (`fetch('/api/...')`),
++ never an absolute backend URL.</code></pre>
+      <div class="mini">What</div>
+      <ul><li>replace the template preamble with the same-origin contract</li></ul>
+      <div class="mini">Why</div>
+      <ul class="why">
+        <li><b>B</b> — the rule is easy to break and invisible until auth fails cross-site</li>
+        <li><b>C</b> — template notes kept below, marked as inherited</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="p-verify">
+  <h1>Verify &amp; TODO</h1>
+  <p class="sub">Both gates green · both CI runs green</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="t-e2e">End-to-End</button>
+    <button class="tab" data-tab="t-proxy">Vite Proxy</button>
+    <button class="tab" data-tab="t-gate">Gate Notes</button>
+    <button class="tab" data-tab="t-todo">TODO</button>
+  </div>
+
+  <div class="tabpanel active" id="t-e2e">
+    <h2>Real bundle, one process, one port</h2>
+    <div class="tablewrap">
+      <table>
+        <tr><th>Request to :8099</th><th>Result</th></tr>
+        <tr><td><code>/</code></td><td>app shell, <code>Cache-Control: no-cache</code></td></tr>
+        <tr><td><code>/assets/index-CP6jzYRJ.js</code></td><td>200, <code>text/javascript</code>, <code>immutable</code></td></tr>
+        <tr><td><code>/projects/42</code></td><td>200 <code>text/html</code> — SPA fallback</td></tr>
+        <tr><td><code>/assets/index-STALE.js</code></td><td><b>404</b>, not HTML</td></tr>
+        <tr><td><code>/api/nope</code></td><td><code>{"error":"not found"}</code>, 404</td></tr>
+        <tr><td><code>/healthz</code>, <code>/healthz/db</code></td><td><code>{"status":"ok"}</code></td></tr>
+      </table>
+    </div>
+    <p>The same run exercised <code>MIGRATE_ON_STARTUP=true</code> from LAM-10, applying all four
+      migrations at boot.</p>
+  </div>
+
+  <div class="tabpanel" id="t-proxy">
+    <h2>Both servers running</h2>
+    <div class="tablewrap">
+      <table>
+        <tr><th>Request to :5173</th><th>Result</th></tr>
+        <tr><td><code>/</code></td><td>Vite dev server, app HTML</td></tr>
+        <tr><td><code>/healthz</code></td><td><code>{"status":"ok"}</code> — reached the backend</td></tr>
+        <tr><td><code>/healthz/db</code></td><td><code>{"status":"ok"}</code> — reached Postgres</td></tr>
+        <tr><td><code>/api/nope</code></td><td><code>{"error":"not found"}</code>, 404 — backend's JSON, not Vite's HTML</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <p style="margin-bottom:0">That last row is the one that matters: it confirms the proxy
+        takes precedence over Vite's own SPA fallback, so a real API 404 is not masked by an
+        HTML page.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-gate">
+    <span class="pri imp">Important</span>
+    <h2>staticcheck caught one</h2>
+    <pre><code data-lang="txt">web/embed.go:15:1: ineffectual compiler directive due to
+extraneous space: "// go:embed skips dotfiles..." (SA9009)</code></pre>
+    <p>A doc line beginning <code>// go:embed</code> reads as a malformed compiler directive.
+      Reworded to start with "the directive below".</p>
+    <div class="card">
+      <p style="margin-bottom:0"><b>Second time this ordering bit.</b>
+        <code>scripts/test.sh</code> runs under <code>set -e</code> with lint ahead of
+        <code>go test</code>, so a lint error exits before the tests run and looks like they were
+        skipped. Documented in <code>docs/adr/0001</code> during LAM-5 — and it happened again
+        here.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-todo">
+    <h2>TODO</h2>
+    <ul class="todo">
+      <li><input type="checkbox" id="c1"><label for="c1">Merge backend PR #7 into <code>E-LAM-0001-B</code></label></li>
+      <li><input type="checkbox" id="c2"><label for="c2">Merge frontend PR #2 into <code>E-LAM-0001-F</code></label></li>
+      <li><input type="checkbox" id="c3"><label for="c3">Set LAM-28 → Done</label></li>
+      <li><input type="checkbox" id="c4"><label for="c4">Adopt the dev database — <code>migrate baseline &amp;&amp; migrate up</code> (still outstanding from LAM-10)</label></li>
+      <li><input type="checkbox" id="c5"><label for="c5">Start LAM-29 (containerize) — LAM-28 was blocking it</label></li>
+      <li><input type="checkbox" id="c6"><label for="c6"><code>gh auth switch --user willbarr_church</code></label></li>
+    </ul>
+    <div class="card" style="margin-top:20px">
+      <div class="mini">Deliberately out of scope</div>
+      <p style="margin-bottom:0"><b>React Router.</b> The backend's SPA fallback is in place and
+        tested, but the frontend is still the unmodified Vite template — there is no route to
+        add yet. Worth its own ticket once there is a real screen.</p>
+    </div>
+  </div>
+</section>
+</main>
+<script>
+// Syntax highlighter: escape first, then one master regex pass per language so
+// nothing is ever re-tokenized inside an existing span.
+(function () {
+  var esc = function (s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  };
+
+  var GO_KW = 'func|package|import|type|struct|interface|map|chan|const|var|return|if|else|for|range|switch|case|default|break|continue|defer|go|select|fallthrough';
+  var GO_TYPE = 'string|bool|error|byte|rune|int|int64|float64|any|nil|true|false';
+  var TS_KW = 'import|from|export|default|const|let|var|function|return|if|else|for|while|class|extends|new|async|await|type|interface|as|of|in';
+
+  var GRAMMARS = {
+    go: [
+      ['cm', /\/\/[^\n]*/],
+      ['st', /`[^`]*`|"(?:\\.|[^"\\\n])*"/],
+      ['kw', new RegExp('\\b(?:' + GO_KW + ')\\b')],
+      ['ty', new RegExp('\\b(?:' + GO_TYPE + ')\\b')],
+      ['fn', /\b[A-Za-z_]\w*(?=\()/],
+      ['nu', /\b\d[\d_.]*\b/]
+    ],
+    ts: [
+      ['cm', /\/\/[^\n]*/],
+      ['st', /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`[^`]*`/],
+      ['kw', new RegExp('\\b(?:' + TS_KW + ')\\b')],
+      ['ty', /\b(?:true|false|null|undefined)\b/],
+      ['fn', /\b[A-Za-z_]\w*(?=\()/],
+      ['nu', /\b\d[\d_.]*\b/]
+    ],
+    sh: [
+      ['cm', /#[^\n]*/],
+      ['st', /'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/],
+      ['kw', /\b(?:if|then|else|elif|fi|for|in|do|done|set|exit|echo|cd|mkdir|rm|cp|touch|npm|go)\b/],
+      ['va', /\$\{?[A-Za-z_]\w*\}?/],
+      ['nu', /\b\d+\b/]
+    ],
+    txt: [['cm', /#[^\n]*/]]
+  };
+
+  function tokenize(src, grammar) {
+    var parts = grammar.map(function (g) { return '(' + g[1].source + ')'; });
+    var master = new RegExp(parts.join('|'), 'g');
+    var out = '', last = 0, m;
+    while ((m = master.exec(src)) !== null) {
+      out += esc(src.slice(last, m.index));
+      for (var i = 1; i < m.length; i++) {
+        if (m[i] !== undefined) { out += '<span class="' + grammar[i - 1][0] + '">' + esc(m[i]) + '</span>'; break; }
+      }
+      last = m.index + m[0].length;
+      if (m[0] === '') master.lastIndex++;
+    }
+    return out + esc(src.slice(last));
+  }
+
+  function render(code, lang) {
+    var grammar = GRAMMARS[lang] || GRAMMARS.txt;
+    return code.split('\n').map(function (line) {
+      var cls = '', body = line;
+      // Lines the change blocks mark as added or removed.
+      if (/^\+( |$)/.test(line)) { cls = 'add'; }
+      else if (/^-( |$)/.test(line) && !/^--/.test(line)) { cls = 'del'; }
+      if (cls) {
+        var mark = line.slice(0, 1);
+        body = line.slice(1);
+        return '<span class="ln ' + cls + '"><span class="mk">' + mark + '</span>' + tokenize(body, grammar) + '</span>';
+      }
+      return '<span class="ln">' + tokenize(body, grammar) + '</span>';
+    }).join('\n');
+  }
+
+  document.querySelectorAll('pre code[data-lang]').forEach(function (el) {
+    el.innerHTML = render(el.textContent, el.getAttribute('data-lang'));
+  });
+})();
+document.querySelectorAll('.tabs .tab').forEach(function(b){
+  b.addEventListener('click',function(){
+    var page=b.closest('.page');
+    page.querySelectorAll('.tab, .tabpanel').forEach(function(el){el.classList.remove('active')});
+    b.classList.add('active');
+    page.querySelector('#'+b.dataset.tab).classList.add('active');
+  });
+});
+document.querySelectorAll('.skipto a[data-page]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    document.querySelectorAll('.page, .skipto a').forEach(function(el){el.classList.remove('active')});
+    a.classList.add('active');
+    document.getElementById(a.dataset.page).classList.add('active');
+    window.scrollTo(0,0);
+  });
+});
+var nav=document.querySelector('.skipto');
+var menu=nav.querySelector('.skipto-menu');
+function closeMenu(){nav.classList.remove('open');nav.classList.add('closed');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});}
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){
+  if(getComputedStyle(menu).display!=='none'){closeMenu();}
+  else{nav.classList.remove('closed');nav.classList.add('open');}
+});
+nav.addEventListener('mouseleave',function(){nav.classList.remove('closed')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',closeMenu)});
+</script>
+</body>
+</html>

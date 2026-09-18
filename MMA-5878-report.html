@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Public event QR code &mdash; in review</title>
+<style>
+:root{color-scheme:dark;
+--bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+--border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+--warn:#e0a458; --warn-soft:#33280f;
+--g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
+--ok:#2E8B62; --bad:#C24A4A;
+--kw:#A25494; --ty:#4368A8;
+--shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+@media (max-width:1180px){main{padding-top:72px}}
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+ font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+ border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+ align-items:start;margin:0 0 1.6rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted);font-size:16.5px}
+@media (max-width:900px){.head{grid-template-columns:1fr}.head .lede{margin-top:1.1rem}}
+
+h2{font-size:1.3rem;margin:2.1rem 0 .7rem;font-weight:600;letter-spacing:-.01em}
+h3{font-size:1.06rem;margin:1.5rem 0 .5rem;font-weight:600;color:var(--ink)}
+h4{font-size:.97rem;margin:1.15rem 0 .4rem;font-weight:600;color:var(--muted)}
+p{margin:0 0 .85rem;max-width:66ch}
+ul,ol{margin:0 0 .9rem;padding-left:1.25rem}
+li{margin:0 0 .3rem}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+ background:var(--card);border:1px solid var(--border);border-radius:5px;padding:.5px 5px;
+ overflow-wrap:anywhere}
+a{color:var(--accent);overflow-wrap:anywhere}
+
+/* index strip */
+.strip{background:var(--card);border:1px solid var(--border);border-radius:12px;
+ padding:11px 15px;margin:0 0 2.2rem;font-size:13px;color:var(--muted)}
+.strip div{margin:2px 0}
+.strip b{font-weight:600}
+.s1{color:var(--g1)} .s2{color:var(--g2)} .s3{color:var(--g3)}
+
+/* pages + tabs, CSS only */
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.page{display:none}
+.tabpanel{display:none}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+ border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+ font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+ transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+
+/* nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+ display:flex;flex-direction:column;gap:5px;background:var(--card);
+ border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+ box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+ border-radius:8px;transition:.15s;cursor:pointer}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--faint);padding:2px 10px 4px;font-weight:700}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+ padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media (max-width:1180px){
+ .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+ .skipto-toggle{display:flex}
+ .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+ .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+ #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+ .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+ #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+}
+#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+
+/* tables */
+.tw{overflow-x:auto;margin:0 0 1.3rem;border:1px solid var(--border);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--border);
+ vertical-align:top}
+th{background:var(--card);font-weight:600;font-size:12.5px;letter-spacing:.03em;
+ text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td.n{white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+ font-size:12.5px}
+.add{color:var(--ok)} .rem{color:var(--bad)}
+
+/* callout */
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+ padding:13px 17px;margin:0 0 1.3rem}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+ text-transform:uppercase;margin:0 0 5px}
+.note p:last-child{margin-bottom:0}
+
+/* code */
+.code{position:relative;margin:0 0 16px}
+.code pre{margin:0;background:var(--card);border:1px solid var(--border);
+ border-radius:10px;padding:14px 15px;overflow-x:auto;max-width:100%;
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.9px;line-height:1.58}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+ text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--card);
+ padding:1px 4px;border-radius:3px;pointer-events:none;
+ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.k{color:var(--kw)} .t{color:var(--ty)} .ad{color:var(--ok)} .rm{color:var(--bad)}
+.cm{color:var(--faint)}
+
+/* changelog furniture */
+.loc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+ color:var(--muted);margin:0 0 .25rem}
+.desc{color:var(--muted);font-size:14px;margin:0 0 .6rem}
+.bul{margin:0 0 1.4rem;padding-left:1.15rem;font-size:14.5px}
+.bul>li{margin:0 0 .2rem}
+.bul ul{margin:.15rem 0 .35rem;padding-left:1.15rem}
+.rail{color:var(--faint)}
+.p1 h2{color:var(--g1)}
+.p1 .rail{color:var(--g1)}
+.p2 h2{color:var(--g2)}
+.p2 .rail{color:var(--g2)}
+.p3 h2{color:var(--g3)}
+.p3 .rail{color:var(--g3)}
+#r-p-overview:checked ~ main #p-overview{display:block}
+#r-p-overview:checked ~ .skipto label[for="r-p-overview"]{background:var(--bg);color:var(--g1)}
+#r-p-edits:checked ~ main #p-edits{display:block}
+#r-p-edits:checked ~ .skipto label[for="r-p-edits"]{background:var(--bg);color:var(--g2)}
+#r-p-checks:checked ~ main #p-checks{display:block}
+#r-p-checks:checked ~ .skipto label[for="r-p-checks"]{background:var(--bg);color:var(--g3)}
+#r-t1-summary:checked ~ main #t1-summary{display:block}
+#r-t1-summary:checked ~ main label[for="r-t1-summary"]{color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t1-files:checked ~ main #t1-files{display:block}
+#r-t1-files:checked ~ main label[for="r-t1-files"]{color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t1-arch:checked ~ main #t1-arch{display:block}
+#r-t1-arch:checked ~ main label[for="r-t1-arch"]{color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t1-risks:checked ~ main #t1-risks{display:block}
+#r-t1-risks:checked ~ main label[for="r-t1-risks"]{color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t1-read:checked ~ main #t1-read{display:block}
+#r-t1-read:checked ~ main label[for="r-t1-read"]{color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t2-details:checked ~ main #t2-details{display:block}
+#r-t2-details:checked ~ main label[for="r-t2-details"]{color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t2-share:checked ~ main #t2-share{display:block}
+#r-t2-share:checked ~ main label[for="r-t2-share"]{color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t2-wiring:checked ~ main #t2-wiring{display:block}
+#r-t2-wiring:checked ~ main label[for="r-t2-wiring"]{color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t2-tests:checked ~ main #t2-tests{display:block}
+#r-t2-tests:checked ~ main label[for="r-t2-tests"]{color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t3-checks:checked ~ main #t3-checks{display:block}
+#r-t3-checks:checked ~ main label[for="r-t3-checks"]{color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+#r-t3-todo:checked ~ main #t3-todo{display:block}
+#r-t3-todo:checked ~ main label[for="r-t3-todo"]{color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+
+@media (max-width:720px){
+ main{padding-left:16px;padding-right:16px}
+ .tabs{padding:4px 4px 0}
+ .tab{font-size:13px;padding:8px 9px}
+}
+</style>
+</head>
+<body>
+<input class="st" type="radio" name="pg" id="r-p-overview" checked>
+<input class="st" type="radio" name="pg" id="r-p-edits">
+<input class="st" type="radio" name="pg" id="r-p-checks">
+<input class="st" type="checkbox" id="navtoggle">
+<input class="st" type="radio" name="t1" id="r-t1-summary" checked>
+<input class="st" type="radio" name="t1" id="r-t1-files">
+<input class="st" type="radio" name="t1" id="r-t1-arch">
+<input class="st" type="radio" name="t1" id="r-t1-risks">
+<input class="st" type="radio" name="t1" id="r-t1-read">
+<input class="st" type="radio" name="t2" id="r-t2-details" checked>
+<input class="st" type="radio" name="t2" id="r-t2-share">
+<input class="st" type="radio" name="t2" id="r-t2-wiring">
+<input class="st" type="radio" name="t2" id="r-t2-tests">
+<input class="st" type="radio" name="t3" id="r-t3-checks" checked>
+<input class="st" type="radio" name="t3" id="r-t3-todo">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-overview">Overview</label>
+    <label for="r-p-edits">The edits</label>
+    <label for="r-p-checks">Checks</label>
+  </div>
+</nav>
+<main>
+
+<div class="head">
+  <h1>Public event QR code &mdash; in review</h1>
+  <p class="lede">A published event&rsquo;s share link, rendered as a scannable code the
+  creator can save or share. Reached from Event Details, not the publish flow.</p>
+</div>
+
+<div class="strip">
+  <div><b class="s1">Overview</b> &mdash; Summary &middot; Files changed &middot;
+    Architecture &middot; Risks &middot; Read first</div>
+  <div><b class="s2">The edits</b> &mdash; Event Details &middot; Share plumbing &middot;
+    Wiring &middot; Tests touched</div>
+  <div><b class="s3">Checks</b> &mdash; Checks run &middot; Outstanding</div>
+  <div><span class="add">added</span> &middot; <span class="rem">removed</span> &mdash;
+    in every Diff column</div>
+</div>
+
+<section class="page p1" id="p-overview">
+<div class="tabs" role="tablist">
+<label class="tab" for="r-t1-summary">Summary</label>
+<label class="tab" for="r-t1-files">Files changed</label>
+<label class="tab" for="r-t1-arch">Architecture</label>
+<label class="tab" for="r-t1-risks">Risks &middot; questions</label>
+<label class="tab" for="r-t1-read">Read first</label>
+</div>
+<div class="tabpanel" id="t1-summary">
+<h2>What changed</h2>
+<p>Event Details grew a QR action for public events, and a new screen behind it renders
+the event&rsquo;s server-provided <code>link</code> as a code, writes it to a document the user
+picks, or hands it to the share sheet as a PNG.</p>
+<p>The encode is deliberately cheap to reason about: one use case turns a string into a
+bitmap on the default dispatcher, and returns a <code>Result</code> rather than throwing, so a
+failure surfaces as a retry instead of taking the screen down.</p>
+<h2>Why the icon is gated three ways</h2>
+<p>The QR action appears only when an event is public, its calendar is editable, and its
+link is non-blank. The first two are the server&rsquo;s authorization answer; the third is
+practical &mdash; the code encodes that link and nothing else, so without one the screen has
+nothing to draw. Share beside it follows the same link rule, which is where the shape came
+from.</p>
+<p>That third condition is why there is no empty state. A link-less event cannot reach the
+screen, so a failed encode and a deleted event fold into one error with a retry rather than
+earning a designed state each.</p>
+<h2>Why the encode is not keyed on the event row</h2>
+<p>The state is driven by the link and the name alone. <code>getEventDetailsFlow</code>
+applies <code>distinctUntilChanged</code> to the whole joined row, so keying the encoder off the
+row would let any unrelated column changing under a background sync restart it &mdash; blanking
+a displayed code back to a spinner while someone holds the phone up to be scanned.</p>
+<p>The shared state also carries a stop timeout, and the view model keeps the last
+rendered code. Both exist for the same window: the screen collects with lifecycle awareness, so
+a trip to the file picker stops the flow, and the save path resumes <i>after</i>
+<code>CreateDocument</code> has already created the file.</p>
+<h2>Scope this deliberately left out</h2>
+<div class="tw"><table>
+<tr><th>Left out</th><th>Owner</th></tr>
+<tr><td>The publish dialog and its confirmation</td><td>the publish flow, not this change</td></tr>
+<tr><td>Stop Publishing, and the Manage Events tag</td><td>the publish flow</td></tr>
+<tr><td>A copy/paste shareable event URL</td><td>MMA-5886, listed out of scope on the ticket</td></tr>
+<tr><td>Link text alongside the shared image</td><td>MMA-5886 &mdash; FR-8 and Test 10 ask for the image only</td></tr>
+</table></div>
+<p>FR-7 and AC-5 place the code on a post-publish screen. Since the publish flow is not in
+this change, the entry point is Event Details instead &mdash; the same affordance on a different
+host screen.</p>
+</div>
+<div class="tabpanel" id="t1-files">
+<h2>Files changed</h2>
+<div class="tw"><table>
+<tr><th>Path</th><th>What it is</th><th>What the change does</th><th>Diff</th></tr>
+<tr><td><code>feature/calendar/&hellip;/qr/</code> &mdash; 9 files</td><td>the QR feature: encoder, screen, state, view model, two export use cases, nav key</td><td>New. Turns a link into a bitmap, renders it, and writes it out two ways</td><td class="n"><span class="add">+721</span></td></tr>
+<tr><td><code>feature/calendar/&hellip;/qr/</code> tests &mdash; 6 files</td><td>unit and Robolectric cover for each of those units</td><td>New. Round-trip decode, a measured quiet zone, both export guards, retry wiring</td><td class="n"><span class="add">+803</span></td></tr>
+<tr><td><code>&hellip;/screenshotTest/&hellip;/EventQrScreenshotTest.kt</code></td><td>the screen&rsquo;s preview screenshot test</td><td>New. Freezes loading, rendered, error, and a name long enough to wrap</td><td class="n"><span class="add">+38</span></td></tr>
+<tr><td><code>&hellip;/screenshotTestDebug/reference/&hellip;/qr/</code> &mdash; 8 files</td><td>the golden images that test compares against</td><td>New. Four states in light and dark</td><td class="n">binary</td></tr>
+<tr><td><code>feature/calendar/&hellip;/detail/</code> &mdash; 5 files</td><td>Event Details, its state, its view model, and two of its test classes</td><td>The QR action stops opening a stopgap dialog and gains its link condition</td><td class="n"><span class="add">+60</span> / <span class="rem">&minus;11</span></td></tr>
+<tr><td><code>feature/calendar/&hellip;/di/</code> &mdash; 2 files</td><td>the feature&rsquo;s Koin and Navigation 3 modules</td><td>Binds the use cases, the view model, the screen, and the key&rsquo;s serializer</td><td class="n"><span class="add">+22</span></td></tr>
+<tr><td><code>app/&hellip;/ExternalIntentsImpl.kt</code> &middot; <code>core/ui/&hellip;/CalendarExternalIntents.kt</code> &middot; <code>app/&hellip;/xml/filepaths.xml</code></td><td>the share-intent contract, its implementation, and the FileProvider path list</td><td>Adds an image share whose Uri is granted through both extras, and the cache path it serves from</td><td class="n"><span class="add">+30</span></td></tr>
+<tr><td><code>app/src/test/&hellip;/ExternalIntentsImplShareImageTest.kt</code> &middot; <code>di/KoinTest.kt</code> &middot; <code>konsist/usecase/UseCaseTest.kt</code></td><td>the share intent&rsquo;s first test, the DI registry, the use-case naming rule</td><td>Pins the grant paths, registers the view model, accepts two new verbs</td><td class="n"><span class="add">+91</span></td></tr>
+<tr><td><code>feature/calendar/build.gradle.kts</code></td><td>the feature&rsquo;s dependency list</td><td>Declares zxing for the encoder and core-ktx, which was compiling transitively</td><td class="n"><span class="add">+3</span></td></tr>
+<tr><td><code>feature/calendar/&hellip;/values/strings.xml</code></td><td>the feature&rsquo;s user-facing strings</td><td>Eight strings for the new screen, each with a translator comment</td><td class="n"><span class="add">+8</span></td></tr>
+<tr><td><b>39 files</b></td><td>&mdash;</td><td>&mdash;</td><td class="n"><b><span class="add">+1776</span> / <span class="rem">&minus;11</span></b><br>+ 8 binary</td></tr>
+</table></div>
+<p>Every number above is <code>git diff --numstat upstream/main...HEAD</code>, aggregated
+per row. The eight golden images carry no line count, which is why the total names them
+separately rather than folding them in.</p>
+</div>
+<div class="tabpanel" id="t1-arch">
+<h2>Where the route lives</h2>
+<p>Navigation 3 addresses every destination by key, so the screen needs one whether or not
+anything outside the feature reaches it. The only decision was where to declare it.</p>
+<div class="tw"><table>
+<tr><th>If the route is&hellip;</th><th>The key goes in</th><th>This one</th></tr>
+<tr><td>Deep-linkable</td><td>a MaltSync <code>NavSpec</code> in the shared library</td><td>no</td></tr>
+<tr><td>Reached from another module</td><td><code>:feature:calendar:api</code></td><td>no</td></tr>
+<tr><td>Reached only from inside its own feature</td><td>the feature module itself</td><td><b>yes</b></td></tr>
+</table></div>
+<p>Event Details is the only caller and it lives in the same module, so
+<code>EventQrNavKey</code> stays feature-private and joins seven siblings already registered
+by hand in <code>navKeySerializers</code>. It moves to the api module the day a second module
+needs to name it.</p>
+<h2 class="rail-h"><span class="rail">&#9474;</span> Layers this touches</h2>
+<div class="tw"><table>
+<tr><th>Module</th><th>What it gained</th></tr>
+<tr><td><code>:feature:calendar</code></td><td>the whole QR surface, its Koin bindings, and the gate on Event Details</td></tr>
+<tr><td><code>:core:ui</code></td><td>one method on <code>CalendarExternalIntents</code> &mdash; the image-share contract</td></tr>
+<tr><td><code>:app</code></td><td>that method&rsquo;s implementation, the FileProvider cache path, and two test registries</td></tr>
+</table></div>
+<p>The dependency direction is unchanged. <code>:core:ui</code> declares the intent
+contract and <code>:app</code> implements it, which is how the feature reaches a system chooser
+without depending on the app module.</p>
+</div>
+<div class="tabpanel" id="t1-risks">
+<h2>Risks</h2>
+<p>The share grant is the part most likely to break silently. A missing
+<code>ClipData</code> or read flag still works on whichever chooser target a tester happens to
+pick, and fails on others, so the new test asserts both grant paths rather than just that a
+chooser comes back.</p>
+<p>The stop timeout narrows the window where an export outlives its state; it does not
+close it. Past the timeout the flow stops, and on return the code re-encodes. The cached last
+rendered code is what keeps a save landing in that window from failing.</p>
+<p>Staged share files accumulate one per shared event in the app cache. Each call now
+drops anything older than a day, which bounds the directory without risking a file an open
+chooser is still reading.</p>
+<h2>Questions for review</h2>
+<ol>
+<li>Event Details hosts the QR action rather than the post-publish screen FR-7 names.
+That follows from the publish flow being out of scope &mdash; worth confirming it reads as
+intended and not as a missed requirement.</li>
+<li>Share sends the image alone. FR-8 and Test 10 ask for the image, and the URL case is
+MMA-5886, so adding link text here would reach into that ticket.</li>
+<li>The screenshot test uses the module&rsquo;s standard single-device annotation, so the
+<code>widthIn</code> ceiling on the code never engages in a golden. Widening it is a
+module-wide decision, not this change&rsquo;s.</li>
+</ol>
+<div class="note"><b>Two failures that are not this change</b>
+<p><code>:app:detektDebug</code> reports two <code>UnusedPrivateProperty</code> findings
+on properties that are used through <code>operator fun invoke</code>. Both files are
+byte-identical to <code>upstream/main</code> here, and the change that introduced them is
+<code>e3c5530428</code>.</p>
+<p><code>validateDebugScreenshotTest</code> reports 23 failures in
+<code>LocationScreenshotTest</code> and <code>ManageEventsScreenshotTest</code>. Restoring
+those references to their committed bytes and re-running reproduces all 23, so the staleness
+predates this branch. No QR reference is among them.</p>
+</div>
+</div>
+<div class="tabpanel" id="t1-read">
+<h2>Read first</h2>
+<ol>
+<li><code>detail/GetEventDetailsUiStateUseCase.kt</code> &mdash; the three-way gate. It
+decides whether any of the rest is reachable, and it is four lines.</li>
+<li><code>qr/GetEventQrUiStateUseCase.kt</code> &mdash; the state machine. The narrowed
+upstream and the stop timeout are the two decisions worth arguing with.</li>
+<li><code>qr/EncodeQrCodeUseCase.kt</code> &mdash; the encoder, and the comments naming
+why 512 pixels and why the margin hint is deliberately unset.</li>
+<li><code>ExternalIntentsImpl.getShareImageIntent</code> &mdash; the double grant. Short,
+and the least obvious code in the change.</li>
+<li><code>qr/EncodeQrCodeUseCaseTest.kt</code> &mdash; a real ZXing round trip and a
+measured quiet zone, if you want to know whether the encoder is actually tested.</li>
+</ol>
+<p>Everything else is registration, strings, or a test for one of the five above.</p>
+</div>
+</section>
+<section class="page p2" id="p-edits">
+<div class="tabs" role="tablist">
+<label class="tab" for="r-t2-details">Event Details</label>
+<label class="tab" for="r-t2-share">Share plumbing</label>
+<label class="tab" for="r-t2-wiring">Wiring</label>
+<label class="tab" for="r-t2-tests">Tests touched</label>
+</div>
+<div class="tabpanel" id="t2-details">
+<h2><span class="rail">&#9474;</span> <code>detail/GetEventDetailsUiStateUseCase.kt</code></h2>
+<h3>Change 1 &mdash; Gate the QR Icon on the Link</h3>
+<p class="loc"><code>:144-152</code></p>
+<p class="desc">adds the link condition beside the two rights conditions</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">private fun</span> <span class="t">EventDetails</span>.buildMenuItems(
+    onEvent: (<span class="t">EventDetailsEvent</span>) -&gt; <span class="t">Unit</span>
+): <span class="t">List</span>&lt;<span class="t">AppBarMenuItem</span>&gt; {
+    <span class="k">val</span> editable = calendar?.editable == <span class="k">true</span>
+    <span class="k">return</span> buildList {
+        <span class="rm"> -</span>  <span class="k">if</span> (isPublic &amp;&amp; editable) {
+        <span class="ad"> +</span>  <span class="k">if</span> (isPublic &amp;&amp; editable &amp;&amp; link?.nullIfBlank() != <span class="k">null</span>) {
+            ...
+    }
+}</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; the screen encodes that link and nothing else, so a link-less event gives it nothing to draw</li><li><b>C</b> &mdash; Share directly below already gates on the same link, so the two icons now appear and disappear on one rule</li></ul></li>
+</ul>
+<h2><span class="rail">&#9474;</span> <code>detail/EventDetailsViewModel.kt</code></h2>
+<h3>Change 2 &mdash; Navigate Instead of the Stopgap Dialog</h3>
+<p class="loc"><code>:58</code></p>
+<p class="desc">the QR destination exists now, so the placeholder goes</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">when</span> (event) {
+    ...
+    <span class="cm">// TODO: navigate to the QR code screen once it exists.</span>
+    <span class="rm"> -</span>  <span class="t">EventDetailsEvent</span>.QrCodeClicked -&gt; showUnderConstructionDialog()
+    <span class="ad"> +</span>  <span class="t">EventDetailsEvent</span>.QrCodeClicked -&gt; navigate(<span class="t">EventQrNavKey</span>(eventId))
+    ...
+}</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>B</b> &mdash; FR-7, the creator is shown the generated code (MMA-5878)</li></ul></li>
+</ul>
+<h3>Change 3 &mdash; Drop MMA-5951 From the Stopgap&rsquo;s Doc</h3>
+<p class="loc"><code>:101</code></p>
+<p class="desc">one of the three destinations it covered is now built</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="cm">/**
+ * Shared stopgap for the public-event entry points whose destinations are not built yet
+<span class="rm"> -</span>  * (MMA-5951 / MMA-5944 / MMA-5953). Informational, so it has no title and no dismiss *button*
+<span class="ad"> +</span>  * (MMA-5944 / MMA-5953). Informational, so it has no title and no dismiss *button*
+ * ...
+ */</span></pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; a comment listing a destination that now exists sends the next reader looking for a dialog that no longer fires</li></ul></li>
+</ul>
+<h2><span class="rail">&#9474;</span> <code>detail/EventDetailsUiState.kt</code></h2>
+<h3>Change 4 &mdash; State the Gate on the Event</h3>
+<p class="loc"><code>:120</code></p>
+<p class="desc">KDoc names the three conditions instead of the owning ticket</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">sealed interface</span> <span class="t">EventDetailsEvent</span> {
+    ...
+    <span class="rm"> -</span>  <span class="cm">/** Public-only app bar action; MMA-5951 owns the real QR screen. */</span>
+    <span class="ad"> +</span>  <span class="cm">/** Opens the QR code screen. Offered only for a public, editable event that has a link. */</span>
+    <span class="k">data object</span> <span class="t">QrCodeClicked</span> : <span class="t">EventDetailsEvent</span>
+    ...
+}</pre></div>
+</div>
+<div class="tabpanel" id="t2-share">
+<h2><span class="rail">&#9474;</span> <code>core/ui/&hellip;/CalendarExternalIntents.kt</code></h2>
+<h3>Change 5 &mdash; Publish <code>getShareImageIntent</code></h3>
+<p class="loc"><code>:20-26</code></p>
+<p class="desc">the contract the feature calls; the app module implements it</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">interface</span> <span class="t">CalendarExternalIntents</span> {
+    ...
+    <span class="k">fun</span> getShareIntent(subject: <span class="t">CharSequence</span>, text: <span class="t">String</span>): <span class="t">Intent</span>
+
+<span class="ad"> +</span>  <span class="k">fun</span> getShareImageIntent(
+<span class="ad"> +</span>      uri: <span class="t">Uri</span>,
+<span class="ad"> +</span>      subject: <span class="t">CharSequence</span>,
+<span class="ad"> +</span>      text: <span class="t">String</span>? = <span class="k">null</span>,
+<span class="ad"> +</span>  ): <span class="t">Intent</span>
+    ...
+}</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; the feature cannot depend on <code>:app</code>, so the image share has to be named here to be reachable</li><li><b>C</b> &mdash; <code>text</code> defaults to null so the common case, an image on its own, is the shorter call</li></ul></li>
+</ul>
+<h2><span class="rail">&#9474;</span> <code>app/&hellip;/ExternalIntentsImpl.kt</code></h2>
+<h3>Change 6 &mdash; Implement the Image Chooser</h3>
+<p class="loc"><code>:291-305</code></p>
+<p class="desc">grants the Uri twice, then wraps the send in a chooser</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">override fun</span> getShareImageIntent(uri: <span class="t">Uri</span>, subject: <span class="t">CharSequence</span>, text: <span class="t">String</span>?): <span class="t">Intent</span> {
+<span class="ad"> +</span>  <span class="k">val</span> send = <span class="t">Intent</span>(<span class="t">Intent</span>.ACTION_SEND).apply {
+<span class="ad"> +</span>      type = IMAGE_MIME_TYPE
+<span class="ad"> +</span>      putExtra(<span class="t">Intent</span>.EXTRA_STREAM, uri)
+<span class="ad"> +</span>      clipData = <span class="t">ClipData</span>.newRawUri(<span class="k">null</span>, uri)
+<span class="ad"> +</span>      addFlags(<span class="t">Intent</span>.FLAG_GRANT_READ_URI_PERMISSION)
+<span class="ad"> +</span>      putExtra(<span class="t">Intent</span>.EXTRA_SUBJECT, subject)
+<span class="ad"> +</span>      text?.let { putExtra(<span class="t">Intent</span>.EXTRA_TEXT, it) }
+<span class="ad"> +</span>  }
+<span class="ad"> +</span>  <span class="k">return</span> <span class="t">Intent</span>.createChooser(send, <span class="k">null</span>)
+}</pre></div>
+<ul class="bul">
+<li><b>What:</b><ul><li>grants the same Uri through <code>EXTRA_STREAM</code> and a matching <code>ClipData</code></li></ul></li>
+<li><b>Why:</b><ul><li><b>C</b> &mdash; <code>EXTRA_STREAM</code> is what the receiving app reads; the <code>ClipData</code> is what lets the chooser propagate the read grant onward</li><li><b>C</b> &mdash; without the second, some targets receive a Uri they are not permitted to open, and the failure is per-target rather than total</li></ul></li>
+</ul>
+<h3>Change 7 &mdash; Name the Shared MIME Type</h3>
+<p class="loc"><code>:389-390</code></p>
+<p class="desc">the one image type this class shares today</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">companion object</span> {
+<span class="ad"> +</span>  <span class="cm">/** MIME type of the images this class shares; only the QR code uses it today. */</span>
+<span class="ad"> +</span>  <span class="k">private const val</span> IMAGE_MIME_TYPE = <span class="t">"image/png"</span>
+    ...
+}</pre></div>
+<h2><span class="rail">&#9474;</span> <code>app/src/main/res/xml/filepaths.xml</code></h2>
+<h3>Change 8 &mdash; Declare the Share Cache Path</h3>
+<p class="loc"><code>:4-5</code></p>
+<p class="desc">the directory the FileProvider is allowed to hand out Uris for</p>
+<div class="code"><span class="lang">xml</span><pre>&lt;paths xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+    &lt;cache-path name="feedback_cache" path="feedback/" /&gt;
+<span class="ad"> +</span>  &lt;!-- Images staged for the share sheet, e.g. an event's QR code. --&gt;
+<span class="ad"> +</span>  &lt;cache-path name="share" path="share/" /&gt;
+    ...
+&lt;/paths&gt;</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; the provider refuses a Uri for any directory it has not been told about, and the name must match the <code>share</code> the export use case writes to</li></ul></li>
+</ul>
+</div>
+<div class="tabpanel" id="t2-wiring">
+<h2><span class="rail">&#9474;</span> <code>di/FeatureCalendarKoinModule.kt</code></h2>
+<h3>Change 9 &mdash; Register the Four Use Cases and the View Model</h3>
+<p class="loc"><code>:55-58, 87</code></p>
+<p class="desc">factories beside the feature&rsquo;s existing ones</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> featureCalendarKoinModule = module {
+    ...
+<span class="ad"> +</span>  factoryOf(::<span class="t">EncodeQrCodeUseCase</span>)
+<span class="ad"> +</span>  factoryOf(::<span class="t">ExportQrCodeForShareUseCase</span>)
+<span class="ad"> +</span>  factoryOf(::<span class="t">GetEventQrUiStateUseCase</span>)
+<span class="ad"> +</span>  factoryOf(::<span class="t">SaveQrCodeToDocumentUseCase</span>)
+    ...
+<span class="ad"> +</span>  viewModelOf(::<span class="t">EventQrViewModel</span>)
+    ...
+}</pre></div>
+<h2><span class="rail">&#9474;</span> <code>di/Nav3CalendarKoinModule.kt</code></h2>
+<h3>Change 10 &mdash; Bind the Screen to the Key</h3>
+<p class="loc"><code>:237-244</code></p>
+<p class="desc">the entry Navigation 3 resolves when the key is pushed</p>
+<div class="code"><span class="lang">kotlin</span><pre>entryProviderInstaller {
+    ...
+<span class="ad"> +</span>  entry&lt;<span class="t">EventQrNavKey</span>&gt;(
+<span class="ad"> +</span>      metadata = <span class="t">NavChromeMetadata</span>.hideChrome,
+<span class="ad"> +</span>  ) { key -&gt;
+<span class="ad"> +</span>      <span class="k">val</span> viewModel: <span class="t">EventQrViewModel</span> = koinViewModel { parametersOf(key) }
+<span class="ad"> +</span>      <span class="t">HandleNavigation3</span>(viewModel)
+<span class="ad"> +</span>      <span class="t">EventQrScreen</span>(viewModel = viewModel)
+<span class="ad"> +</span>  }
+}</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; a key whose module never installs an entry resolves to the throwing fallback, so publishing the type alone would not make the screen reachable</li></ul></li>
+</ul>
+<h3>Change 11 &mdash; Register the Key&rsquo;s Serializer</h3>
+<p class="loc"><code>:259</code></p>
+<p class="desc">joins the seven module-private keys already listed</p>
+<div class="code"><span class="lang">kotlin</span><pre>navKeySerializers(<span class="t">"calendarEvent"</span>) {
+    <span class="t">SerializersModule</span> {
+        polymorphic(<span class="t">NavKey</span>::<span class="k">class</span>) {
+            ...
+<span class="ad"> +</span>          subclass(<span class="t">EventQrNavKey</span>::<span class="k">class</span>, <span class="t">EventQrNavKey</span>.serializer())
+        }
+    }
+}</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; a restored back stack after process death cannot resolve an unregistered key; MaltSync <code>NavSpec</code>s get this centrally, feature-private keys do not</li></ul></li>
+</ul>
+<h2><span class="rail">&#9474;</span> <code>feature/calendar/build.gradle.kts</code></h2>
+<h3>Change 12 &mdash; Declare zxing and core-ktx</h3>
+<p class="loc"><code>:39-40, 47</code></p>
+<p class="desc">zxing is new to the module; core-ktx was resolving transitively</p>
+<div class="code"><span class="lang">kotlin</span><pre>dependencies {
+    ...
+    implementation(libs.androidx.compose.ui)
+<span class="ad"> +</span>  <span class="cm">// androidx.core.graphics.createBitmap, used by the QR encoder.</span>
+<span class="ad"> +</span>  implementation(libs.androidx.core.ktx)
+    ...
+<span class="ad"> +</span>  implementation(libs.google.zxing)
+    ...
+}</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; the encoder is this module&rsquo;s first <code>androidx.core</code> use in <code>src/main</code>; every other module that touches it declares it explicitly, and <code>projectHealth</code> is not in the loop gates</li></ul></li>
+</ul>
+<h2><span class="rail">&#9474;</span> <code>feature/calendar/&hellip;/values/strings.xml</code></h2>
+<h3>Change 13 &mdash; Add the Screen&rsquo;s Eight Strings</h3>
+<p class="loc"><code>:196-203</code></p>
+<p class="desc">title, two action labels, the image description, error, three snackbars</p>
+<div class="code"><span class="lang">xml</span><pre>&lt;!-- Event Details: QR code screen --&gt;
+<span class="ad"> +</span>  &lt;string name="calendar_event_qr_title"
+<span class="ad"> +</span>      comment="Title of the screen showing a public event's QR code"&gt;QR Code&lt;/string&gt;
+<span class="ad"> +</span>  &lt;string name="calendar_event_qr_content_description"
+<span class="ad"> +</span>      comment="&hellip; %1$s is the event name"&gt;QR code for %1$s&lt;/string&gt;
+    ...
+</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; every string carries a translator comment, matching the convention the rest of the file follows</li></ul></li>
+</ul>
+<h2><span class="rail">&#9474;</span> <code>konsist/usecase/UseCaseTest.kt</code></h2>
+<h3>Change 14 &mdash; Accept <code>Encode</code> and <code>Export</code> as Verbs</h3>
+<p class="loc"><code>:55-56</code></p>
+<p class="desc">the naming rule is an allowlist, and both are new to it</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> acceptedVerbs = listOf(
+    ...
+    <span class="t">"Publish"</span>,
+    <span class="t">"Recover"</span>,
+<span class="ad"> +</span>  <span class="t">"Encode"</span>,
+<span class="ad"> +</span>  <span class="t">"Export"</span>,
+)</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; <code>EncodeQrCodeUseCase</code> and <code>ExportQrCodeForShareUseCase</code> failed the rule; extending the list is the precedent, set by <code>Publish</code> in MMA-5937 and <code>Recover</code> in MMA-5975</li></ul></li>
+</ul>
+</div>
+<div class="tabpanel" id="t2-tests">
+<p>These are edits to test classes that already existed. The seven new test classes are covered in <i>Files changed</i> and <i>Checks run</i>.</p>
+<h2><span class="rail">&#9474;</span> <code>detail/GetEventDetailsUiStateUseCaseTest.kt</code></h2>
+<h3>Change 15.1-15.2 &mdash; Cover Both Halves of the Gate</h3>
+<h4>15.1 &mdash; the link half</h4>
+<p class="loc"><code>:644-655</code></p>
+<p class="desc">null and whitespace links, with the rights held true</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="ad"> +</span>  <span class="k">fun</span> `QR is omitted without a link, even when public and editable`() {
+<span class="ad"> +</span>      <span class="k">val</span> publicEditable = eventDetails(
+<span class="ad"> +</span>          calendar = eventCalendar(editable = <span class="k">true</span>), isPublic = <span class="k">true</span>)
+<span class="ad"> +</span>      assertThat(firedMenuEvents(publicEditable.copy(link = <span class="k">null</span>)))
+<span class="ad"> +</span>          .doesNotContain(<span class="t">EventDetailsEvent</span>.QrCodeClicked)
+<span class="ad"> +</span>      assertThat(firedMenuEvents(publicEditable.copy(link = <span class="t">"   "</span>)))
+<span class="ad"> +</span>          .doesNotContain(<span class="t">EventDetailsEvent</span>.QrCodeClicked)
+<span class="ad"> +</span>  }</pre></div>
+<h4>15.2 &mdash; the rights half</h4>
+<p class="loc"><code>:657-673</code></p>
+<p class="desc">a public linked event on a calendar the user cannot edit</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="ad"> +</span>  <span class="k">fun</span> `QR is omitted for a public linked event on a calendar the user cannot edit`() {
+<span class="ad"> +</span>      <span class="k">val</span> events = firedMenuEvents(
+<span class="ad"> +</span>          eventDetails(calendar = eventCalendar(editable = <span class="k">false</span>),
+<span class="ad"> +</span>              isPublic = <span class="k">true</span>, link = <span class="t">"https://example.org/e/1"</span>))
+<span class="ad"> +</span>      assertThat(events).doesNotContain(<span class="t">EventDetailsEvent</span>.QrCodeClicked)
+<span class="ad"> +</span>      assertThat(events.filterIsInstance&lt;<span class="t">EventDetailsEvent</span>.<span class="t">Share</span>&gt;()).isNotEmpty()
+<span class="ad"> +</span>  }</pre></div>
+<ul class="bul">
+<li><b>What:</b><ul><li>isolates each conjunct of the gate, so dropping either one reddens a test</li></ul></li>
+<li><b>Why:</b><ul><li><b>C</b> &mdash; the nearest existing test drove a non-editable event whose link defaulted to null, so it could not tell the two conditions apart</li><li><b>C</b> &mdash; the Share assertion in 15.2 pins that Share is deliberately <i>not</i> gated on edit rights</li></ul></li>
+</ul>
+<h2><span class="rail">&#9474;</span> <code>detail/EventDetailsViewModelTest.kt</code></h2>
+<h3>Change 16 &mdash; Assert the Route, Not the Dialog</h3>
+<p class="loc"><code>:163-172</code></p>
+<p class="desc">the QR event now produces a navigation action</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">fun</span> `qr code click navigates to the qr screen`() {
+    <span class="k">val</span> viewModel = createViewModel()
+    viewModel.onEvent(<span class="t">EventDetailsEvent</span>.QrCodeClicked)
+<span class="ad"> +</span>  assertThat(viewModel.navigationActionFlow.value)
+<span class="ad"> +</span>      .isEqualTo(<span class="t">Navigation3Action</span>.Navigate(<span class="t">EventQrNavKey</span>(EVENT_ID)))
+}</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; the previous assertion checked for the under-construction dialog, which would keep passing if the route were wired to the wrong key</li></ul></li>
+</ul>
+<h2><span class="rail">&#9474;</span> <code>di/KoinTest.kt</code></h2>
+<h3>Change 17 &mdash; Pin the View Model to Its Route</h3>
+<p class="loc"><code>:365</code></p>
+<p class="desc">the Konsist registry that fails when a view model is unregistered</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">val</span> definitions = listOf(
+    ...
+<span class="ad"> +</span>  definition&lt;<span class="t">EventQrViewModel</span>&gt;(<span class="t">EventQrNavKey</span>::<span class="k">class</span>),
+    ...
+)</pre></div>
+<ul class="bul">
+<li><b>Why:</b><ul><li><b>C</b> &mdash; the rebase onto main also dropped an <code>EventEditDraftNavKey</code> import here that upstream had already orphaned; keeping it would have failed detekt as an unused import</li></ul></li>
+</ul>
+</div>
+</section>
+<section class="page p3" id="p-checks">
+<div class="tabs" role="tablist">
+<label class="tab" for="r-t3-checks">Checks run</label>
+<label class="tab" for="r-t3-todo">Outstanding</label>
+</div>
+<div class="tabpanel" id="t3-checks">
+<h2>Gates, with the command each result came from</h2>
+<h3>Scoped pre-PR gate</h3>
+<div class="code"><span class="lang">bash</span><pre><span class="k">~/.claude/skills/preflight/fast-gate.sh</span> . <span class="t">:app</span> <span class="t">:core:ui</span> <span class="t">:feature:calendar</span></pre></div>
+<p>Returns <code>VERIFY: FAIL tier=fast</code>, and the only failing task is
+<code>:app:detektDebug</code> &mdash; the two findings described under <i>Risks</i>, which fail
+identically on <code>upstream/main</code>. No compile errors and no test failures. The scoped
+gate defers whole-project lint and detekt, kover thresholds, <code>assembleDebug</code> and
+dependent-module tests to CI.</p>
+<h3>Unit tests</h3>
+<div class="code"><span class="lang">bash</span><pre><span class="k">./gradlew</span> <span class="t">:feature:calendar:testDebugUnitTest</span> \
+          <span class="t">:app:testDebugUnitTest</span> <span class="t">:core:ui:testDebugUnitTest</span></pre></div>
+<div class="tw"><table>
+<tr><th>Module</th><th>Tests</th><th>Failed</th></tr>
+<tr><td><code>:feature:calendar</code></td><td class="n">956</td><td class="n"><span class="add">0</span></td></tr>
+<tr><td><code>:app</code></td><td class="n">615</td><td class="n"><span class="add">0</span></td></tr>
+<tr><td><code>:core:ui</code></td><td class="n">86</td><td class="n"><span class="add">0</span></td></tr>
+</table></div>
+<h3>Screenshot references</h3>
+<div class="code"><span class="lang">bash</span><pre><span class="k">./gradlew</span> <span class="t">:feature:calendar:validateDebugScreenshotTest</span></pre></div>
+<p>230 tests, 23 failed. All 23 are <code>LocationScreenshotTest</code> (16) and
+<code>ManageEventsScreenshotTest</code> (7); all eight QR references pass, including the two
+added for the long-name state.</p>
+<h3>The screen&rsquo;s Robolectric test alone</h3>
+<div class="code"><span class="lang">bash</span><pre><span class="k">./gradlew</span> <span class="t">:feature:calendar:testDebugUnitTest</span> --tests <span class="t">"*EventQrScreenTest*"</span></pre></div>
+<p><code>BUILD SUCCESSFUL in 19s</code>. Run to settle a review comment claiming
+<code>assertDoesNotExist()</code> was unimported and would not compile &mdash; it is a member
+function of <code>SemanticsNodeInteraction</code>, needs no import, and two sibling tests in
+the same module call it the same way.</p>
+<h2>On device</h2>
+<p>Five events were seeded straight into the debug calendar database, one per branch of
+the gate, and each Event Details app bar was checked against what the gate should produce.</p>
+<div class="tw"><table>
+<tr><th>Event</th><th>QR</th><th>Share</th><th>Overflow</th></tr>
+<tr><td>public, editable, link</td><td><span class="add">shown</span></td><td>shown</td><td>Edit, Duplicate, Remove</td></tr>
+<tr><td>private</td><td><span class="rem">hidden</span></td><td>shown</td><td>Edit, Remove</td></tr>
+<tr><td>calendar not editable</td><td><span class="rem">hidden</span></td><td>shown</td><td>&mdash;</td></tr>
+<tr><td>link is whitespace</td><td><span class="rem">hidden</span></td><td><span class="rem">hidden</span></td><td>no web row</td></tr>
+<tr><td>link is null</td><td><span class="rem">hidden</span></td><td><span class="rem">hidden</span></td><td>no web row</td></tr>
+</table></div>
+<p>The whitespace row is the one that earns its place. A link of three spaces is caught
+only by <code>nullIfBlank()</code>, so a null-or-empty check would have passed every other row
+and failed that one in production.</p>
+<p>Save and share were exercised on the same device: the picker writes a readable PNG, and
+the chooser hands the staged file to a third-party app. Switching the system theme mid-screen
+also re-rendered the code correctly, which incidentally exercises the stop timeout.</p>
+</div>
+<div class="tabpanel" id="t3-todo">
+<h2>Outstanding</h2>
+<ol>
+<li>Attach the four device screenshots to the pull request. The body carries placeholders;
+GitHub will not take local paths, so they go in after the PR exists.</li>
+<li>Reply to the review comment on <code>assertDoesNotExist()</code> and close it as a
+false positive, citing the green run and the two sibling call sites.</li>
+<li>Note both pre-existing failures in the PR description, so neither reads as this
+change&rsquo;s.</li>
+<li>Remove the five seeded events from the debug database, or let the next calendar sync
+reconcile them away.</li>
+<li>Decide whether the module&rsquo;s screenshot tests should move off the single-device
+annotation, which would let the <code>widthIn</code> ceiling be exercised. Not this
+change&rsquo;s call.</li>
+</ol>
+<div class="note"><b>Undefined &mdash; UB-440, proposed</b><p>The verify checklist caps any line, prose or code, at ~100 characters. In markdown the source line is the line the reader sees; in HTML it is markup the reader never sees. Interim: the cap was applied to <b>rendered</b> lines inside code blocks &mdash; span markup and entities discounted &mdash; and not to markup source lines. Under that reading the document has zero code lines over 100 characters, and 101 markup lines that exceed it invisibly. This case is not in the Undefined Behaviors file; UB-440 is the next free number and the entry has not been written.</p></div>
+<div class="note"><b>Provenance of this document</b>
+<p>Built with no questioning pass, so nothing here was elicited &mdash; every judgement is
+read off the branch, the ticket, and the gate logs. Diff numbers are
+<code>git diff --numstat upstream/main...HEAD</code>. The default applied for the absent method
+flag was <i>no method</i>.</p>
+<p>What was cut: the seventeen new files are not given Changelog entries, because a new
+file has no edit to show &mdash; they appear in <i>Files changed</i> with their line counts and
+in <i>Read first</i> by name. The Changelog covers only the fourteen files that already
+existed.</p>
+</div>
+</div>
+</section>
+</main>
+</body>
+</html>

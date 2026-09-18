@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings Icon Background Colors — Theme-Adaptive Options (Guide)</title>
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --card: #ffffff;
+    --ink: #1b2026;
+    --muted: #616b78;
+    --line: #e6eaef;
+    --line2: #d4dbe3;
+    --brand: #2b6cb0;
+    --brand2: #5c366e;
+    --brand-soft: #ecf3fb;
+    --must: #b42318;
+    --must-soft: #fdecea;
+    --imp: #9a6700;
+    --imp-soft: #fdf4e0;
+    --opt: #1e7d3f;
+    --opt-soft: #e7f4ec;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.05);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 30px 20px 90px; }
+
+  header.hero {
+    background: radial-gradient(1200px 400px at 10% -20%, rgba(92,54,110,.55), transparent 60%),
+                linear-gradient(135deg, #2b6cb0 0%, #3a3f9e 60%, #5c366e 100%);
+    color: #fff; border-radius: 20px; padding: 34px 32px 30px; margin-bottom: 22px; box-shadow: var(--shadow);
+  }
+  .kicker { display:inline-block; font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+    background: rgba(255,255,255,.16); padding:5px 12px; border-radius:999px; margin-bottom:14px; }
+  header.hero h1 { margin: 0 0 10px; font-size: 28px; line-height: 1.22; }
+  header.hero p { margin: 0; opacity: .94; font-size: 15px; max-width: 64ch; }
+
+  .onesentence {
+    background: #fff; border: 1px solid var(--line); border-left: 5px solid var(--brand);
+    border-radius: 14px; padding: 18px 22px; margin-bottom: 22px; box-shadow: var(--shadow);
+  }
+  .onesentence .lbl { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--brand); font-weight:700; }
+  .onesentence p { margin: 6px 0 0; font-size: 17.5px; line-height: 1.5; }
+
+  .skip { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:26px; box-shadow:var(--shadow); }
+  .skip .lbl { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:10px; }
+  .skip .row { display:flex; flex-wrap:wrap; gap:8px; }
+  .skip a { text-decoration:none; color:var(--brand); background:var(--brand-soft); padding:7px 13px; border-radius:999px; font-size:13.5px; font-weight:600; transition: transform .08s ease; }
+  .skip a:hover { transform: translateY(-1px); }
+
+  section { margin: 24px 0; }
+  .card { background: var(--card); border:1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow); }
+
+  h2 { font-size: 19px; margin: 0 0 14px; display:flex; align-items:center; gap:10px; }
+  h2 .dot { width:10px; height:10px; border-radius:50%; background:var(--brand); display:inline-block; }
+  h3 { margin: 0 0 6px; font-size: 16.5px; }
+
+  .prio { display:inline-block; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    padding:3px 10px; border-radius:999px; margin-bottom:10px; }
+  .prio.must { background:var(--must-soft); color:var(--must); }
+  .prio.imp { background:var(--imp-soft); color:var(--imp); }
+  .prio.opt { background:var(--opt-soft); color:var(--opt); }
+
+  p { margin: 0 0 10px; } .lead { font-size: 16.5px; }
+  ul { margin: 6px 0 4px; padding-left: 20px; } li { margin: 6px 0; }
+  code { background:#eef1f5; border:1px solid var(--line); border-radius:5px; padding:1px 6px;
+    font:13px/1.4 "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align:left; padding:11px 11px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; }
+  thead th { border-bottom:2px solid var(--line2); }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background:#fafbfc; }
+  .yes { color: var(--opt); font-weight:700; }
+  .no { color: var(--must); font-weight:700; }
+  .partial { color: var(--imp); font-weight:700; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:700; }
+  .pill.low { background:var(--opt-soft); color:var(--opt); }
+  .pill.med { background:var(--imp-soft); color:var(--imp); }
+  .pill.high { background:var(--must-soft); color:var(--must); }
+
+  .grid { display:grid; gap:14px; }
+  @media(min-width:680px){ .grid.two { grid-template-columns: 1fr 1fr; } }
+  .optcard { border:1px solid var(--line); border-left:4px solid var(--brand); border-radius:13px; padding:16px 18px; background:#fff; }
+  .optcard .badge { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:0 0 7px; }
+  .gain { color:var(--opt); font-weight:600; } .give { color:var(--must); font-weight:600; }
+
+  .callout { border-left:4px solid var(--brand); background:var(--brand-soft); border-radius:9px; padding:13px 16px; margin:12px 0; }
+  .callout.warn { border-color:var(--imp); background:var(--imp-soft); }
+  .callout.good { border-color:var(--opt); background:var(--opt-soft); }
+
+  .three { display:grid; gap:12px; } @media(min-width:680px){ .three { grid-template-columns: repeat(3,1fr); } }
+  .three .item { background:#11181f; color:#e8edf2; border-radius:13px; padding:16px 18px; }
+  .three .item b { color:#8fb6e0; display:block; margin-bottom:4px; font-size:13px; letter-spacing:.04em; text-transform:uppercase; }
+  .three .item code { background:#1f2933; border-color:#2c3a47; color:#d7e2ee; }
+
+  .pickbox { border:2px solid var(--brand2); background:#f4ecf8; border-radius:12px; padding:13px 17px; }
+  .pickbox b { color:var(--brand2); }
+
+  ol.steps { counter-reset: s; list-style:none; padding-left:0; margin:6px 0; }
+  ol.steps li { counter-increment:s; padding-left:40px; position:relative; margin:11px 0; }
+  ol.steps li::before { content: counter(s); position:absolute; left:0; top:-1px; width:27px; height:27px;
+    border-radius:9px; background:var(--brand); color:#fff; display:grid; place-items:center; font-weight:800; font-size:13px; }
+
+  .muted { color:var(--muted); } .small { font-size:13px; }
+  footer { text-align:center; color:var(--muted); font-size:12.5px; margin-top:30px; }
+  @media(max-width:640px){ table{font-size:12.5px;} th,td{padding:8px 7px;} header.hero h1{font-size:23px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="kicker">Guide · Compare · Read Together</span>
+    <h1>Settings Icon Background Colors — Theme-Adaptive Options</h1>
+    <p>The colored circles behind the Settings icons are hardcoded for light mode. This guide compares five ways to make them follow the OS theme — so your team can pick one.</p>
+  </header>
+
+  <div class="onesentence">
+    <span class="lbl">One-Sentence Version</span>
+    <p>Make the icon-color getters theme-aware, then choose: <strong>keep all 9 distinct colors</strong> (more work) or <strong>reuse a smaller palette the app already has</strong> (less work, fewer colors).</p>
+  </div>
+
+  <div class="skip">
+    <div class="lbl">Skip To</div>
+    <div class="row">
+      <a href="#problem">The Problem</a>
+      <a href="#prereq">Shared Prerequisite</a>
+      <a href="#options">The 5 Options</a>
+      <a href="#matrix">Comparison Table</a>
+      <a href="#decide">Decision Helper</a>
+      <a href="#verify">Verify</a>
+      <a href="#remember">Remember 3 Things</a>
+      <a href="#next">What To Do Next</a>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <section id="problem" class="card">
+    <span class="prio must">Must Know</span>
+    <h2><span class="dot"></span>The Problem</h2>
+    <ul>
+      <li>9 Settings categories, each an icon inside a 40dp colored circle.</li>
+      <li>Colors are <b>hardcoded light pastels</b> — they don't flip for dark mode and ignore Material You.</li>
+      <li>Source: two plain getters in <code>SettingsUiState.kt</code> — <code>iconBackground</code> (line 183) and <code>iconTint</code> (line 196).</li>
+      <li>Render site: <code>SettingsScreen.kt:192</code>.</li>
+      <li>The code already flags the fix: <i>"Stage 3 → theme tokens (convert these getters to @Composable)."</i></li>
+    </ul>
+    <p class="small muted">Proven pattern in-app: <code>ReorientButton.kt</code> puts an icon on <code>primaryContainer</code> with an <code>onPrimaryContainer</code> tint and adapts to the theme correctly.</p>
+  </section>
+
+  <!-- PREREQ -->
+  <section id="prereq" class="card">
+    <span class="prio must">Must Know</span>
+    <h2><span class="dot"></span>Shared Prerequisite (all options)</h2>
+    <p class="lead">Convert the two getters at <code>SettingsUiState.kt:183</code> and <code>:196</code> from plain properties to <code>@Composable</code> getters so they can read <code>MaterialTheme.colorScheme</code> / <code>AppTheme.extendedColors</code>.</p>
+    <div class="callout good">The render site at <code>SettingsScreen.kt:192</code> needs <b>no structural change</b> — only the color sources differ. This step is identical no matter which option you pick.</div>
+  </section>
+
+  <!-- OPTIONS -->
+  <section id="options">
+    <h2 style="padding-left:4px;"><span class="dot"></span>The 5 Options</h2>
+
+    <p class="small muted" style="padding-left:4px;">Direction 1 keeps all 9 colors distinct. Direction 2 accepts a smaller cohesive palette. Option E is a hybrid.</p>
+
+    <div class="grid two">
+      <div class="optcard" style="border-left-color:#b42318;">
+        <p class="badge">Direction 1 · keep 9 distinct</p>
+        <h3>A — New "category accent" tokens</h3>
+        <p>Add 9 light/dark pairs to the design system (extend <code>ExtendedColorScheme</code> / <code>LocalAppColors</code>).</p>
+        <p><span class="gain">Gain:</span> all 9 distinct, full light/dark + contrast tiers, designer-controlled.</p>
+        <p><span class="give">Give up:</span> highest effort; hand-author + contrast-check ~9 dark pairs.</p>
+        <p class="small muted">The literal "Stage 3 → theme tokens" path.</p>
+      </div>
+
+      <div class="optcard" style="border-left-color:#9a6700;">
+        <p class="badge">Direction 1 · keep 9 distinct</p>
+        <h3>B — Derive dark variants in code</h3>
+        <p>Keep the pastels; transform them at render time when <code>isSystemInDarkTheme()</code>.</p>
+        <p><span class="gain">Gain:</span> all 9 distinct, no design-system changes, low–med effort.</p>
+        <p><span class="give">Give up:</span> no contrast tiers / dynamic color; WCAG risk on some hues.</p>
+      </div>
+
+      <div class="optcard" style="border-left-color:#1e7d3f;">
+        <p class="badge">Direction 2 · cohesive palette</p>
+        <h3>C — Reuse <code>ExtendedColorScheme</code></h3>
+        <p>Map categories to existing families: <code>info / alert / success / privacy / warning</code>.</p>
+        <p><span class="gain">Gain:</span> light/dark + contrast tiers free, guaranteed-accessible, lowest effort.</p>
+        <p><span class="give">Give up:</span> only ≤5 colors — categories share; no dynamic color.</p>
+        <p class="small muted">Most directly reuses colors we already have.</p>
+      </div>
+
+      <div class="optcard" style="border-left-color:#2b6cb0;">
+        <p class="badge">Direction 2 · cohesive palette</p>
+        <h3>D — Reuse Material 3 roles</h3>
+        <p><code>primaryContainer / secondaryContainer / tertiaryContainer / surfaceVariant</code> + <code>on*</code> tints.</p>
+        <p><span class="gain">Gain:</span> light/dark + contrast + <b>dynamic color (Material You)</b>, lowest effort.</p>
+        <p><span class="give">Give up:</span> only 3–4 distinct colors — least "iOS-distinct".</p>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:14px;">
+      <div class="optcard" style="border-left-color:#5c366e;">
+        <p class="badge">Hybrid</p>
+        <h3>E — Harmonized brand hues</h3>
+        <p>9 fixed brand hues run through <code>MaterialColors.harmonize(color, primary)</code> so they shift toward the active theme and feel unified.</p>
+        <p><span class="gain">Gain:</span> all 9 stay recognizable but cohesive in both themes. <span class="give">Give up:</span> medium effort, still needs light/dark base handling, only partial contrast/dynamic awareness.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATRIX -->
+  <section id="matrix" class="card">
+    <span class="prio imp">Important</span>
+    <h2><span class="dot"></span>Comparison Table</h2>
+    <table>
+      <thead>
+        <tr><th>Option</th><th>Distinct colors</th><th>Light / Dark</th><th>Contrast tiers</th><th>Dynamic color</th><th>Effort</th><th>Reuses existing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>A</b> new tokens</td><td>9</td><td class="yes">Yes</td><td class="yes">Yes*</td><td class="no">No</td><td><span class="pill high">High</span></td><td class="yes">Yes — infra + hex</td></tr>
+        <tr><td><b>B</b> programmatic</td><td>9</td><td class="yes">Yes</td><td class="no">No</td><td class="no">No</td><td><span class="pill med">Low–Med</span></td><td class="yes">Yes — current hex</td></tr>
+        <tr><td><b>C</b> ExtendedColorScheme</td><td>≤5</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="no">No</td><td><span class="pill low">Low</span></td><td class="yes">Yes ✓✓</td></tr>
+        <tr><td><b>D</b> M3 roles</td><td>3–4</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td><span class="pill low">Lowest</span></td><td class="yes">Yes — M3</td></tr>
+        <tr><td><b>E</b> harmonized</td><td>9</td><td class="yes">Yes</td><td class="partial">Partial</td><td class="partial">Partial</td><td><span class="pill med">Medium</span></td><td class="partial">Partial</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">* A gets contrast tiers only if the dark pairs are authored to match the existing <code>Contrast</code> system.</p>
+    <div class="callout warn">
+      <b>Two callouts that decide a lot:</b>
+      <ul style="margin-bottom:0;">
+        <li>Only <b>D</b> (and partly <b>E</b>) follows <b>Material You / dynamic color</b>. A, B, C keep fixed brand colors.</li>
+        <li><b>"Use colors we already have"</b> ranking: <b>C</b> → <b>A</b> → <b>D</b> → <b>B</b>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- DECIDE -->
+  <section id="decide" class="card">
+    <span class="prio imp">Important</span>
+    <h2><span class="dot"></span>Decision Helper</h2>
+    <div class="grid">
+      <div class="pickbox"><b>Preserve the distinct iOS look</b> → pick <b>A</b> (or B for a cheaper, riskier version).</div>
+      <div class="pickbox"><b>Lowest effort + guaranteed accessibility</b> → pick <b>C</b>.</div>
+      <div class="pickbox"><b>Maximal OS integration (Material You)</b> → pick <b>D</b>.</div>
+    </div>
+    <p style="margin-top:13px;" class="small muted">The "Stage 3 → theme tokens" comment already leans toward <b>A</b> and <b>C</b> as the most on-plan choices.</p>
+  </section>
+
+  <!-- VERIFY -->
+  <section id="verify" class="card">
+    <span class="prio opt">Optional · do after choosing</span>
+    <h2><span class="dot"></span>How To Verify</h2>
+    <ol class="steps">
+      <li>Build &amp; run: <code>./gradlew :app:assembleDebug</code>, then open Settings.</li>
+      <li>Toggle device <b>light → dark</b> (and the in-app override); confirm every circle's fill + icon tint flip with legible contrast.</li>
+      <li>For <b>D / E</b>: enable dynamic color on Android 12+ and confirm the circles re-tint to the wallpaper.</li>
+      <li>Spot-check WCAG contrast per background/tint pair — especially <b>B</b> and <b>E</b>.</li>
+      <li>Add a Compose <code>@Preview</code> with both light and dark <code>uiMode</code>.</li>
+    </ol>
+  </section>
+
+  <!-- REMEMBER -->
+  <section id="remember">
+    <h2 style="padding-left:4px;"><span class="dot"></span>Remember Only 3 Things</h2>
+    <div class="three">
+      <div class="item"><b>1 · Prerequisite</b>Make the getters at <code>SettingsUiState.kt:183/196</code> <code>@Composable</code>.</div>
+      <div class="item"><b>2 · The fork</b>Keep 9 distinct colors (A/B/E) or a cohesive shared palette (C/D).</div>
+      <div class="item"><b>3 · Shortcuts</b>Distinct → A · cheap+accessible → C · Material You → D.</div>
+    </div>
+  </section>
+
+  <!-- NEXT -->
+  <section id="next" class="card">
+    <span class="prio must">Must Do</span>
+    <h2><span class="dot"></span>What To Do Next</h2>
+    <ol class="steps">
+      <li>As a team, answer: <b>9 distinct colors required?</b> and <b>follow Material You?</b></li>
+      <li>Use the decision helper to land on one option (A / B / C / D / E).</li>
+      <li>Implement the shared prerequisite, then wire up the chosen color source.</li>
+      <li>Run the verification checklist and add a light+dark <code>@Preview</code>.</li>
+    </ol>
+  </section>
+
+  <footer>
+    Source: <code>.claude/plans/you-shouldn-t-have-to-rosy-yeti.md</code> · companion to <code>docs/settings-icon-colors-decision.html</code><br>
+    Render site <code>SettingsScreen.kt:192</code> · Colors <code>SettingsUiState.kt:183 / 196</code>
+  </footer>
+
+</div>
+</body>
+</html>

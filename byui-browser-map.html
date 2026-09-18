@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>byui-browser map</title>
+<style>
+:root{color-scheme:dark;
+--bg:#14171a;--card:#1d2126;--ink:#e8eaed;--muted:#a4acb5;--faint:#737c86;
+--border:#2b3138;--border-strong:#3a424b;--accent:#6cc394;--accent-soft:#1c3128;
+--warn:#e0a458;--warn-soft:#33280f;
+--shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);--radius:14px;
+--f-primary:#1e3a5f;--s-primary:#7ab0ff;
+--f-bridge:#1e4620;--s-bridge:#82c98a;
+--f-infra:#4a3010;--s-infra:#e0a050;
+--f-ux:#2a2247;--s-ux:#b09ce6;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+code,a{overflow-wrap:anywhere}
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+h1{font-size:clamp(26px,5.4vw,38px);margin:0;color:var(--accent);font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);border-radius:2px;margin-top:.85rem}
+h2{font-size:1.3rem;margin:0 0 .4rem;font-weight:600}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;align-items:start;margin:0 0 1.6rem}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media (max-width:900px){.head{grid-template-columns:1fr}.head .lede{margin-top:1.1rem}}
+.meta{font-size:13px;color:var(--muted);margin:0 0 1.2rem}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--muted);margin:0 0 2rem}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;border:1.5px solid}
+.sw-primary{background:var(--f-primary);border-color:var(--s-primary)}
+.sw-infra{background:var(--f-infra);border-color:var(--s-infra)}
+.sw-bridge{background:var(--f-bridge);border-color:var(--s-bridge)}
+.sw-ux{background:var(--f-ux);border-color:var(--s-ux)}
+.sw-ext{background:var(--bg);border-color:var(--border-strong)}
+.note{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;padding:13px 17px;margin:0 0 2rem;font-size:14.5px}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 5px}
+
+section.diagram{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 26px 18px;margin:0 0 28px;box-shadow:var(--shadow);scroll-margin-top:80px;transition:border-color .3s}
+section.diagram:target{border-color:var(--accent)}
+.caption{margin:0 0 14px;color:var(--muted);font-size:14px;max-width:70ch}
+svg{display:block}
+svg text{fill:var(--ink);font:13px system-ui,sans-serif}
+.shape{fill:var(--bg);stroke:var(--border-strong);stroke-width:1.5}
+.container{fill:var(--bg);stroke:var(--border-strong);stroke-width:1.5;stroke-dasharray:6 4}
+.ctitle{font-size:14px;font-weight:600;fill:var(--muted)}
+.edge{stroke:var(--faint);stroke-width:1.5;fill:none}
+.edge-label{font-size:11px;fill:var(--muted)}
+.ball{fill:var(--card);stroke:var(--ink);stroke-width:1.5}
+.port{fill:var(--card);stroke:var(--ink);stroke-width:1.5}
+.name{font-weight:600}
+.sub{font-size:10px;fill:var(--muted)}
+.cicon{fill:var(--card);stroke:var(--muted);stroke-width:1}
+.comp-primary{fill:var(--f-primary);stroke:var(--s-primary)}
+.comp-bridge{fill:var(--f-bridge);stroke:var(--s-bridge)}
+.comp-infra{fill:var(--f-infra);stroke:var(--s-infra)}
+.comp-ux{fill:var(--f-ux);stroke:var(--s-ux)}
+.comp-ext{fill:var(--bg);stroke:var(--border-strong)}
+.node{transform-box:fill-box;transform-origin:center;transition:transform .15s ease,filter .15s ease}
+.node.clickable{cursor:pointer}
+.node.clickable:hover{transform:translateY(-2px) scale(1.03);filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.node.clickable .name{fill:var(--ink);text-decoration:none}
+
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;display:flex;flex-direction:column;gap:5px;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;box-shadow:var(--shadow);width:172px}
+.skipto a,.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;border-radius:8px;transition:.15s;cursor:pointer;display:block}
+.skipto a:hover,.skipto label:hover{background:var(--bg);color:var(--accent)}
+.skipto .navlabel{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:0 10px 4px}
+.skipto a.i1{padding-left:22px;font-size:12.5px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media (max-width:1580px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,#navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,#navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+  main{padding-top:72px}
+}
+@media (max-width:720px){section.diagram{padding:14px 16px 12px}}
+</style>
+</head>
+<body>
+<input class="st" type="checkbox" id="navtoggle">
+<nav class="skipto" aria-label="Diagrams">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Diagram menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Diagrams</div>
+    <a href="#d-workspace">Workspace</a>
+    <a class="i1" href="#d-crate-browser">browser binary</a>
+    <a class="i1" href="#d-crate-common">common</a>
+    <a class="i1" href="#d-process-renderer">Renderer process</a>
+    <a class="i1" href="#d-process-network">Network process</a>
+    <a class="i1" href="#d-process-browser">Browser (UI) process</a>
+    <!-- ARCHMAP:TOC-END -->
+  </div>
+</nav>
+<svg class="st" width="0" height="0" aria-hidden="true">
+  <defs>
+    <symbol id="cicon" viewBox="0 0 14 14">
+      <rect class="cicon" x="3" y="1" width="10" height="12" rx="1"/>
+      <rect class="cicon" x="0.5" y="3.5" width="5" height="2.5"/>
+      <rect class="cicon" x="0.5" y="8" width="5" height="2.5"/>
+    </symbol>
+  </defs>
+</svg>
+<main>
+  <div class="head">
+    <h1>byui-browser map</h1>
+    <p class="lede">A Rust browser scaffold: fourteen workspace crates owned by nine student teams, arranged into the six-process model the architecture document specifies. Every crate body is still a TODO.</p>
+  </div>
+  <p class="meta">Component diagram · ball-and-socket variant, fleshed-out ports on featured containers · Obsidian target, no JavaScript · generated 2026-09-15 · defaults applied: -cmpt at the top level · source: byui-browser main branch (github.com/byui-cse/byui-browser)</p>
+  <div class="legend">
+    <span><i class="sw sw-primary"></i>engine — renderer and GPU crates</span>
+    <span><i class="sw sw-infra"></i>services — network, storage, devtools</span>
+    <span><i class="sw sw-bridge"></i>shared and composition — common, browser binary</span>
+    <span><i class="sw sw-ux"></i>user-facing — chrome, Browser UI process, shells</span>
+    <span><i class="sw sw-ext"></i>neighbour outside the featured component</span>
+  </div>
+  <div class="note"><b>Read this first</b>Solid ball-and-socket lines inside the workspace and browser diagrams are Cargo dependencies read from the manifests. Every other interface is documented intent from docs/TECH_ARCHITECTURE.md and the crate doc comments; no function behind them exists yet. Click a component to jump to the diagram where it is the subject; plain components are leaves.</div>
+
+<section class="diagram" id="d-workspace" data-featured="workspace">
+  <h2>byui-browser workspace — process model over the Cargo crates</h2>
+  <p class="caption">Shows the six documented processes with the crates each hosts, the binary that composes every crate, the shared common crate beneath them, and the native shells. Omits tests/, docs/, the Makefile, and the typed IPC links between processes, which are not yet defined in code.</p>
+  <svg viewBox="0 0 1300 620" width="100%" role="img" aria-label="Top-level component diagram of the byui-browser Cargo workspace">
+  <line class="edge" x1="430" y1="180" x2="430" y2="143.5"/>
+  <circle class="ball" cx="430" cy="138" r="5.5"/>
+  <path class="edge" d="M421,138 A9,9 0 0 1 439,138"/>
+  <line class="edge" x1="430" y1="129" x2="430" y2="96"/>
+  <line class="edge" x1="430" y1="520" x2="430" y2="480.5"/>
+  <circle class="ball" cx="430" cy="475" r="5.5"/>
+  <path class="edge" d="M421,475 A9,9 0 0 1 439,475"/>
+  <line class="edge" x1="430" y1="466" x2="430" y2="270"/>
+  <line class="edge" x1="700" y1="180" x2="700" y2="143.5"/>
+  <circle class="ball" cx="700" cy="138" r="5.5"/>
+  <path class="edge" d="M691,138 A9,9 0 0 1 709,138"/>
+  <line class="edge" x1="700" y1="129" x2="700" y2="96"/>
+  <line class="edge" x1="700" y1="520" x2="700" y2="480.5"/>
+  <circle class="ball" cx="700" cy="475" r="5.5"/>
+  <path class="edge" d="M691,475 A9,9 0 0 1 709,475"/>
+  <line class="edge" x1="700" y1="466" x2="700" y2="270"/>
+  <line class="edge" x1="970" y1="180" x2="970" y2="143.5"/>
+  <circle class="ball" cx="970" cy="138" r="5.5"/>
+  <path class="edge" d="M961,138 A9,9 0 0 1 979,138"/>
+  <line class="edge" x1="970" y1="129" x2="970" y2="96"/>
+  <line class="edge" x1="970" y1="520" x2="970" y2="480.5"/>
+  <circle class="ball" cx="970" cy="475" r="5.5"/>
+  <path class="edge" d="M961,475 A9,9 0 0 1 979,475"/>
+  <line class="edge" x1="970" y1="466" x2="970" y2="270"/>
+  <line class="edge" x1="565" y1="340" x2="565" y2="143.5"/>
+  <circle class="ball" cx="565" cy="138" r="5.5"/>
+  <path class="edge" d="M556,138 A9,9 0 0 1 574,138"/>
+  <line class="edge" x1="565" y1="129" x2="565" y2="96"/>
+  <line class="edge" x1="565" y1="520" x2="565" y2="480.5"/>
+  <circle class="ball" cx="565" cy="475" r="5.5"/>
+  <path class="edge" d="M556,475 A9,9 0 0 1 574,475"/>
+  <line class="edge" x1="565" y1="466" x2="565" y2="430"/>
+  <line class="edge" x1="835" y1="340" x2="835" y2="143.5"/>
+  <circle class="ball" cx="835" cy="138" r="5.5"/>
+  <path class="edge" d="M826,138 A9,9 0 0 1 844,138"/>
+  <line class="edge" x1="835" y1="129" x2="835" y2="96"/>
+  <line class="edge" x1="835" y1="520" x2="835" y2="480.5"/>
+  <circle class="ball" cx="835" cy="475" r="5.5"/>
+  <path class="edge" d="M826,475 A9,9 0 0 1 844,475"/>
+  <line class="edge" x1="835" y1="466" x2="835" y2="430"/>
+  <line class="edge" x1="1105" y1="340" x2="1105" y2="143.5"/>
+  <circle class="ball" cx="1105" cy="138" r="5.5"/>
+  <path class="edge" d="M1096,138 A9,9 0 0 1 1114,138"/>
+  <line class="edge" x1="1105" y1="129" x2="1105" y2="96"/>
+  <line class="edge" x1="1105" y1="520" x2="1105" y2="480.5"/>
+  <circle class="ball" cx="1105" cy="475" r="5.5"/>
+  <path class="edge" d="M1096,475 A9,9 0 0 1 1114,475"/>
+  <line class="edge" x1="1105" y1="466" x2="1105" y2="430"/>
+  <line class="edge" x1="340" y1="225" x2="285.5" y2="225"/>
+  <circle class="ball" cx="280" cy="225" r="5.5"/>
+  <path class="edge" d="M280,216 A9,9 0 0 0 280,234"/>
+  <line class="edge" x1="271" y1="225" x2="220" y2="225"/>
+  <text class="edge-label" x="280" y="211" text-anchor="middle">hosts UI</text>
+  <text class="edge-label" x="292" y="142" text-anchor="end">Cargo dependency, one per crate</text>
+  <text class="edge-label" x="292" y="479" text-anchor="end">shared types · errors · ids · IPC</text>
+  <a class="node clickable" data-cid="crate-browser" href="#d-crate-browser">
+    <rect class="shape comp-bridge" x="300" y="40" width="940" height="56" rx="8"/>
+    <use href="#cicon" x="1220" y="46" width="14" height="14"/>
+    <text class="name" x="770.0" y="66.5" text-anchor="middle">browser</text>
+    <text class="sub" x="770.0" y="81.5" text-anchor="middle">crates/browser · top-level binary · depends on all 13 crates via Cargo · process spawning is TODO</text>
+  </a>
+  <g class="node" data-cid="platforms">
+    <rect class="shape comp-ux" x="40" y="180" width="180" height="90" rx="8"/>
+    <use href="#cicon" x="200" y="186" width="14" height="14"/>
+    <text class="name" x="130.0" y="217.0" text-anchor="middle">Platform shells</text>
+    <text class="sub" x="130.0" y="232.0" text-anchor="middle">platforms/</text>
+    <text class="sub" x="130.0" y="245.0" text-anchor="middle">macos · windows · linux</text>
+  </g>
+  <a class="node clickable" data-cid="process-browser" href="#d-process-browser">
+    <rect class="shape comp-ux" x="340" y="180" width="180" height="90" rx="8"/>
+    <use href="#cicon" x="500" y="186" width="14" height="14"/>
+    <text class="name" x="430.0" y="217.0" text-anchor="middle">Browser (UI)</text>
+    <text class="sub" x="430.0" y="232.0" text-anchor="middle">process</text>
+    <text class="sub" x="430.0" y="245.0" text-anchor="middle">chrome</text>
+  </a>
+  <a class="node clickable" data-cid="process-renderer" href="#d-process-renderer">
+    <rect class="shape comp-primary" x="610" y="180" width="180" height="90" rx="8"/>
+    <use href="#cicon" x="770" y="186" width="14" height="14"/>
+    <text class="name" x="700.0" y="210.5" text-anchor="middle">Renderer</text>
+    <text class="sub" x="700.0" y="225.5" text-anchor="middle">process · one per tab</text>
+    <text class="sub" x="700.0" y="238.5" text-anchor="middle">html · css · layout</text>
+    <text class="sub" x="700.0" y="251.5" text-anchor="middle">paint · js · webapis</text>
+  </a>
+  <g class="node" data-cid="process-gpu">
+    <rect class="shape comp-primary" x="880" y="180" width="180" height="90" rx="8"/>
+    <use href="#cicon" x="1040" y="186" width="14" height="14"/>
+    <text class="name" x="970.0" y="217.0" text-anchor="middle">GPU / Compositor</text>
+    <text class="sub" x="970.0" y="232.0" text-anchor="middle">process</text>
+    <text class="sub" x="970.0" y="245.0" text-anchor="middle">render</text>
+  </g>
+  <a class="node clickable" data-cid="process-network" href="#d-process-network">
+    <rect class="shape comp-infra" x="475" y="340" width="180" height="90" rx="8"/>
+    <use href="#cicon" x="635" y="346" width="14" height="14"/>
+    <text class="name" x="565.0" y="377.0" text-anchor="middle">Network</text>
+    <text class="sub" x="565.0" y="392.0" text-anchor="middle">process</text>
+    <text class="sub" x="565.0" y="405.0" text-anchor="middle">net</text>
+  </a>
+  <g class="node" data-cid="process-storage">
+    <rect class="shape comp-infra" x="745" y="340" width="180" height="90" rx="8"/>
+    <use href="#cicon" x="905" y="346" width="14" height="14"/>
+    <text class="name" x="835.0" y="377.0" text-anchor="middle">Utility / Storage</text>
+    <text class="sub" x="835.0" y="392.0" text-anchor="middle">process</text>
+    <text class="sub" x="835.0" y="405.0" text-anchor="middle">storage · security</text>
+  </g>
+  <g class="node" data-cid="process-devtools">
+    <rect class="shape comp-infra" x="1015" y="340" width="180" height="90" rx="8"/>
+    <use href="#cicon" x="1175" y="346" width="14" height="14"/>
+    <text class="name" x="1105.0" y="377.0" text-anchor="middle">DevTools</text>
+    <text class="sub" x="1105.0" y="392.0" text-anchor="middle">process</text>
+    <text class="sub" x="1105.0" y="405.0" text-anchor="middle">devtools</text>
+  </g>
+  <a class="node clickable" data-cid="crate-common" href="#d-crate-common">
+    <rect class="shape comp-bridge" x="300" y="520" width="940" height="56" rx="8"/>
+    <use href="#cicon" x="1220" y="526" width="14" height="14"/>
+    <text class="name" x="770.0" y="546.5" text-anchor="middle">common</text>
+    <text class="sub" x="770.0" y="561.5" text-anchor="middle">crates/common · shared types · dom · error · ids · ipc · jointly owned · every crate depends on it</text>
+  </a>
+  </svg>
+</section>
+
+<section class="diagram" id="d-crate-browser" data-featured="crate-browser">
+  <h2>browser — the binary that composes every crate</h2>
+  <p class="caption">Shows the thirteen Cargo dependencies declared by the browser binary, coloured by role. Omits the planned process spawning, which main.rs marks as TODO, and the crates&#x27; own dependency on common.</p>
+  <svg viewBox="0 0 1240 520" width="100%" role="img" aria-label="Component diagram of the browser binary crate and its thirteen dependencies">
+  <line class="edge" x1="130" y1="110" x2="130" y2="164.5"/>
+  <circle class="ball" cx="130" cy="170" r="5.5"/>
+  <path class="edge" d="M121,170 A9,9 0 0 0 139,170"/>
+  <line class="edge" x1="130" y1="179" x2="130" y2="230"/>
+  <line class="edge" x1="290" y1="110" x2="290" y2="164.5"/>
+  <circle class="ball" cx="290" cy="170" r="5.5"/>
+  <path class="edge" d="M281,170 A9,9 0 0 0 299,170"/>
+  <line class="edge" x1="290" y1="179" x2="290" y2="230"/>
+  <line class="edge" x1="450" y1="110" x2="450" y2="164.5"/>
+  <circle class="ball" cx="450" cy="170" r="5.5"/>
+  <path class="edge" d="M441,170 A9,9 0 0 0 459,170"/>
+  <line class="edge" x1="450" y1="179" x2="450" y2="230"/>
+  <line class="edge" x1="610" y1="110" x2="610" y2="164.5"/>
+  <circle class="ball" cx="610" cy="170" r="5.5"/>
+  <path class="edge" d="M601,170 A9,9 0 0 0 619,170"/>
+  <line class="edge" x1="610" y1="179" x2="610" y2="230"/>
+  <line class="edge" x1="770" y1="110" x2="770" y2="164.5"/>
+  <circle class="ball" cx="770" cy="170" r="5.5"/>
+  <path class="edge" d="M761,170 A9,9 0 0 0 779,170"/>
+  <line class="edge" x1="770" y1="179" x2="770" y2="230"/>
+  <line class="edge" x1="930" y1="110" x2="930" y2="164.5"/>
+  <circle class="ball" cx="930" cy="170" r="5.5"/>
+  <path class="edge" d="M921,170 A9,9 0 0 0 939,170"/>
+  <line class="edge" x1="930" y1="179" x2="930" y2="230"/>
+  <line class="edge" x1="1090" y1="110" x2="1090" y2="164.5"/>
+  <circle class="ball" cx="1090" cy="170" r="5.5"/>
+  <path class="edge" d="M1081,170 A9,9 0 0 0 1099,170"/>
+  <line class="edge" x1="1090" y1="179" x2="1090" y2="230"/>
+  <line class="edge" x1="210" y1="400" x2="210" y2="355.5"/>
+  <circle class="ball" cx="210" cy="350" r="5.5"/>
+  <path class="edge" d="M201,350 A9,9 0 0 1 219,350"/>
+  <line class="edge" x1="210" y1="341" x2="210" y2="300"/>
+  <line class="edge" x1="370" y1="400" x2="370" y2="355.5"/>
+  <circle class="ball" cx="370" cy="350" r="5.5"/>
+  <path class="edge" d="M361,350 A9,9 0 0 1 379,350"/>
+  <line class="edge" x1="370" y1="341" x2="370" y2="300"/>
+  <line class="edge" x1="530" y1="400" x2="530" y2="355.5"/>
+  <circle class="ball" cx="530" cy="350" r="5.5"/>
+  <path class="edge" d="M521,350 A9,9 0 0 1 539,350"/>
+  <line class="edge" x1="530" y1="341" x2="530" y2="300"/>
+  <line class="edge" x1="690" y1="400" x2="690" y2="355.5"/>
+  <circle class="ball" cx="690" cy="350" r="5.5"/>
+  <path class="edge" d="M681,350 A9,9 0 0 1 699,350"/>
+  <line class="edge" x1="690" y1="341" x2="690" y2="300"/>
+  <line class="edge" x1="850" y1="400" x2="850" y2="355.5"/>
+  <circle class="ball" cx="850" cy="350" r="5.5"/>
+  <path class="edge" d="M841,350 A9,9 0 0 1 859,350"/>
+  <line class="edge" x1="850" y1="341" x2="850" y2="300"/>
+  <line class="edge" x1="1010" y1="400" x2="1010" y2="355.5"/>
+  <circle class="ball" cx="1010" cy="350" r="5.5"/>
+  <path class="edge" d="M1001,350 A9,9 0 0 1 1019,350"/>
+  <line class="edge" x1="1010" y1="341" x2="1010" y2="300"/>
+  <g class="node" data-cid="crate-html">
+    <rect class="shape comp-primary" x="60" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="180" y="46" width="14" height="14"/>
+    <text class="name" x="130.0" y="73.5" text-anchor="middle">html</text>
+    <text class="sub" x="130.0" y="88.5" text-anchor="middle">tokenizer · DOM</text>
+  </g>
+  <g class="node" data-cid="crate-css">
+    <rect class="shape comp-primary" x="220" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="340" y="46" width="14" height="14"/>
+    <text class="name" x="290.0" y="73.5" text-anchor="middle">css</text>
+    <text class="sub" x="290.0" y="88.5" text-anchor="middle">cascade · style</text>
+  </g>
+  <g class="node" data-cid="crate-layout">
+    <rect class="shape comp-primary" x="380" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="500" y="46" width="14" height="14"/>
+    <text class="name" x="450.0" y="73.5" text-anchor="middle">layout</text>
+    <text class="sub" x="450.0" y="88.5" text-anchor="middle">box tree · layout</text>
+  </g>
+  <g class="node" data-cid="crate-paint">
+    <rect class="shape comp-primary" x="540" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="660" y="46" width="14" height="14"/>
+    <text class="name" x="610.0" y="73.5" text-anchor="middle">paint</text>
+    <text class="sub" x="610.0" y="88.5" text-anchor="middle">display list</text>
+  </g>
+  <g class="node" data-cid="crate-render">
+    <rect class="shape comp-primary" x="700" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="820" y="46" width="14" height="14"/>
+    <text class="name" x="770.0" y="73.5" text-anchor="middle">render</text>
+    <text class="sub" x="770.0" y="88.5" text-anchor="middle">wgpu · compositor</text>
+  </g>
+  <g class="node" data-cid="crate-js">
+    <rect class="shape comp-primary" x="860" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="980" y="46" width="14" height="14"/>
+    <text class="name" x="930.0" y="73.5" text-anchor="middle">js</text>
+    <text class="sub" x="930.0" y="88.5" text-anchor="middle">parser · VM · GC</text>
+  </g>
+  <g class="node" data-cid="crate-webapis">
+    <rect class="shape comp-primary" x="1020" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="1140" y="46" width="14" height="14"/>
+    <text class="name" x="1090.0" y="73.5" text-anchor="middle">webapis</text>
+    <text class="sub" x="1090.0" y="88.5" text-anchor="middle">DOM bindings · fetch</text>
+  </g>
+  <g class="node" data-cid="crate-net">
+    <rect class="shape comp-infra" x="140" y="400" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="260" y="406" width="14" height="14"/>
+    <text class="name" x="210.0" y="433.5" text-anchor="middle">net</text>
+    <text class="sub" x="210.0" y="448.5" text-anchor="middle">HTTP · TLS · cache</text>
+  </g>
+  <g class="node" data-cid="crate-storage">
+    <rect class="shape comp-infra" x="300" y="400" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="420" y="406" width="14" height="14"/>
+    <text class="name" x="370.0" y="433.5" text-anchor="middle">storage</text>
+    <text class="sub" x="370.0" y="448.5" text-anchor="middle">IndexedDB · Cache API</text>
+  </g>
+  <g class="node" data-cid="crate-security">
+    <rect class="shape comp-infra" x="460" y="400" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="580" y="406" width="14" height="14"/>
+    <text class="name" x="530.0" y="433.5" text-anchor="middle">security</text>
+    <text class="sub" x="530.0" y="448.5" text-anchor="middle">sandbox · CSP · perms</text>
+  </g>
+  <g class="node" data-cid="crate-chrome">
+    <rect class="shape comp-ux" x="620" y="400" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="740" y="406" width="14" height="14"/>
+    <text class="name" x="690.0" y="433.5" text-anchor="middle">chrome</text>
+    <text class="sub" x="690.0" y="448.5" text-anchor="middle">tabs · address bar</text>
+  </g>
+  <g class="node" data-cid="crate-devtools">
+    <rect class="shape comp-infra" x="780" y="400" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="900" y="406" width="14" height="14"/>
+    <text class="name" x="850.0" y="433.5" text-anchor="middle">devtools</text>
+    <text class="sub" x="850.0" y="448.5" text-anchor="middle">inspector · debugger</text>
+  </g>
+  <a class="node clickable" data-cid="crate-common" href="#d-crate-common">
+    <rect class="shape comp-bridge" x="940" y="400" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="1060" y="406" width="14" height="14"/>
+    <text class="name" x="1010.0" y="433.5" text-anchor="middle">common</text>
+    <text class="sub" x="1010.0" y="448.5" text-anchor="middle">shared types · IPC</text>
+  </a>
+  <g class="node" data-cid="crate-browser">
+    <rect class="shape comp-bridge" x="60" y="230" width="1120" height="70" rx="8"/>
+    <use href="#cicon" x="1160" y="236" width="14" height="14"/>
+    <text class="name" x="620.0" y="263.5" text-anchor="middle">browser</text>
+    <text class="sub" x="620.0" y="278.5" text-anchor="middle">crates/browser/src/main.rs · fn main prints a scaffolding notice · each line here is a [dependencies] entry in its Cargo.toml</text>
+  </g>
+  </svg>
+</section>
+
+<section class="diagram" id="d-crate-common" data-featured="crate-common">
+  <h2>common — the shared crate every other crate depends on</h2>
+  <p class="caption">Shows the four real modules of common, each exposed through a port on the crate boundary, and the documented consumers of each. Omits the types themselves, since every module is still a TODO comment.</p>
+  <svg viewBox="0 0 1000 560" width="100%" role="img" aria-label="Component diagram of the common crate with its four modules and their consumers">
+  <g class="node" data-cid="crate-common">
+    <rect class="container" x="60" y="300" width="880" height="230" rx="12"/>
+    <use href="#cicon" x="916" y="308" width="16" height="16"/>
+    <text class="ctitle" x="78" y="326" text-anchor="start">common — crates/common</text>
+    <text class="sub" x="78" y="342" text-anchor="start">shared, jointly owned · #![forbid(unsafe_code)] · four modules, each a TODO stub</text>
+  </g>
+  <line class="edge" x1="180" y1="410" x2="180" y2="306"/>
+  <rect class="port" x="174" y="294" width="12" height="12"/>
+  <line class="edge" x1="180" y1="294" x2="180" y2="275.5"/>
+  <circle class="ball" cx="180" cy="270" r="5.5"/>
+  <line class="edge" x1="400" y1="410" x2="400" y2="306"/>
+  <rect class="port" x="394" y="294" width="12" height="12"/>
+  <line class="edge" x1="400" y1="294" x2="400" y2="275.5"/>
+  <circle class="ball" cx="400" cy="270" r="5.5"/>
+  <line class="edge" x1="620" y1="410" x2="620" y2="306"/>
+  <rect class="port" x="614" y="294" width="12" height="12"/>
+  <line class="edge" x1="620" y1="294" x2="620" y2="275.5"/>
+  <circle class="ball" cx="620" cy="270" r="5.5"/>
+  <line class="edge" x1="840" y1="410" x2="840" y2="306"/>
+  <rect class="port" x="834" y="294" width="12" height="12"/>
+  <line class="edge" x1="840" y1="294" x2="840" y2="275.5"/>
+  <circle class="ball" cx="840" cy="270" r="5.5"/>
+  <line class="edge" x1="130" y1="110" x2="130" y2="129"/>
+  <path class="edge" d="M121,138 A9,9 0 0 1 139,138"/>
+  <path class="edge" data-pts="130,140 130,200 180,200 180,264.5" d="M130,140 L130,186 Q130,200 144,200 L166,200 Q180,200 180,214 L180,264.5"/>
+  <line class="edge" x1="285" y1="110" x2="285" y2="129"/>
+  <path class="edge" d="M276,138 A9,9 0 0 1 294,138"/>
+  <path class="edge" data-pts="285,140 285,200 180,200 180,264.5" d="M285,140 L285,186 Q285,200 271,200 L194,200 Q180,200 180,214 L180,264.5"/>
+  <line class="edge" x1="440" y1="110" x2="440" y2="129"/>
+  <path class="edge" d="M431,138 A9,9 0 0 1 449,138"/>
+  <path class="edge" data-pts="440,140 440,200 180,200 180,264.5" d="M440,140 L440,186 Q440,200 426,200 L194,200 Q180,200 180,214 L180,264.5"/>
+  <line class="edge" x1="595" y1="110" x2="595" y2="129"/>
+  <path class="edge" d="M586,138 A9,9 0 0 1 604,138"/>
+  <path class="edge" data-pts="595,140 595,200 180,200 180,264.5" d="M595,140 L595,186 Q595,200 581,200 L194,200 Q180,200 180,214 L180,264.5"/>
+  <line class="edge" x1="730" y1="110" x2="730" y2="129"/>
+  <path class="edge" d="M721,138 A9,9 0 0 1 739,138"/>
+  <path class="edge" data-pts="730,140 730,230 400,230 400,264.5" d="M730,140 L730,216 Q730,230 716,230 L414,230 Q400,230 400,244 L400,264.5"/>
+  <line class="edge" x1="770" y1="110" x2="770" y2="129"/>
+  <path class="edge" d="M761,138 A9,9 0 0 1 779,138"/>
+  <path class="edge" data-pts="770,140 770,215 620,215 620,264.5" d="M770,140 L770,201 Q770,215 756,215 L634,215 Q620,215 620,229 L620,264.5"/>
+  <line class="edge" x1="905" y1="110" x2="905" y2="129"/>
+  <path class="edge" d="M896,138 A9,9 0 0 1 914,138"/>
+  <path class="edge" data-pts="905,140 905,245 840,245 840,264.5" d="M905,140 L905,231 Q905,245 891,245 L849.75,245 Q840,245 840,254.75 L840,264.5"/>
+  <text class="edge-label" x="360" y="193" text-anchor="middle">DOM-facing types</text>
+  <text class="edge-label" x="565" y="223" text-anchor="middle">ids</text>
+  <text class="edge-label" x="695" y="208" text-anchor="middle">errors</text>
+  <text class="edge-label" x="872" y="238" text-anchor="middle">ipc</text>
+  <g class="node" data-cid="mod-common-dom">
+    <rect class="shape comp-bridge" x="90" y="410" width="180" height="70" rx="8"/>
+    <use href="#cicon" x="250" y="416" width="14" height="14"/>
+    <text class="name" x="180.0" y="443.5" text-anchor="middle">dom</text>
+    <text class="sub" x="180.0" y="458.5" text-anchor="middle">dom.rs · DOM skeleton</text>
+  </g>
+  <g class="node" data-cid="mod-common-ids">
+    <rect class="shape comp-bridge" x="310" y="410" width="180" height="70" rx="8"/>
+    <use href="#cicon" x="470" y="416" width="14" height="14"/>
+    <text class="name" x="400.0" y="443.5" text-anchor="middle">ids</text>
+    <text class="sub" x="400.0" y="458.5" text-anchor="middle">ids.rs · NodeId newtypes</text>
+  </g>
+  <g class="node" data-cid="mod-common-error">
+    <rect class="shape comp-bridge" x="530" y="410" width="180" height="70" rx="8"/>
+    <use href="#cicon" x="690" y="416" width="14" height="14"/>
+    <text class="name" x="620.0" y="443.5" text-anchor="middle">error</text>
+    <text class="sub" x="620.0" y="458.5" text-anchor="middle">error.rs · shared errors</text>
+  </g>
+  <g class="node" data-cid="mod-common-ipc">
+    <rect class="shape comp-bridge" x="750" y="410" width="180" height="70" rx="8"/>
+    <use href="#cicon" x="910" y="416" width="14" height="14"/>
+    <text class="name" x="840.0" y="443.5" text-anchor="middle">ipc</text>
+    <text class="sub" x="840.0" y="458.5" text-anchor="middle">ipc.rs · typed IPC</text>
+  </g>
+  <g class="node" data-cid="crate-html">
+    <rect class="shape comp-ext" x="60" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="180" y="46" width="14" height="14"/>
+    <text class="name" x="130.0" y="73.5" text-anchor="middle">html</text>
+    <text class="sub" x="130.0" y="88.5" text-anchor="middle">HTML Team</text>
+  </g>
+  <g class="node" data-cid="crate-css">
+    <rect class="shape comp-ext" x="215" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="335" y="46" width="14" height="14"/>
+    <text class="name" x="285.0" y="73.5" text-anchor="middle">css</text>
+    <text class="sub" x="285.0" y="88.5" text-anchor="middle">CSS Engine Team</text>
+  </g>
+  <g class="node" data-cid="crate-layout">
+    <rect class="shape comp-ext" x="370" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="490" y="46" width="14" height="14"/>
+    <text class="name" x="440.0" y="73.5" text-anchor="middle">layout</text>
+    <text class="sub" x="440.0" y="88.5" text-anchor="middle">Layout &amp; Rendering</text>
+  </g>
+  <g class="node" data-cid="crate-webapis">
+    <rect class="shape comp-ext" x="525" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="645" y="46" width="14" height="14"/>
+    <text class="name" x="595.0" y="73.5" text-anchor="middle">webapis</text>
+    <text class="sub" x="595.0" y="88.5" text-anchor="middle">JS APIs Team</text>
+  </g>
+  <a class="node clickable" data-cid="workspace" href="#d-workspace">
+    <rect class="shape comp-ext" x="680" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="800" y="46" width="14" height="14"/>
+    <text class="name" x="750.0" y="73.5" text-anchor="middle">workspace</text>
+    <text class="sub" x="750.0" y="88.5" text-anchor="middle">all 13 crates</text>
+  </a>
+  <a class="node clickable" data-cid="crate-browser" href="#d-crate-browser">
+    <rect class="shape comp-ext" x="835" y="40" width="140" height="70" rx="8"/>
+    <use href="#cicon" x="955" y="46" width="14" height="14"/>
+    <text class="name" x="905.0" y="73.5" text-anchor="middle">browser</text>
+    <text class="sub" x="905.0" y="88.5" text-anchor="middle">process wiring</text>
+  </a>
+  </svg>
+</section>
+
+<section class="diagram" id="d-process-renderer" data-featured="process-renderer">
+  <h2>Renderer process — the per-tab engine pipeline</h2>
+  <p class="caption">Shows the six crates the architecture places in a renderer and the interfaces docs/TECH_ARCHITECTURE.md §3.2 names between them, plus the two neighbouring processes they hand off to. Omits common and the resource fetches html and css make for stylesheets and scripts, which are not specified in code.</p>
+  <svg viewBox="0 0 1420 640" width="100%" role="img" aria-label="Component diagram of the Renderer process and its six crates">
+  <g class="node" data-cid="process-renderer">
+    <rect class="container" x="40" y="120" width="1060" height="480" rx="12"/>
+    <use href="#cicon" x="1076" y="128" width="16" height="16"/>
+    <text class="ctitle" x="58" y="146" text-anchor="start">Renderer process — one per tab, sandboxed</text>
+    <text class="sub" x="58" y="162" text-anchor="start">hosts html · css · layout · paint · js · webapis · HTML/CSS/JS/Layout/Paint for one document</text>
+  </g>
+  <line class="edge" x1="230" y1="215" x2="279.5" y2="215"/>
+  <circle class="ball" cx="285" cy="215" r="5.5"/>
+  <path class="edge" d="M285,206 A9,9 0 0 1 285,224"/>
+  <line class="edge" x1="294" y1="215" x2="340" y2="215"/>
+  <text class="edge-label" x="285" y="203" text-anchor="middle">DOM tree</text>
+  <line class="edge" x1="500" y1="215" x2="549.5" y2="215"/>
+  <circle class="ball" cx="555" cy="215" r="5.5"/>
+  <path class="edge" d="M555,206 A9,9 0 0 1 555,224"/>
+  <line class="edge" x1="564" y1="215" x2="610" y2="215"/>
+  <text class="edge-label" x="555" y="203" text-anchor="middle">ComputedStyles</text>
+  <line class="edge" x1="770" y1="215" x2="819.5" y2="215"/>
+  <circle class="ball" cx="825" cy="215" r="5.5"/>
+  <path class="edge" d="M825,206 A9,9 0 0 1 825,224"/>
+  <line class="edge" x1="834" y1="215" x2="880" y2="215"/>
+  <text class="edge-label" x="825" y="203" text-anchor="middle">LayoutTree</text>
+  <line class="edge" x1="150" y1="250" x2="150" y2="329.5"/>
+  <circle class="ball" cx="150" cy="335" r="5.5"/>
+  <path class="edge" d="M141,335 A9,9 0 0 0 159,335"/>
+  <line class="edge" x1="150" y1="344" x2="150" y2="420"/>
+  <text class="edge-label" x="164" y="339" text-anchor="start">controlled DOM mutation</text>
+  <line class="edge" x1="340" y1="455" x2="290.5" y2="455"/>
+  <circle class="ball" cx="285" cy="455" r="5.5"/>
+  <path class="edge" d="M285,446 A9,9 0 0 0 285,464"/>
+  <line class="edge" x1="276" y1="455" x2="230" y2="455"/>
+  <text class="edge-label" x="285" y="443" text-anchor="middle">VM · values</text>
+  <line class="edge" x1="1040" y1="215" x2="1094" y2="215"/>
+  <rect class="port" x="1094" y="209" width="12" height="12"/>
+  <line class="edge" x1="1106" y1="215" x2="1139.5" y2="215"/>
+  <circle class="ball" cx="1145" cy="215" r="5.5"/>
+  <path class="edge" d="M1145,206 A9,9 0 0 1 1145,224"/>
+  <line class="edge" x1="1154" y1="215" x2="1200" y2="215"/>
+  <text class="edge-label" x="1150" y="203" text-anchor="middle">DisplayList</text>
+  <path class="edge" data-pts="150,490 150,540 1094,540" d="M150,490 L150,526 Q150,540 164,540 L1094,540"/>
+  <rect class="port" x="1094" y="534" width="12" height="12"/>
+  <line class="edge" x1="1106" y1="540" x2="1136" y2="540"/>
+  <path class="edge" d="M1145,531 A9,9 0 0 0 1145,549"/>
+  <circle class="ball" cx="1145" cy="540" r="5.5"/>
+  <line class="edge" x1="1150.5" y1="540" x2="1200" y2="540"/>
+  <text class="edge-label" x="620" y="528" text-anchor="middle">fetch(request) → Response · renderers never open sockets</text>
+  <g class="node" data-cid="crate-html">
+    <rect class="shape comp-primary" x="70" y="180" width="160" height="70" rx="8"/>
+    <use href="#cicon" x="210" y="186" width="14" height="14"/>
+    <text class="name" x="150.0" y="213.5" text-anchor="middle">html</text>
+    <text class="sub" x="150.0" y="228.5" text-anchor="middle">tokenizer · tree builder</text>
+  </g>
+  <g class="node" data-cid="crate-css">
+    <rect class="shape comp-primary" x="340" y="180" width="160" height="70" rx="8"/>
+    <use href="#cicon" x="480" y="186" width="14" height="14"/>
+    <text class="name" x="420.0" y="213.5" text-anchor="middle">css</text>
+    <text class="sub" x="420.0" y="228.5" text-anchor="middle">style_document(dom, sheets)</text>
+  </g>
+  <g class="node" data-cid="crate-layout">
+    <rect class="shape comp-primary" x="610" y="180" width="160" height="70" rx="8"/>
+    <use href="#cicon" x="750" y="186" width="14" height="14"/>
+    <text class="name" x="690.0" y="213.5" text-anchor="middle">layout</text>
+    <text class="sub" x="690.0" y="228.5" text-anchor="middle">layout_tree(styled, viewport)</text>
+  </g>
+  <g class="node" data-cid="crate-paint">
+    <rect class="shape comp-primary" x="880" y="180" width="160" height="70" rx="8"/>
+    <use href="#cicon" x="1020" y="186" width="14" height="14"/>
+    <text class="name" x="960.0" y="213.5" text-anchor="middle">paint</text>
+    <text class="sub" x="960.0" y="228.5" text-anchor="middle">display list generation</text>
+  </g>
+  <g class="node" data-cid="crate-webapis">
+    <rect class="shape comp-primary" x="70" y="420" width="160" height="70" rx="8"/>
+    <use href="#cicon" x="210" y="426" width="14" height="14"/>
+    <text class="name" x="150.0" y="453.5" text-anchor="middle">webapis</text>
+    <text class="sub" x="150.0" y="468.5" text-anchor="middle">Window · Document · fetch</text>
+  </g>
+  <g class="node" data-cid="crate-js">
+    <rect class="shape comp-primary" x="340" y="420" width="160" height="70" rx="8"/>
+    <use href="#cicon" x="480" y="426" width="14" height="14"/>
+    <text class="name" x="420.0" y="453.5" text-anchor="middle">js</text>
+    <text class="sub" x="420.0" y="468.5" text-anchor="middle">parser · bytecode · VM · GC</text>
+  </g>
+  <g class="node" data-cid="process-gpu">
+    <rect class="shape comp-ext" x="1200" y="180" width="180" height="70" rx="8"/>
+    <use href="#cicon" x="1360" y="186" width="14" height="14"/>
+    <text class="name" x="1290.0" y="213.5" text-anchor="middle">GPU / Compositor</text>
+    <text class="sub" x="1290.0" y="228.5" text-anchor="middle">process · render crate</text>
+  </g>
+  <a class="node clickable" data-cid="process-network" href="#d-process-network">
+    <rect class="shape comp-ext" x="1200" y="505" width="180" height="70" rx="8"/>
+    <use href="#cicon" x="1360" y="511" width="14" height="14"/>
+    <text class="name" x="1290.0" y="538.5" text-anchor="middle">Network</text>
+    <text class="sub" x="1290.0" y="553.5" text-anchor="middle">process · net crate</text>
+  </a>
+  </svg>
+</section>
+
+<section class="diagram" id="d-process-network" data-featured="process-network">
+  <h2>Network process — the only place sockets open</h2>
+  <p class="caption">Shows the net crate&#x27;s documented fetch API as used by the renderer and the browser UI, the cookie and cache policy it takes from Security &amp; Storage, and its open socket to remote servers. Omits protocol internals, which are a single TODO in lib.rs.</p>
+  <svg viewBox="0 0 1140 460" width="100%" role="img" aria-label="Component diagram of the Network process and the net crate">
+  <g class="node" data-cid="process-network">
+    <rect class="container" x="420" y="150" width="340" height="280" rx="12"/>
+    <use href="#cicon" x="736" y="158" width="16" height="16"/>
+    <text class="ctitle" x="438" y="176" text-anchor="start">Network process</text>
+    <text class="sub" x="438" y="192" text-anchor="start">all HTTP(S), caching, cookies</text>
+  </g>
+  <line class="edge" x1="450" y1="250" x2="426" y2="250"/>
+  <rect class="port" x="414" y="244" width="12" height="12"/>
+  <line class="edge" x1="414" y1="250" x2="375.5" y2="250"/>
+  <circle class="ball" cx="370" cy="250" r="5.5"/>
+  <path class="edge" d="M370,241 A9,9 0 0 0 370,259"/>
+  <line class="edge" x1="361" y1="250" x2="220" y2="250"/>
+  <text class="edge-label" x="320" y="238" text-anchor="middle">fetch(request) → Response</text>
+  <line class="edge" x1="450" y1="340" x2="426" y2="340"/>
+  <rect class="port" x="414" y="334" width="12" height="12"/>
+  <line class="edge" x1="414" y1="340" x2="375.5" y2="340"/>
+  <circle class="ball" cx="370" cy="340" r="5.5"/>
+  <path class="edge" d="M370,331 A9,9 0 0 0 370,349"/>
+  <line class="edge" x1="361" y1="340" x2="220" y2="340"/>
+  <text class="edge-label" x="320" y="328" text-anchor="middle">fetch(request) → Response</text>
+  <line class="edge" x1="730" y1="250" x2="754" y2="250"/>
+  <rect class="port" x="754" y="244" width="12" height="12"/>
+  <line class="edge" x1="766" y1="250" x2="811" y2="250"/>
+  <path class="edge" d="M820,241 A9,9 0 0 0 820,259"/>
+  <circle class="ball" cx="820" cy="250" r="5.5"/>
+  <line class="edge" x1="825.5" y1="250" x2="880" y2="250"/>
+  <text class="edge-label" x="820" y="226" text-anchor="middle">cookie jar</text>
+  <text class="edge-label" x="820" y="238" text-anchor="middle">cache policy</text>
+  <line class="edge" x1="730" y1="340" x2="754" y2="340"/>
+  <rect class="port" x="754" y="334" width="12" height="12"/>
+  <line class="edge" x1="766" y1="340" x2="811" y2="340"/>
+  <path class="edge" d="M820,331 A9,9 0 0 0 820,349"/>
+  <text class="edge-label" x="766" y="326" text-anchor="start">HTTP/1.1 · HTTP/2 · HTTP/3 · TLS</text>
+  <text class="edge-label" x="836" y="344" text-anchor="start">remote servers · partner unknown</text>
+  <g class="node" data-cid="crate-net">
+    <rect class="shape comp-infra" x="450" y="210" width="280" height="160" rx="8"/>
+    <use href="#cicon" x="710" y="216" width="14" height="14"/>
+    <text class="name" x="590.0" y="275.5" text-anchor="middle">net</text>
+    <text class="sub" x="590.0" y="290.5" text-anchor="middle">HTTP/1.1 · HTTP/2 · HTTP/3</text>
+    <text class="sub" x="590.0" y="303.5" text-anchor="middle">TLS (rustls) · caching</text>
+    <text class="sub" x="590.0" y="316.5" text-anchor="middle">cookies · connection pooling</text>
+  </g>
+  <a class="node clickable" data-cid="process-renderer" href="#d-process-renderer">
+    <rect class="shape comp-ext" x="40" y="215" width="180" height="70" rx="8"/>
+    <use href="#cicon" x="200" y="221" width="14" height="14"/>
+    <text class="name" x="130.0" y="248.5" text-anchor="middle">Renderer</text>
+    <text class="sub" x="130.0" y="263.5" text-anchor="middle">process · webapis fetch</text>
+  </a>
+  <a class="node clickable" data-cid="process-browser" href="#d-process-browser">
+    <rect class="shape comp-ext" x="40" y="305" width="180" height="70" rx="8"/>
+    <use href="#cicon" x="200" y="311" width="14" height="14"/>
+    <text class="name" x="130.0" y="338.5" text-anchor="middle">Browser (UI)</text>
+    <text class="sub" x="130.0" y="353.5" text-anchor="middle">process · chrome loads pages</text>
+  </a>
+  <g class="node" data-cid="process-storage">
+    <rect class="shape comp-ext" x="880" y="215" width="200" height="70" rx="8"/>
+    <use href="#cicon" x="1060" y="221" width="14" height="14"/>
+    <text class="name" x="980.0" y="248.5" text-anchor="middle">Utility / Storage</text>
+    <text class="sub" x="980.0" y="263.5" text-anchor="middle">process · security · storage</text>
+  </g>
+  </svg>
+</section>
+
+<section class="diagram" id="d-process-browser" data-featured="process-browser">
+  <h2>Browser (UI) process — chrome and the native shells</h2>
+  <p class="caption">Shows the chrome crate hosted by the three platform shells, and the engine processes it drives to load and display pages. Omits devtools and the binary&#x27;s process spawning; the shell folders hold only .gitkeep files.</p>
+  <svg viewBox="0 0 1140 400" width="100%" role="img" aria-label="Component diagram of the Browser UI process, the chrome crate, and the platform shells">
+  <g class="node" data-cid="process-browser">
+    <rect class="container" x="380" y="50" width="340" height="310" rx="12"/>
+    <use href="#cicon" x="696" y="58" width="16" height="16"/>
+    <text class="ctitle" x="398" y="76" text-anchor="start">Browser (UI) process</text>
+    <text class="sub" x="398" y="92" text-anchor="start">chrome, tabs, navigation, UX</text>
+  </g>
+  <line class="edge" x1="420" y1="118" x2="386" y2="118"/>
+  <rect class="port" x="374" y="112" width="12" height="12"/>
+  <line class="edge" x1="374" y1="118" x2="335.5" y2="118"/>
+  <circle class="ball" cx="330" cy="118" r="5.5"/>
+  <path class="edge" d="M330,109 A9,9 0 0 0 330,127"/>
+  <line class="edge" x1="321" y1="118" x2="220" y2="118"/>
+  <line class="edge" x1="420" y1="198" x2="386" y2="198"/>
+  <rect class="port" x="374" y="192" width="12" height="12"/>
+  <line class="edge" x1="374" y1="198" x2="335.5" y2="198"/>
+  <circle class="ball" cx="330" cy="198" r="5.5"/>
+  <path class="edge" d="M330,189 A9,9 0 0 0 330,207"/>
+  <line class="edge" x1="321" y1="198" x2="220" y2="198"/>
+  <line class="edge" x1="420" y1="278" x2="386" y2="278"/>
+  <rect class="port" x="374" y="272" width="12" height="12"/>
+  <line class="edge" x1="374" y1="278" x2="335.5" y2="278"/>
+  <circle class="ball" cx="330" cy="278" r="5.5"/>
+  <path class="edge" d="M330,269 A9,9 0 0 0 330,287"/>
+  <line class="edge" x1="321" y1="278" x2="220" y2="278"/>
+  <text class="edge-label" x="300" y="186" text-anchor="middle">hosts UI logic</text>
+  <line class="edge" x1="680" y1="145" x2="714" y2="145"/>
+  <rect class="port" x="714" y="139" width="12" height="12"/>
+  <line class="edge" x1="726" y1="145" x2="771" y2="145"/>
+  <path class="edge" d="M780,136 A9,9 0 0 0 780,154"/>
+  <circle class="ball" cx="780" cy="145" r="5.5"/>
+  <line class="edge" x1="785.5" y1="145" x2="840" y2="145"/>
+  <text class="edge-label" x="780" y="121" text-anchor="middle">navigate</text>
+  <text class="edge-label" x="780" y="133" text-anchor="middle">display page</text>
+  <line class="edge" x1="680" y1="265" x2="714" y2="265"/>
+  <rect class="port" x="714" y="259" width="12" height="12"/>
+  <line class="edge" x1="726" y1="265" x2="771" y2="265"/>
+  <path class="edge" d="M780,256 A9,9 0 0 0 780,274"/>
+  <circle class="ball" cx="780" cy="265" r="5.5"/>
+  <line class="edge" x1="785.5" y1="265" x2="840" y2="265"/>
+  <text class="edge-label" x="780" y="241" text-anchor="middle">fetch</text>
+  <g class="node" data-cid="crate-chrome">
+    <rect class="shape comp-ux" x="420" y="90" width="260" height="216" rx="8"/>
+    <use href="#cicon" x="660" y="96" width="14" height="14"/>
+    <text class="name" x="550.0" y="183.5" text-anchor="middle">chrome</text>
+    <text class="sub" x="550.0" y="198.5" text-anchor="middle">tabs · address bar · menus</text>
+    <text class="sub" x="550.0" y="211.5" text-anchor="middle">settings · bookmarks</text>
+    <text class="sub" x="550.0" y="224.5" text-anchor="middle">window management</text>
+  </g>
+  <g class="node" data-cid="platform-macos">
+    <rect class="shape comp-ux" x="40" y="90" width="180" height="56" rx="8"/>
+    <use href="#cicon" x="200" y="96" width="14" height="14"/>
+    <text class="name" x="130.0" y="116.5" text-anchor="middle">platforms/macos</text>
+    <text class="sub" x="130.0" y="131.5" text-anchor="middle">AppKit</text>
+  </g>
+  <g class="node" data-cid="platform-windows">
+    <rect class="shape comp-ux" x="40" y="170" width="180" height="56" rx="8"/>
+    <use href="#cicon" x="200" y="176" width="14" height="14"/>
+    <text class="name" x="130.0" y="196.5" text-anchor="middle">platforms/windows</text>
+    <text class="sub" x="130.0" y="211.5" text-anchor="middle">Win32 / WinUI</text>
+  </g>
+  <g class="node" data-cid="platform-linux">
+    <rect class="shape comp-ux" x="40" y="250" width="180" height="56" rx="8"/>
+    <use href="#cicon" x="200" y="256" width="14" height="14"/>
+    <text class="name" x="130.0" y="276.5" text-anchor="middle">platforms/linux</text>
+    <text class="sub" x="130.0" y="291.5" text-anchor="middle">GTK</text>
+  </g>
+  <a class="node clickable" data-cid="process-renderer" href="#d-process-renderer">
+    <rect class="shape comp-ext" x="840" y="110" width="200" height="70" rx="8"/>
+    <use href="#cicon" x="1020" y="116" width="14" height="14"/>
+    <text class="name" x="940.0" y="143.5" text-anchor="middle">Renderer</text>
+    <text class="sub" x="940.0" y="158.5" text-anchor="middle">process · html · css · layout</text>
+  </a>
+  <a class="node clickable" data-cid="process-network" href="#d-process-network">
+    <rect class="shape comp-ext" x="840" y="230" width="200" height="70" rx="8"/>
+    <use href="#cicon" x="1020" y="236" width="14" height="14"/>
+    <text class="name" x="940.0" y="263.5" text-anchor="middle">Network</text>
+    <text class="sub" x="940.0" y="278.5" text-anchor="middle">process · net</text>
+  </a>
+  </svg>
+</section>
+
+<!-- ARCHMAP:DIAGRAMS-END -->
+</main>
+<script id="archmap-registry" type="application/json">
+{
+ "workspace": {
+  "label": "byui-browser workspace",
+  "path": "Cargo.toml",
+  "diagram": "d-workspace"
+ },
+ "crate-browser": {
+  "label": "browser (binary)",
+  "path": "crates/browser",
+  "diagram": "d-crate-browser"
+ },
+ "crate-common": {
+  "label": "common",
+  "path": "crates/common",
+  "diagram": "d-crate-common"
+ },
+ "crate-html": {
+  "label": "html",
+  "path": "crates/html",
+  "diagram": null
+ },
+ "crate-css": {
+  "label": "css",
+  "path": "crates/css",
+  "diagram": null
+ },
+ "crate-layout": {
+  "label": "layout",
+  "path": "crates/layout",
+  "diagram": null
+ },
+ "crate-paint": {
+  "label": "paint",
+  "path": "crates/paint",
+  "diagram": null
+ },
+ "crate-render": {
+  "label": "render",
+  "path": "crates/render",
+  "diagram": null
+ },
+ "crate-js": {
+  "label": "js",
+  "path": "crates/js",
+  "diagram": null
+ },
+ "crate-webapis": {
+  "label": "webapis",
+  "path": "crates/webapis",
+  "diagram": null
+ },
+ "crate-net": {
+  "label": "net",
+  "path": "crates/net",
+  "diagram": null
+ },
+ "crate-storage": {
+  "label": "storage",
+  "path": "crates/storage",
+  "diagram": null
+ },
+ "crate-security": {
+  "label": "security",
+  "path": "crates/security",
+  "diagram": null
+ },
+ "crate-chrome": {
+  "label": "chrome",
+  "path": "crates/chrome",
+  "diagram": null
+ },
+ "crate-devtools": {
+  "label": "devtools",
+  "path": "crates/devtools",
+  "diagram": null
+ },
+ "process-browser": {
+  "label": "Browser (UI) process",
+  "path": "docs/TECH_ARCHITECTURE.md §1.2",
+  "diagram": "d-process-browser"
+ },
+ "process-renderer": {
+  "label": "Renderer process",
+  "path": "docs/TECH_ARCHITECTURE.md §1.2",
+  "diagram": "d-process-renderer"
+ },
+ "process-network": {
+  "label": "Network process",
+  "path": "docs/TECH_ARCHITECTURE.md §1.2",
+  "diagram": "d-process-network"
+ },
+ "process-gpu": {
+  "label": "GPU / Compositor process",
+  "path": "docs/TECH_ARCHITECTURE.md §1.2",
+  "diagram": null
+ },
+ "process-storage": {
+  "label": "Utility / Storage process",
+  "path": "docs/TECH_ARCHITECTURE.md §1.2",
+  "diagram": null
+ },
+ "process-devtools": {
+  "label": "DevTools process",
+  "path": "docs/TECH_ARCHITECTURE.md §1.2",
+  "diagram": null
+ },
+ "platforms": {
+  "label": "Platform shells",
+  "path": "platforms/",
+  "diagram": null
+ },
+ "platform-macos": {
+  "label": "macos shell (AppKit)",
+  "path": "platforms/macos",
+  "diagram": null
+ },
+ "platform-windows": {
+  "label": "windows shell (Win32 / WinUI)",
+  "path": "platforms/windows",
+  "diagram": null
+ },
+ "platform-linux": {
+  "label": "linux shell (GTK)",
+  "path": "platforms/linux",
+  "diagram": null
+ },
+ "mod-common-dom": {
+  "label": "common::dom",
+  "path": "crates/common/src/dom.rs",
+  "diagram": null
+ },
+ "mod-common-ids": {
+  "label": "common::ids",
+  "path": "crates/common/src/ids.rs",
+  "diagram": null
+ },
+ "mod-common-error": {
+  "label": "common::error",
+  "path": "crates/common/src/error.rs",
+  "diagram": null
+ },
+ "mod-common-ipc": {
+  "label": "common::ipc",
+  "path": "crates/common/src/ipc.rs",
+  "diagram": null
+ }
+}
+</script>
+</body>
+</html>

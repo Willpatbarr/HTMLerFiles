@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-5962 — Calendar: Day View — Plan</title>
+<style>
+  :root{
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:dark; scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:48px 24px 96px;
+  }
+  .wrap{max-width:880px; margin:0 auto}
+  header.top{margin:0 0 34px}
+  .eyebrow{color:var(--accent); font-size:13px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; margin:0 0 6px}
+  h1{font-size:30px; line-height:1.2; margin:0 0 10px}
+  .sub{color:var(--muted); font-size:15px; margin:0}
+  .meta{display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 0}
+  .pill{font-size:12px; color:var(--muted); background:var(--card); border:1px solid var(--border); border-radius:999px; padding:4px 11px}
+  .pill b{color:var(--ink); font-weight:600}
+
+  section{margin:0 0 26px}
+  h2{font-size:20px; margin:34px 0 12px; padding-top:8px; scroll-margin-top:80px}
+  h3{font-size:16px; margin:20px 0 8px}
+  p{margin:0 0 12px}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin:0 0 14px}
+  .card.tight{padding:14px 16px}
+  .onesent{border-left:3px solid var(--accent); background:var(--accent-soft)}
+  .onesent p{margin:0; font-size:17px}
+
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+  @media(max-width:720px){.grid3{grid-template-columns:1fr}}
+  .r3{background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px}
+  .r3 .n{color:var(--accent); font-weight:700; font-size:13px}
+  .r3 p{margin:6px 0 0; font-size:14px; color:var(--muted)}
+
+  ul,ol{margin:0 0 12px; padding-left:22px}
+  li{margin:0 0 7px}
+  .clean{list-style:none; padding-left:0}
+  .clean li{padding-left:20px; position:relative}
+  .clean li::before{content:"›"; position:absolute; left:2px; color:var(--accent)}
+
+  .tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:2px 8px; border-radius:6px; vertical-align:middle}
+  .must{background:#3a1f22; color:#f0929b; border:1px solid #5a2c31}
+  .imp{background:var(--warn-soft); color:var(--warn); border:1px solid #574012}
+  .opt{background:#1a2833; color:#7fb6d6; border:1px solid #274056}
+  .done{background:var(--accent-soft); color:var(--accent); border:1px solid #2c5340}
+  .gap{background:#3a1f22; color:#f0929b; border:1px solid #5a2c31}
+  .verify{background:var(--warn-soft); color:var(--warn); border:1px solid #574012}
+
+  .ws{border:1px solid var(--border); border-radius:var(--radius); padding:0; margin:0 0 14px; overflow:hidden; background:var(--card)}
+  .ws > .head{display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid var(--border); background:#20252b}
+  .ws > .head .num{width:26px; height:26px; flex:0 0 26px; border-radius:8px; background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center}
+  .ws > .head .t{font-weight:600; font-size:16px; flex:1}
+  .ws > .body{padding:14px 18px}
+  .ws .fr{font-size:12px; color:var(--faint); margin:2px 0 10px}
+  .frlink,.acref,.secref{display:inline-block; text-decoration:none; border:1px solid; border-radius:6px; padding:0 6px; margin:0 3px 2px 0; font-size:11px; font-weight:700; letter-spacing:.02em; line-height:1.7; white-space:nowrap; transition:.15s}
+  .frlink{color:var(--accent); background:var(--accent-soft); border-color:#2c5340}
+  .frlink:hover{background:var(--accent); color:#0f1512; border-color:var(--accent)}
+  .acref{color:#7fb0e6; background:#1a2a40; border-color:#2f4a66}
+  .acref:hover{background:#7fb0e6; color:#0f1512; border-color:#7fb0e6}
+  .secref{color:var(--warn); background:var(--warn-soft); border-color:#574012}
+  .secref:hover{background:var(--warn); color:#241a08; border-color:var(--warn)}
+  .frlink::after,.acref::after,.secref::after{content:" \2197"; font-size:9px; opacity:.7}
+  .frkey{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--muted); align-items:center}
+  .frkey span{display:inline-flex; align-items:center; gap:5px}
+  .frkey i{width:22px; height:14px; border-radius:4px; border:1px solid; display:inline-block}
+  .frkey .kfr{background:var(--accent-soft); border-color:#2c5340}
+  .frkey .kac{background:#1a2a40; border-color:#2f4a66}
+  .frkey .ksec{background:var(--warn-soft); border-color:#574012}
+  code{background:#11151a; border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-size:13px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; color:#cbd3dc}
+  .path{color:#8fd0ac}
+
+  table{width:100%; border-collapse:collapse; font-size:14px; margin:0 0 12px; display:block; overflow-x:auto}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--faint); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap}
+  td code{white-space:nowrap}
+
+  .warnbox{border-left:3px solid var(--warn); background:var(--warn-soft)}
+  .warnbox strong{color:var(--warn)}
+
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; color:var(--muted)}
+  .flow .box{background:var(--bg); border:1px solid var(--border-strong); border-radius:8px; padding:6px 10px; color:var(--ink)}
+  .flow .arw{color:var(--accent)}
+
+  .check li{list-style:none; margin-left:-22px; padding-left:26px; position:relative}
+  .check li::before{content:"☐"; position:absolute; left:0; color:var(--faint)}
+
+  .skipto{position:fixed; top:50%; left:18px; transform:translateY(-50%); z-index:60; display:flex; flex-direction:column; gap:5px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 12px 13px; box-shadow:var(--shadow); width:172px}
+  .skipto .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--faint); padding:0 10px 4px}
+  .skipto a{text-decoration:none; color:var(--muted); font-size:13px; padding:6px 10px; border-radius:8px; transition:.15s}
+  .skipto a:hover{background:var(--bg); color:var(--accent)}
+  @media(max-width:1180px){
+    body{padding-top:64px}
+    .skipto{top:0; left:0; right:0; transform:none; width:auto; flex-direction:row; overflow-x:auto; border-radius:0; border-width:0 0 1px; padding:8px 10px}
+    .skipto .lbl{display:none}
+  }
+  .foot{color:var(--faint); font-size:12px; text-align:center; margin-top:40px; border-top:1px solid var(--border); padding-top:18px}
+
+  .ac{border:1px solid var(--border); border-radius:12px; background:var(--bg); padding:12px 16px; margin:0 0 10px}
+  .ac .ach{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin:0 0 7px}
+  .ac .ach .num{color:#7fb0e6; font-weight:700; font-size:13px; white-space:nowrap}
+  .ac .ach .t{font-weight:600; font-size:15px}
+  .ac .ach .frs{margin-left:auto; font-size:11px; color:var(--faint); white-space:nowrap}
+  .ac ul{margin:0; padding-left:18px; font-size:14px; color:var(--muted)}
+  .ac li{margin:0 0 5px}
+  .ac li::marker{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <span class="lbl">Jump to</span>
+  <a href="#tldr">One-sentence</a>
+  <a href="#three">Remember 3</a>
+  <a href="#context">Context</a>
+  <a href="#scope">Scope in/out</a>
+  <a href="#work">Workstreams</a>
+  <a href="#files">Done vs gap map</a>
+  <a href="#order">Build order</a>
+  <a href="#risks">Risks</a>
+  <a href="#next">What to do next</a>
+  <a href="#acs">Spec ACs</a>
+</nav>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">Implementation Plan</p>
+    <h1>MMA-5962 — Calendar: Day View</h1>
+    <p class="sub">First grid view: the shared time-grid rendering engine (reused by Week/3-Day) plus a swipeable Day view. The engine's baseline already shipped with 5961 — this ticket closes the FR gaps.</p>
+    <div class="meta">
+      <span class="pill"><b>Type:</b> New Feature</span>
+      <span class="pill"><b>Epic:</b> LTS-2600</span>
+      <span class="pill"><b>Spec:</b> MMA-5960 (calendar-spec.html)</span>
+      <span class="pill"><b>Depends on:</b> MMA-5961</span>
+      <span class="pill"><b>Engine reused by:</b> MMA-5963 (Week/3-Day)</span>
+    </div>
+  </header>
+
+  <!-- ONE SENTENCE -->
+  <section id="tldr">
+    <div class="card onesent">
+      <p><b>The Day grid already renders — finish it to spec:</b> fix event routing edge-cases (≥24h → all-day bar), make chips "render what fits" (no times, location if it fits), open scrolled to now + remember scroll, add pull-to-refresh, and seed the wide-screen detail pane from the focused date — because Week/3-Day (5963) inherit this exact engine.</p>
+    </div>
+  </section>
+
+  <!-- REMEMBER 3 -->
+  <section id="three">
+    <h2>Remember Only 3 Things</h2>
+    <div class="grid3">
+      <div class="r3"><div class="n">1 — This is gap-closing, not greenfield</div><p>The PMG import in 5961 already landed <span class="path">grid/</span> + <span class="path">day/</span> with now-line, overlap columns, all-day row, and a swipeable pager — on <em>real</em> repo data. Don't rebuild what exists.</p></div>
+      <div class="r3"><div class="n">2 — Chips lose their times</div><p><code>CalendarGridEventChip</code> currently shows name + start time. Spec says: <b>name always, no times ever</b>, location only if the chip is tall enough.</p></div>
+      <div class="r3"><div class="n">3 — You're building for three views</div><p>Routing (FR-16) and scroll behavior (FR-18) land in the <em>shared</em> engine. Get the shape right — Week/3-Day (5963) consume it as-is.</p></div>
+    </div>
+  </section>
+
+  <!-- CONTEXT -->
+  <section id="context">
+    <h2>Context <span class="tag opt">Optional</span></h2>
+    <div class="card">
+      <p>MMA-5961 imported the whole PMG prototype (<span class="path">grid/ day/ week/ month/</span>) as its groundwork baseline, restructured agenda → <b>Schedule</b>, built the calendar host (<code>CalendarViewModel</code> with <code>viewModeFlow</code> / <code>selectedGridDateFlow</code>), rewired the grid use case to real repo data, made the filter repo-backed, and added the sync-failure snackbar. So the Day view <em>opens and renders today</em>.</p>
+      <p>What's left is the delta between "prototype renders" and "spec-complete": routing edge-cases, chip content rules, scroll behavior, the refresh gesture, and detail-pane seeding. Week/3-Day (MMA-5963) and Month (MMA-5964) are siblings that reuse what this ticket hardens.</p>
+      <div class="flow" style="margin-top:6px">
+        <span class="box">5961 groundwork ✓</span><span class="arw">→</span>
+        <span class="box">MMA-5962 <b>(this)</b> Day + engine</span><span class="arw">→ engine reused by →</span>
+        <span class="box">5963 Week / 3-Day</span><span class="box">5964 Month</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCOPE -->
+  <section id="scope">
+    <h2>Scope — In vs Out</h2>
+    <div class="card tight">
+      <h3 style="margin-top:4px">In scope</h3>
+      <ul class="clean">
+        <li>Event routing edge-cases: all-day + timed ≥24h → all-day bar; &lt;24h midnight-crossers → grid, split per day <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-16">FR-16</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-4">FR-4</a></span></li>
+        <li>Chips "render what fits": name always, <b>no times</b>, location if tall enough <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-22">FR-22</a></span></li>
+        <li>Open at current time band (today &amp; non-today) + scroll memory across view switches <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-18">FR-18</a></span></li>
+        <li>Pull-to-refresh in Day — the gesture is net-new; Week/3-Day reuse it <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-23">FR-23</a></span></li>
+        <li>Wide-screen detail-pane seeding from the focused grid date <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-10">FR-10</a></span></li>
+        <li>Verify the already-done engine FRs against spec + edge cases (overlaps, now-line, min-height, tz/12-24h, empty grid, DST) <span class="fr" style="display:inline"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-5">FR-5</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-6">FR-6</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-26">FR-26</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-14">FR-14</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-21">FR-21</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-15">FR-15</a></span></li>
+      </ul>
+      <h3>Out of scope</h3>
+      <ul class="clean">
+        <li>Week / 3-Day view polish (sliding window, week-start locale) → <b>MMA-5963</b></li>
+        <li>Month view (cell contents, 4–6 rows, drill-down) → <b>MMA-5964</b></li>
+        <li>Event creation / editing (still deferred)</li>
+        <li>Sample-data removal (<code>USE_SAMPLE_DATA</code> / <span class="path">sample/</span>) — tracked under the 5961 TODO, not this ticket</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- WORKSTREAMS -->
+  <section id="work">
+    <h2>The 6 Workstreams</h2>
+    <p class="sub" style="margin-bottom:10px">WS1–WS3 change the shared engine (Week/3-Day inherit them). WS4–WS5 are Day-adjacent features. WS6 is the verification sweep.</p>
+    <div class="frkey" style="margin-bottom:18px">
+      <span><i class="kfr"></i> FR button → spec requirement</span>
+      <span><i class="kac"></i> AC button → spec acceptance criterion</span>
+      <span><i class="ksec"></i> § button → spec section</span>
+      <span style="color:var(--faint)">All open the full spec (calendar-spec.html) at that anchor</span>
+    </div>
+
+    <!-- WS1 -->
+    <div class="ws">
+      <div class="head"><span class="num">1</span><span class="t">Event routing — all-day row vs hour grid</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-16">FR-16</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-4">FR-4</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-3">AC-3</a> <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-20">AC-20</a></p>
+        <p>Routing today is by the <code>allDay</code> flag only (<code>timedEvents()</code> / <code>allDayEvents()</code> in <span class="path">grid/CalendarGridMeasurements.kt</span>). The spec routes by <em>duration too</em>:</p>
+        <table>
+          <tr><th>Event shape</th><th>Where it renders</th><th>Status</th></tr>
+          <tr><td>All-day flag set</td><td>All-day row bar</td><td><span class="tag done">done</span></td></tr>
+          <tr><td>Timed, duration ≥ 24h</td><td>All-day row <b>spanning bar</b></td><td><span class="tag gap">missing</span></td></tr>
+          <tr><td>Timed &lt; 24h crossing midnight</td><td>Hour grid, <b>split into one segment per day</b></td><td><span class="tag verify">verify</span> — the use case clips per occurrence; confirm split matches spec</td></tr>
+          <tr><td>Timed, single day</td><td>Hour grid</td><td><span class="tag done">done</span></td></tr>
+        </table>
+        <ul>
+          <li>Change lands in the shared measurement/use-case layer (<span class="path">CalendarGridMeasurements.kt</span> + <span class="path">GetCalendarGridUiStateUseCase.kt</span>) — Week/3-Day pick it up for free.</li>
+          <li>Clip segments at window edges; DST-transition days must position correctly (see WS6).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS2 -->
+    <div class="ws">
+      <div class="head"><span class="num">2</span><span class="t">Chips — "render what fits"</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-22">FR-22</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-16">AC-16</a></p>
+        <p><span class="path">grid/CalendarGridEventChip.kt</span> currently renders <b>name + start time</b> (with <code>DateFormat.is24HourFormat</code>). Spec rules:</p>
+        <ul>
+          <li><b>Name always</b> (ellipsize as needed).</li>
+          <li><b>No start/end times — ever.</b> Delete the time line (the 12/24h handling stays available for hour labels, not chips).</li>
+          <li><b>Location only if the chip is tall enough</b> — height-driven, so sub-30-min-at-min-height chips show name only.</li>
+        </ul>
+        <p class="sub">Decide "tall enough" from the measured chip height vs. line heights (the chip already knows its duration-derived height from the measurements layer).</p>
+      </div>
+    </div>
+
+    <!-- WS3 -->
+    <div class="ws">
+      <div class="head"><span class="num">3</span><span class="t">Scroll — open at now + cross-view memory</span><span class="tag must">Must Know</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-18">FR-18</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-13">AC-13</a></p>
+        <p>Nothing controls the grid's vertical scroll yet. Spec behavior:</p>
+        <ul>
+          <li>Day opens <b>scrolled to the current time band</b>; swiping to a non-today day keeps <b>the same band</b> (no jump).</li>
+          <li><b>Scroll position survives view switches</b> — leave Day, come back, same offset.</li>
+        </ul>
+        <ul>
+          <li>Persist the scroll offset in the shared host layer next to <code>selectedGridDateFlow</code> in <span class="path">CalendarViewModel.kt</span> — that's the seam 5961 built for exactly this, and 5963 needs the same memory for Week/3-Day.</li>
+          <li>Watch the interplay with <span class="path">day/CalendarDayView.kt</span>'s <code>HorizontalPager</code> (~20k pages anchored on today): one shared vertical scroll state across pages, not per-page.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS4 -->
+    <div class="ws">
+      <div class="head"><span class="num">4</span><span class="t">Pull-to-refresh (net-new gesture)</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-23">FR-23</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-17">AC-17</a></p>
+        <p>No <code>PullToRefreshBox</code> exists anywhere in the calendar — Schedule only draws <code>PullToRefreshDefaults.Indicator</code> without the gesture. Build it here; Week/3-Day reuse it.</p>
+        <ul>
+          <li><b>Copy the app-standard pattern</b> from <span class="path">ux/organization/OrganizationScreen.kt</span> (~L287, L405): <code>PullToRefreshBox(isRefreshing, onRefresh)</code> wrapping the content.</li>
+          <li>Refresh action already exists: <code>workScheduler.refreshCalendar(SyncMode.FULL)</code> + <code>isRefreshingFlow</code> (see <span class="path">schedule/GetScheduleUiStateUseCase.kt</span> ~L63, L95–98) — wire the gesture to the same flow.</li>
+          <li>Gesture must coexist with the grid's vertical scroll (only trigger at top).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS5 -->
+    <div class="ws">
+      <div class="head"><span class="num">5</span><span class="t">Wide-screen detail-pane seeding from focused date</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-10">FR-10</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-8">AC-8</a></p>
+        <p>The calendar uses a custom split (<code>CalendarEventPane</code> in <span class="path">CalendarScreen.kt</span> ~L294–320, not <code>ListDetailPaneScaffold</code>). Pre-tap seeding lives in <code>CalendarViewModel.listenForEdits()</code> (~L107–125) and currently picks the <b>first agenda event ≥ today</b>.</p>
+        <ul>
+          <li>Change the seed source to the <b>focused grid date</b> (<code>selectedGridDateFlow</code>): first event on that date, updating as the user swipes/navigates.</li>
+          <li>Phone behavior (tap → full-screen detail → back to same view/date) should already hold — verify, don't rebuild.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WS6 -->
+    <div class="ws">
+      <div class="head"><span class="num">6</span><span class="t">Verification sweep — the "already done" FRs + time edges</span><span class="tag imp">Important</span></div>
+      <div class="body">
+        <p class="fr"><a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-5">FR-5</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-6">FR-6</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-26">FR-26</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-15">FR-15</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-14">FR-14</a>, <a class="frlink" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#fr-21">FR-21</a> · <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-4">AC-4</a> <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-5">AC-5</a> <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-11">AC-11</a> <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-12">AC-12</a> <a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-20">AC-20</a></p>
+        <p>The prototype implemented these — this ticket owns proving them against the spec, because their ACs are graded here:</p>
+        <ul>
+          <li><b>Overlaps</b> (FR-5): side-by-side shrinking columns, <b>no cap</b>, no overflow affordance — stress with many concurrent events (<code>toEventColumns()</code> first-fit packing).</li>
+          <li><b>Now-line</b> (FR-6): today only, advances live (60s tick in <code>CalendarCurrentTimeLine</code>).</li>
+          <li><b>Min height</b> (FR-26): sub-30-min events render at <code>MIN_EVENT_MINUTES = 30</code>.</li>
+          <li><b>Empty grid</b> (FR-15): no events → empty grid, <b>no message</b>.</li>
+          <li><b>Device tz + 12/24h</b> (FR-21/14): hour labels + positioning follow device settings.</li>
+          <li><b>DST-transition day</b>: events position correctly on spring-forward/fall-back days — the classic hour-grid math trap.</li>
+        </ul>
+        <p class="sub">Add unit tests around the measurements layer (routing, column packing, min-height, DST) — it's pure logic and the engine 5963 inherits.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DONE VS GAP MAP -->
+  <section id="files">
+    <h2>Done vs Gap — where everything lives</h2>
+    <div class="card">
+      <p class="sub">All paths under <span class="path">app/src/main/java/org/lds/ldstools/ux/calendar/</span>. The whole tree is already on this branch (5961 baseline import).</p>
+      <table>
+        <tr><th>Concern</th><th>File</th><th>Status → action</th></tr>
+        <tr><td>Routing + measurements</td><td><span class="path">grid/CalendarGridMeasurements.kt</span></td><td><span class="tag gap">WS1</span> add ≥24h → all-day rule; verify crosser split</td></tr>
+        <tr><td>Events-by-date projection</td><td><span class="path">grid/GetCalendarGridUiStateUseCase.kt</span></td><td><span class="tag gap">WS1</span> routing feeds from here (real repo data ✓)</td></tr>
+        <tr><td>Event chip</td><td><span class="path">grid/CalendarGridEventChip.kt</span></td><td><span class="tag gap">WS2</span> drop times, add location-if-fits</td></tr>
+        <tr><td>Day view (pager)</td><td><span class="path">day/CalendarDayView.kt</span></td><td><span class="tag gap">WS3/WS4</span> scroll-to-now + memory; PullToRefreshBox</td></tr>
+        <tr><td>Host state (date/view/scroll)</td><td><span class="path">CalendarViewModel.kt</span></td><td><span class="tag gap">WS3/WS5</span> add scroll state; reseed detail from focused date</td></tr>
+        <tr><td>Detail split pane</td><td><span class="path">CalendarScreen.kt</span> (<code>CalendarEventPane</code>)</td><td><span class="tag verify">WS5</span> custom split, not ListDetailPaneScaffold — keep</td></tr>
+        <tr><td>Hour grid + now-line</td><td><span class="path">grid/CalendarDayColumn.kt</span></td><td><span class="tag done">WS6</span> verify only</td></tr>
+        <tr><td>All-day row</td><td><span class="path">grid/AllDayEventsRow.kt</span></td><td><span class="tag verify">WS1</span> receives the new ≥24h bars</td></tr>
+        <tr><td>PTR pattern to copy</td><td><span class="path">ux/organization/OrganizationScreen.kt</span></td><td><span class="tag done">reference</span> app-standard <code>PullToRefreshBox</code></td></tr>
+        <tr><td>Refresh plumbing</td><td><span class="path">schedule/GetScheduleUiStateUseCase.kt</span></td><td><span class="tag done">reference</span> <code>refreshCalendar(SyncMode.FULL)</code> + <code>isRefreshingFlow</code></td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- BUILD ORDER -->
+  <section id="order">
+    <h2>Suggested Build Order</h2>
+    <div class="card">
+      <ol>
+        <li><b>WS1 routing first</b> — it changes what the grid receives; chips and scroll build on stable data. Unit-test the measurement layer as you go.</li>
+        <li><b>WS2 chips</b> — pure visual layer on top of routed segments.</li>
+        <li><b>WS3 scroll</b> — needs the host-state seam; decide the state shape early since 5963 reuses it.</li>
+        <li><b>WS4 pull-to-refresh</b> and <b>WS5 detail seeding</b> — independent of each other and of WS1–3; can run in parallel or trail.</li>
+        <li><b>WS6 verification sweep</b> — last, as the gate to "done": overlap stress, DST day, empty grid, tz/format flips.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- RISKS -->
+  <section id="risks">
+    <h2>Risks &amp; Watch-outs</h2>
+    <div class="card">
+      <table>
+        <tr><th>Risk</th><th>Why it bites</th><th>Mitigation</th></tr>
+        <tr><td>Engine changes ripple into 5963/5964</td><td>Routing + scroll land in shared code Week/3-Day/Month consume; churn later = sibling rework</td><td>Unit-test the measurements layer; treat its API as frozen once WS1/WS3 merge</td></tr>
+        <tr><td>DST hour-grid math</td><td>23h/25h days break y-position ⇄ time math and the now-line</td><td>Explicit tests on transition dates (<a class="acref" href="file:///Users/willbarr/Documents/HTMLerFiles/calendar-spec.html#ac-20">AC-20</a>)</td></tr>
+        <tr><td>Chip height measurement</td><td>"Location if it fits" needs real measured height; naive minLines checks mis-render at min-height</td><td>Derive from the duration-based height the layout already computes; snapshot the 30-min case</td></tr>
+        <tr><td>Scroll state × HorizontalPager</td><td>~20k pages: per-page scroll states won't preserve the band across swipes</td><td>One shared vertical scroll state owned above the pager (host layer)</td></tr>
+        <tr><td>PTR vs grid scroll conflict</td><td>Nested scroll: pull gesture can fight the hour-grid's vertical scroll</td><td>Standard <code>PullToRefreshBox</code> nested-scroll handling; test mid-scroll pulls</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- NEXT -->
+  <section id="next">
+    <h2>What To Do Next</h2>
+    <div class="card">
+      <ol>
+        <li><b>Start WS1</b>: add the ≥24h-timed → all-day-bar rule in <span class="path">grid/CalendarGridMeasurements.kt</span> and confirm midnight-crosser splitting in <span class="path">grid/GetCalendarGridUiStateUseCase.kt</span> matches spec — with unit tests.</li>
+        <li><b>Decide the scroll-state shape</b> (WS3) in <code>CalendarViewModel</code> before touching the pager — it's the seam 5963 inherits.</li>
+        <li><b>Strip the chip's time line</b> (WS2) — small, visible, easy first win alongside WS1.</li>
+      </ol>
+      <p class="sub" style="margin-top:6px">PR checklist (mirrors the ticket's 8 ACs / testing guide):</p>
+      <ul class="check">
+        <li>Routing: all-day &amp; ≥24h → bar; &lt;24h crosser → grid split per day; clipped at window edges</li>
+        <li>Overlaps: side-by-side shrinking, no cap, no overflow affordance</li>
+        <li>Now-line: today only, advances over time</li>
+        <li>Chips: name always; no times anywhere; location only when it fits</li>
+        <li>Scroll: opens at current band (today &amp; non-today); preserved across view switches</li>
+        <li>Pull-to-refresh in Day triggers sync + indicator</li>
+        <li>Detail: phone full-screen → back to same view/date; tablet pane updates on tap and pre-tap seeds from focused date</li>
+        <li>Time edges: sub-30-min at min height; DST-transition day renders correctly</li>
+        <li>Measurement-layer unit tests added; existing calendar tests green</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SPEC ACS -->
+  <section id="acs">
+    <h2>Acceptance Criteria for This Ticket — verbatim from the spec</h2>
+    <div class="card">
+      <p class="sub">The 10 acceptance criteria this ticket's work is graded against, worded exactly as they appear in the module spec (<span class="path">feature/calendar/spec/viewsspec/spec.md</span>, §Acceptance Criteria). Note its numbering differs from the HTML spec export at the tail (this file's AC-19 = calendar-spec.html's AC-20).</p>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-3 (QA #3)</span><span class="t">Event routing &amp; multi-day edge cases</span><span class="frs">FR-16</span></div>
+        <ul>
+          <li>Given an all-day event (single or multi-day), Then it shows in the all-day row (chip or spanning bar), never on the grid;</li>
+          <li>And given a timed event lasting ≥24h, Then it shows as an all-day-row spanning bar;</li>
+          <li>And given a &lt;24h timed event crossing midnight (e.g. 11pm–1am), Then it renders on the hour grid split into a segment on each day (no all-day bar);</li>
+          <li>And given a single-day timed event, Then it renders on the grid;</li>
+          <li>And given a bar starting before / ending after the window, Then it is clipped to the window edges and breaks at week/period boundaries.</li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-4 (QA #4)</span><span class="t">Overlap rendering (no cap)</span><span class="frs">FR-5</span></div>
+        <ul>
+          <li>Given a day that has many overlapping timed events, When viewed in Day / 3-Day / Week, Then all overlaps render side-by-side as shrinking columns, with no cap and no overflow affordance.</li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-5 (QA #5)</span><span class="t">Live now-line</span><span class="frs">FR-6</span></div>
+        <ul>
+          <li>Given today is visible in Day / 3-Day / Week, When viewing, Then a current-time line is drawn on today's column only;</li>
+          <li>And When time passes, Then the line advances (it is live, not static);</li>
+          <li>And given Month, Then no now-line is drawn.</li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-8 (QA #8)</span><span class="t">Event tap (phone &amp; tablet)</span><span class="frs">FR-10</span></div>
+        <ul>
+          <li>Given a grid view on a <b>phone</b>, When the user taps an event, Then a full-screen detail opens, and When they back out, Then they return to the same view and date;</li>
+          <li>And on a <b>tablet</b> (list/detail), When the user taps an event, Then the detail pane updates;</li>
+          <li>And on a tablet <b>before any tap</b>, Then the detail pane reflects the focused grid date rather than always today.</li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-11 (QA #11)</span><span class="t">Localization &amp; timezone (both paths)</span><span class="frs">FR-13, FR-14, FR-21</span></div>
+        <ul>
+          <li>Given the device locale's first day of week is Monday and 24-hour time is on, When viewing Week / Month, Then weeks start Monday and times show 24-hour;</li>
+          <li>And given the default (Sunday first, 12-hour), Then weeks start Sunday and times show 12-hour;</li>
+          <li>And all events render in the device timezone. (3-Day is exempt from week-start — sliding window.)</li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-12 (QA #12)</span><span class="t">Empty states</span><span class="frs">FR-15</span></div>
+        <ul>
+          <li>Given a day/week/month with no events, When viewed, Then the empty grid shows with no message;</li>
+          <li>And given Schedule is empty, Then the existing "No events" text shows.</li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-13 (QA #13)</span><span class="t">Initial scroll &amp; scroll memory</span><span class="frs">FR-18</span></div>
+        <ul>
+          <li>Given the user opens a time-grid on today, When it appears, Then it is scrolled to the current time;</li>
+          <li>And given a non-today day is opened (via date picker or Month tap), Then it opens at the same time-of-day band;</li>
+          <li>And when the user switches to another view and returns, Then the prior scroll position is preserved.</li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-16 (QA #16)</span><span class="t">Chip content ("render what fits")</span><span class="frs">FR-22</span></div>
+        <ul>
+          <li>Given an event chip, When rendered, Then the event name always shows and no start/end time shows;</li>
+          <li>And given the chip is tall enough, Then the location fills the remaining space;</li>
+          <li>And given it is too short, Then the location is omitted / truncated with an ellipsis.</li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-17 (QA #17)</span><span class="t">Refresh behavior</span><span class="frs">FR-23</span></div>
+        <ul>
+          <li>Given Day / 3-Day / Week / Month, When the user pulls down, Then a calendar sync is triggered and the refresh indicator shows until it completes;</li>
+          <li>And given Schedule, Then no pull-to-refresh gesture exists <b>but its "Refresh" overflow action still triggers a sync</b>. <em>(Month added per PR #1884 review — lands in 5964.)</em></li>
+        </ul>
+      </div>
+      <div class="ac">
+        <div class="ach"><span class="num">AC-19 (QA #20)</span><span class="t">Time-edge cases</span><span class="frs">Codex A13</span></div>
+        <ul>
+          <li>Given a very short (sub-30-minute) single-day timed event, When rendered on the hour grid, Then it shows at the minimum legible height (<code>MIN_EVENT_MINUTES = 30</code>, FR-25);</li>
+          <li>And given a &lt;24h event crossing midnight, Then it renders on the grid split across the two days (not an all-day bar, FR-16);</li>
+          <li>And given a DST-transition day, Then the hour grid and event positions remain correct. <em>(DST behavior provisional — confirm in tech design.)</em></li>
+        </ul>
+      </div>
+      <p class="sub" style="margin:8px 0 0">Note: AC-8's tablet "list/detail + pre-tap seed" wording predates the supporting-pane rework — event detail now opens in a supporting pane only after a tap (no pre-tap seed). The spec + Jira wording are pending update to match.</p>
+    </div>
+  </section>
+
+  <div class="foot">
+    MMA-5962 · Calendar Day View · Plan generated from the Jira ticket (icseng) + calendar spec (MMA-5960, calendar-spec.html) + code audit of branch MMA-5962.
+    Week/3-Day are MMA-5963, Month is MMA-5964 — both reuse the engine hardened here.
+  </div>
+
+</div>
+</body>
+</html>

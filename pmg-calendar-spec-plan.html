@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PMG Calendar — Spec &amp; Plan (MMA-5930)</title>
+  <style>
+    :root {
+      --bg: #14171a;
+      --card: #1d2126;
+      --ink: #e8eaed;
+      --muted: #a4acb5;
+      --faint: #737c86;
+      --border: #2b3138;
+      --border-strong: #3a424b;
+      --accent: #6cc394;
+      --accent-soft: #1c3128;
+      --warn: #e0a458;
+      --warn-soft: #33280f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .35);
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      color-scheme: dark;
+      scroll-behavior: smooth
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 48px 24px 96px;
+    }
+
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto
+    }
+
+    h1 {
+      font-size: 30px;
+      margin: 0 0 6px;
+      letter-spacing: -.4px
+    }
+
+    h2 {
+      font-size: 21px;
+      margin: 0 0 14px;
+      letter-spacing: -.2px
+    }
+
+    h3 {
+      font-size: 16px;
+      margin: 0 0 8px;
+      color: var(--ink)
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 15px;
+      margin: 0 0 32px
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin: 0 0 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card.warn {
+      border-color: var(--warn);
+      background: linear-gradient(0deg, var(--warn-soft), var(--card))
+    }
+
+    .card.hero {
+      border-color: var(--border-strong)
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .tag.must {
+      background: var(--accent-soft);
+      color: var(--accent)
+    }
+
+    .tag.imp {
+      background: #20304a;
+      color: #7fb0e6
+    }
+
+    .tag.opt {
+      background: #2a2530;
+      color: #b79bd0
+    }
+
+    .tag.warn {
+      background: var(--warn-soft);
+      color: var(--warn)
+    }
+
+    p {
+      margin: 0 0 12px
+    }
+
+    ul {
+      margin: 0 0 6px;
+      padding-left: 20px
+    }
+
+    li {
+      margin: 0 0 7px
+    }
+
+    a {
+      color: var(--accent)
+    }
+
+    code {
+      background: #0f1215;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: 13px;
+      color: #d8dee6
+    }
+
+    .one-liner {
+      font-size: 18px;
+      line-height: 1.5
+    }
+
+    .one-liner b {
+      color: var(--accent)
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin: 4px 0
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top
+    }
+
+    th {
+      color: var(--faint);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px
+    }
+
+    .r3 {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px 14px;
+      align-items: start
+    }
+
+    .r3 .n {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 36px 0
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 12px;
+      margin-bottom: 12px
+    }
+
+    .step .n {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 13px;
+      display: grid;
+      place-items: center
+    }
+
+    /* floating nav */
+    .skipto {
+      position: fixed;
+      top: 50%;
+      left: 18px;
+      transform: translateY(-50%);
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 12px 13px;
+      box-shadow: var(--shadow);
+      width: 172px;
+    }
+
+    .skipto .lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--faint);
+      padding: 2px 10px 6px
+    }
+
+    .skipto a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: .15s
+    }
+
+    .skipto a:hover {
+      background: var(--bg);
+      color: var(--accent)
+    }
+
+    @media (max-width:1180px) {
+      .skipto {
+        top: 0;
+        left: 0;
+        right: 0;
+        transform: none;
+        width: auto;
+        flex-direction: row;
+        overflow-x: auto;
+        border-radius: 0;
+        border-width: 0 0 1px;
+        padding: 8px 10px
+      }
+
+      .skipto .lbl {
+        display: none
+      }
+
+      body {
+        padding-top: 66px
+      }
+    }
+
+    .page-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 0 0 24px;
+    }
+
+    .page-links a {
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-weight: 600;
+      transition: .15s;
+    }
+
+    .page-links a:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="skipto">
+    <span class="lbl">Skip to</span>
+    <a href="#tldr">One-Sentence</a>
+    <a href="#docs">Docs to make</a>
+    <a href="#spec">Spec (what)</a>
+    <a href="#design">Design (how)</a>
+    <a href="#jira">Jira breakdown</a>
+    <a href="#open">Open questions</a>
+    <a href="#remember">Remember 3</a>
+    <a href="#next">Do next</a>
+    <div class="page-links">
+      <a href="file:///Users/willbarr/Downloads/calendar-redesign.html">
+        Calendar Redesign
+      </a>
+
+      <a href="file:///Users/willbarr/Downloads/calendar-decision-brief.html">
+        Decision Brief
+      </a>
+
+      <a href="file:///Users/willbarr/Downloads/calendar-comparison.html">
+        Comparison
+      </a>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <h1>PMG Calendar — Spec &amp; Plan</h1>
+    <p class="sub">MMA-5930 &middot; take the PMG calendar prototype from sample data → production</p>
+
+    <div class="card hero" id="tldr">
+      <span class="tag must">One-Sentence Version</span>
+      <p class="one-liner">The 5-view calendar prototype is <b>built and works</b> — the real job is
+        <b>wiring it to live data behind a rollout flag</b>, and the only hard unknown is whether
+        backward-scrolling views need <b>past-month history</b> (the repo doesn't sync it yet).
+      </p>
+    </div>
+
+    <!-- ============ DOCS ============ -->
+    <div class="card" id="docs">
+      <span class="tag must">Must Know</span>
+      <h2>What documents to make</h2>
+      <p>For this feature (prototype done, PMG decision made) you need <b>3 core docs</b>. The
+        decision brief you already have covers the "why."</p>
+      <table>
+        <tr>
+          <th>#</th>
+          <th>Doc</th>
+          <th>Purpose</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td><b>Feature spec</b></td>
+          <td>The "what" — scope, 5 views, behavior, out-of-scope, success criteria</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><b>Technical design</b></td>
+          <td>The "how" — the doc that matters most; holds the 3 real work items</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><b>Jira breakdown</b></td>
+          <td>Epic + sequenced subtasks; just a decomposition of doc 2</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>Test + rollout <span style="color:var(--faint)">(optional)</span></td>
+          <td>Fold into doc 2 as a section unless QA wants its own artifact</td>
+        </tr>
+      </table>
+      <p style="margin-top:14px; color:var(--muted)"><b>Location/format</b> (Confluence vs Jira vs repo folder) —
+        deferred, your call later.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ SPEC ============ -->
+    <h2 id="spec">Doc 1 — Feature Spec (the "what")</h2>
+
+    <div class="card">
+      <span class="tag imp">Important</span>
+      <h3>In scope: 5 view modes</h3>
+      <p>Switchable via the existing view-mode chip. All already built in the prototype.</p>
+      <table>
+        <tr>
+          <th>View</th>
+          <th>Behavior</th>
+        </tr>
+        <tr>
+          <td><b>Schedule</b></td>
+          <td>Existing agenda list — default; already real-data-ready</td>
+        </tr>
+        <tr>
+          <td><b>Day</b></td>
+          <td>Swipeable day, hour grid + all-day row + live now-line</td>
+        </tr>
+        <tr>
+          <td><b>3-Day</b></td>
+          <td>3-day grid (shares Week impl)</td>
+        </tr>
+        <tr>
+          <td><b>Week</b></td>
+          <td>7-day grid</td>
+        </tr>
+        <tr>
+          <td><b>Month</b></td>
+          <td>6-week grid, 3 chips/day + "N more", tap day → Day view</td>
+        </tr>
+      </table>
+      <p style="margin-top:12px">Filtering, event tap→detail, overlap packing, and responsive
+        list/detail are all <b>already wired</b>.</p>
+    </div>
+
+    <div class="card">
+      <span class="tag opt">Optional / Out of scope</span>
+      <h3>Explicitly NOT in this ticket</h3>
+      <ul>
+        <li><b>Event creation</b> — no create entry points (feasibility researched separately; deferred)</li>
+        <li>Editing / deleting events</li>
+        <li>Pinch-to-zoom, arbitrary N-day spans (were AWV-only; not ported)</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ DESIGN ============ -->
+    <h2 id="design">Doc 2 — Technical Design (the "how")</h2>
+    <p class="sub" style="margin-bottom:20px">Three items are more than "flip a flag" — this is the real work.</p>
+
+    <div class="card warn">
+      <span class="tag warn">Biggest Unknown</span>
+      <h3>2a &middot; Data-window gap</h3>
+      <p>The repo only syncs <b>current month forward</b> — no past-month data, and no
+        "events between two dates" query. So grid views scrolled <b>backward show empty history.</b></p>
+      <ul>
+        <li><b>Path A (no past data):</b> cheapest — cap backward nav at current month. No sync/DAO changes.</li>
+        <li><b>Path B (show history):</b> sync change to fetch past months + a bounded DAO query. Bigger scope.</li>
+      </ul>
+      <p style="margin-bottom:0"><b>Undecided</b> — you're checking with team/PO. Doesn't block items 1–3.</p>
+    </div>
+
+    <div class="card">
+      <span class="tag imp">Important</span>
+      <h3>2b &middot; Grid filter isn't repo-backed</h3>
+      <p>The grid's calendar filter is in-memory sample data. The <b>agenda filter is already
+          correct</b> — reads <code>getAllSubscribedCalendarsFlow()</code>, toggles via
+        <code>setCalendarDisplayedAsync()</code>. Plan: re-point the grid filter at that same pattern.
+      </p>
+    </div>
+
+    <div class="card">
+      <span class="tag imp">Important</span>
+      <h3>2c &middot; Replace the throwaway sample toggles</h3>
+      <p>Two <code>USE_SAMPLE_DATA = true</code> constants exist; the real combine-flows are
+        <b>already written and DI-ready</b>. Plan: delete the constants, gate the grid views behind a
+        <b>Firebase Remote Config boolean</b> in <code>ToolsConfig</code> (mirror
+        <code>isTithingDeclarationsEnabled()</code>). The host VM already injects <code>ToolsConfig</code>.
+      </p>
+    </div>
+
+    <div class="card">
+      <span class="tag opt">Cleanup</span>
+      <h3>2d &middot; Delete &amp; tidy</h3>
+      <ul>
+        <li>Delete <code>ux/calendar/sample/</code> once flags gone + filter re-backed</li>
+        <li>Fix 2 trivial Detekt FQN violations (<code>java.time.LocalTime.of</code> inline)</li>
+      </ul>
+      <p style="margin-bottom:0; color:var(--muted)">No new architecture needed — views plug into the
+        existing <code>CalendarViewMode</code> enum; nav unchanged; Konsist/Koin already satisfied.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ JIRA ============ -->
+    <div class="card" id="jira">
+      <span class="tag imp">Important</span>
+      <h2>Doc 3 — Jira Breakdown</h2>
+      <p>Epic under MMA-5930, sequenced. Items 1–3 proceed regardless of the 2a decision.</p>
+      <div class="step"><span class="n">1</span>
+        <div>Re-back grid calendar filter on repository <span style="color:var(--faint)">(2b)</span></div>
+      </div>
+      <div class="step"><span class="n">2</span>
+        <div>Add <code>ToolsConfig</code> rollout flag; remove <code>USE_SAMPLE_DATA</code> <span
+            style="color:var(--faint)">(2c)</span></div>
+      </div>
+      <div class="step"><span class="n">3</span>
+        <div>Flip grid + agenda use cases to real data behind the flag <span style="color:var(--faint)">(2c)</span>
+        </div>
+      </div>
+      <div class="step"><span class="n">4</span>
+        <div>Resolve data-window decision — size depends on past-data answer <span
+            style="color:var(--faint)">(2a)</span></div>
+      </div>
+      <div class="step"><span class="n">5</span>
+        <div>Delete sample package + Detekt fixes <span style="color:var(--faint)">(2d)</span></div>
+      </div>
+      <div class="step"><span class="n">6</span>
+        <div>Test coverage: use-case mapping, filter persistence, view QA pass</div>
+      </div>
+    </div>
+
+    <!-- ============ OPEN Q ============ -->
+    <div class="card" id="open">
+      <span class="tag warn">Decisions Needed</span>
+      <h2>Open questions</h2>
+      <ul>
+        <li><b>Past-month data (2a):</b> show history on backward scroll, or current-month-forward for v1?
+          <i>You're checking with team/PO.</i> Biggest scope lever.
+        </li>
+        <li><b>Flag granularity:</b> one flag for all grid views, or per-view? (Recommend one.)</li>
+        <li><b>Doc location/format:</b> Confluence vs Jira vs repo — deferred.</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ REMEMBER 3 ============ -->
+    <div class="card hero" id="remember">
+      <span class="tag must">Remember Only 3 Things</span>
+      <div class="r3">
+        <div class="n">1</div>
+        <div>The prototype <b>works</b> — this is productionization, not a rebuild.</div>
+        <div class="n">2</div>
+        <div>The real work is <b>2b (filter), 2c (flag + live data), 2a (past-data unknown)</b>.</div>
+        <div class="n">3</div>
+        <div>Only the <b>past-month-data question</b> can grow scope — resolve it early.</div>
+      </div>
+    </div>
+
+    <!-- ============ NEXT ============ -->
+    <div class="card" id="next">
+      <span class="tag must">What To Do Next</span>
+      <ol>
+        <li>Check with team/PO on the <b>past-month data</b> question (gates ticket 4's size).</li>
+        <li>Confirm this spec &amp; design, then have me <b>decompose it into Jira tickets</b>.</li>
+        <li>Start build with <b>ticket 1 (repo-back the grid filter)</b> — safe, unblocked first step.</li>
+      </ol>
+    </div>
+
+  </div>
+</body>
+
+</html>

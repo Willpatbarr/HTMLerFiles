@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6039 — Calendar Filter Icons</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+main{max-width:880px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-top:72px;padding-bottom:96px}
+h1{font-size:clamp(24px,5vw,34px);line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:clamp(19px,3.4vw,23px);margin:0 0 14px;letter-spacing:-.01em}
+h3{font-size:clamp(15px,2.6vw,17px);margin:0 0 8px;color:var(--ink)}
+p{margin:0 0 12px}
+a{color:var(--accent);overflow-wrap:anywhere}
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.88em;background:#161a1e;border:1px solid var(--border);
+  border-radius:6px;padding:1px 5px;overflow-wrap:anywhere;max-width:100%;
+}
+pre{
+  background:#101316;border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;overflow-x:auto;max-width:100%;margin:0 0 14px;
+}
+pre code{background:none;border:0;padding:0;font-size:13px;line-height:1.6}
+section{scroll-margin-top:80px;margin-bottom:34px}
+.sub{color:var(--muted);margin:0 0 22px;font-size:15px}
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 24px;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.tag{
+  display:inline-block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;padding:3px 9px;border-radius:999px;margin-bottom:12px;
+}
+.must{background:var(--accent-soft);color:var(--accent);border:1px solid #2c4a3a}
+.imp{background:#1b2733;color:#7fb3e0;border:1px solid #2c3f52}
+.opt{background:#22232b;color:var(--faint);border:1px solid var(--border-strong)}
+.warnbox{background:var(--warn-soft);border:1px solid #4d3c17;border-radius:var(--radius);padding:20px 22px;margin-bottom:16px}
+.warnbox h3{color:var(--warn)}
+.okbox{background:var(--accent-soft);border:1px solid #2c4a3a;border-radius:var(--radius);padding:20px 22px;margin-bottom:16px}
+.okbox h3{color:var(--accent)}
+.onesent{
+  background:var(--accent-soft);border:1px solid #2c4a3a;border-left:3px solid var(--accent);
+  border-radius:var(--radius);padding:20px 24px;margin-bottom:26px;font-size:17px;
+}
+.tablewrap{overflow-x:auto;max-width:100%;margin-bottom:14px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:460px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+ul,ol{margin:0 0 12px;padding-left:20px}
+li{margin-bottom:7px}
+li:last-child{margin-bottom:0}
+.file{
+  display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+  color:var(--muted);background:#161a1e;border:1px solid var(--border);border-radius:6px;
+  padding:2px 7px;overflow-wrap:anywhere;max-width:100%;
+}
+.hr{height:1px;background:var(--border);border:0;margin:30px 0}
+.three li{margin-bottom:14px}
+.three li strong{color:var(--accent)}
+.ac{list-style:none;padding-left:0;counter-reset:ac}
+.ac li{counter-increment:ac;padding-left:52px;position:relative;margin-bottom:13px}
+.ac li:before{
+  content:"AC-" counter(ac);position:absolute;left:0;top:2px;font-size:10.5px;font-weight:700;
+  letter-spacing:.05em;color:var(--accent);background:var(--accent-soft);border:1px solid #2c4a3a;
+  border-radius:999px;padding:2px 7px;font-family:ui-monospace,Menlo,monospace;
+}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:26px;position:relative}
+.check li:before{content:"";position:absolute;left:0;top:5px;width:14px;height:14px;border:1.5px solid var(--border-strong);border-radius:4px}
+.done li:before{border-color:var(--accent);background:var(--accent-soft)}
+.done li:after{content:"";position:absolute;left:4.5px;top:8px;width:4px;height:8px;border:solid var(--accent);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--muted);margin-bottom:26px}
+.navlabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);padding:0 10px 5px;font-weight:700}
+.skipto{
+  position:fixed;top:50%;left:18px;transform:translateY(-50%);
+  z-index:60;display:flex;flex-direction:column;gap:5px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:12px 12px 13px;box-shadow:var(--shadow);width:172px;
+}
+.skipto a{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;border-radius:8px;transition:.15s}
+.skipto a:hover{background:var(--bg);color:var(--accent)}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,.skipto.open .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,.skipto.open .skipto-toggle svg{transform:rotate(180deg)}
+  section{scroll-margin-top:80px}
+}
+@media (max-width:720px){
+  .grid{grid-template-columns:1fr}
+  .card,.warnbox,.okbox{padding:15px 16px}
+  main{padding-top:70px}
+  .ac li{padding-left:0;padding-top:24px}
+  .ac li:before{top:0}
+}
+</style>
+</head>
+<body>
+
+<nav class="skipto" aria-label="Skip to section">
+  <button class="skipto-toggle" aria-label="Skip to section menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="skipto-menu">
+    <div class="navlabel">Skip to</div>
+    <a href="#three">Remember 3</a>
+    <a href="#problem">The Problem</a>
+    <a href="#mock">Mock Analysis</a>
+    <a href="#ac">Acceptance Criteria</a>
+    <a href="#audit">Convention Audit</a>
+    <a href="#decisions">Decisions</a>
+    <a href="#impl">Implementation</a>
+    <a href="#blocker">Build Blocker</a>
+    <a href="#verify">Verification</a>
+    <a href="#next">What To Do Next</a>
+  </div>
+</nav>
+
+<main>
+
+<h1>MMA-6039 — Calendar: Update Filter Icons</h1>
+<p class="sub">Give the visibility sheet and the subscriptions screen distinct icon languages, and group both lists into sections.</p>
+
+<div class="meta">
+  <span>Type: Enhancement</span>
+  <span>Parent: LTS-2600</span>
+  <span>Status: In Progress</span>
+  <span>Branch: <code>MMA-6039</code></span>
+  <span>Base: <code>0b616e604c</code></span>
+</div>
+
+<div class="onesent">
+  <strong>One-sentence version:</strong> Two calendar screens looked identical but did different things, so the sheet now uses eye / eye-off icons, the subscriptions screen uses real switches, and both lists group by <code>CalendarType</code> — three commits, all gates green, not yet pushed.
+</div>
+
+<section id="three">
+  <div class="card">
+    <span class="tag must">Must Know</span>
+    <h2>Remember Only 3 Things</h2>
+    <ol class="three">
+      <li><strong>Visibility ≠ subscription.</strong> The sheet hides a calendar you already subscribe to (local <code>displayed</code> flag). The screen controls whether you receive it at all (server-side <code>saveSubscriptions()</code>). They used the same checkbox affordance — that was the bug.</li>
+      <li><strong>Sections come from data that already existed.</strong> <code>CalendarType</code> is declared <code>HEAD_QUARTERS, BUILDING, UNIT</code> — exactly the design's section order. No new data, no new sorting.</li>
+      <li><strong>Nobody wrote acceptance criteria for this ticket.</strong> Jira is one line with zero comments. The AC below were derived after the fact from the mock, the decisions, and the tests — get them agreed before review.</li>
+    </ol>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section id="problem">
+  <span class="tag must">Must Know</span>
+  <h2>The Design Problem</h2>
+
+  <p>The ticket body was one line: <em>"update the icons for the visibility filter popup and the manage subscriptions."</em> The real problem sits underneath that.</p>
+
+  <p>Two screens control what a user sees on the calendar, and they looked nearly the same while doing genuinely different things:</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Visibility sheet</h3>
+      <p class="sub" style="margin-bottom:10px">A bottom sheet, "Show or Hide Calendars"</p>
+      <p>Flips a <strong>local</strong> <code>Calendar.displayed</code> flag on calendars you already subscribe to. Reversible, instant, private to your device.</p>
+      <span class="file">feature/calendar/…/schedule/ScheduleView.kt</span>
+    </div>
+    <div class="card">
+      <h3>Subscriptions screen</h3>
+      <p class="sub" style="margin-bottom:10px">A full screen, was "Manage Calendars"</p>
+      <p>Flips <strong>server-side</strong> subscription via <code>saveSubscriptions()</code>. Has a save button, a discard-changes dialog, and network consequences.</p>
+      <span class="file">app/…/ux/calendar/manage/ManageCalendarsScreen.kt</span>
+    </div>
+  </div>
+
+  <p>Both rendered a checkbox-shaped control on the left of each row. Nothing on screen told you which kind of action you were about to take.</p>
+</section>
+
+<hr class="hr">
+
+<section id="mock">
+  <span class="tag must">Must Know</span>
+  <h2>Mock Analysis</h2>
+
+  <p>Jared's mock showed both screens side by side. Comparing it against the shipped code produced four deltas, not the one the ticket described.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Element</th><th>Was</th><th>Target</th></tr></thead>
+    <tbody>
+      <tr><td>Visibility rows</td><td><code>Checkbox</code>, leading</td><td>eye / eye-off, trailing</td></tr>
+      <tr><td>Subscription rows</td><td><code>Icons.Rounded.CheckBox</code> glyph, leading</td><td>real <code>Switch</code>, leading</td></tr>
+      <tr><td>Both lists</td><td>flat</td><td>Church Headquarters / Locations / Calendars</td></tr>
+      <tr><td>Subscriptions title</td><td>"Manage Calendars"</td><td>"Calendar subscriptions"</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="card">
+    <h3>The grouping was already possible</h3>
+    <p>The mock's three sections map exactly onto the existing <code>CalendarType</code> enum:</p>
+    <pre><code>enum class CalendarType {
+    HEAD_QUARTERS, BUILDING, UNIT;   // Church Headquarters / Locations / Calendars
+}</code></pre>
+    <p>Because the enum is declared in display order, <code>CalendarType.entries</code> gives the section order for free — no ordering constant, no sort comparator.</p>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section id="ac">
+  <span class="tag must">Must Know</span>
+  <h2>Acceptance Criteria</h2>
+
+  <div class="warnbox">
+    <h3>These are derived, not given</h3>
+    <p>Jira MMA-6039 has a one-line description and zero comments. No FRs, no AC. The nearby <span class="file">feature/calendar/spec/viewsspec/spec.md</span> does carry FR-1…FR-26 / AC-1…AC-20, but that covers the calendar <em>views</em> work — the closest overlap is FR-7 / FR-8 / FR-17 on the shared <code>displayed</code> flag, and none of it mentions icons or grouping. That spec folder is also owned by someone else.</p>
+    <p>The list below was reconstructed from the mock, the locked decisions, and the eight tests. <strong>Get it agreed before review</strong> — otherwise reviewers are judging against a screenshot.</p>
+  </div>
+
+  <h3>Grouping — both screens</h3>
+  <ol class="ac">
+    <li>Calendars are grouped into sections rendered in the order <strong>Church Headquarters → Locations → Calendars</strong>, regardless of the order the query returns them.</li>
+    <li>A calendar type the user has no calendars for renders <strong>no header</strong> — no empty sections.</li>
+    <li>Order of calendars <em>within</em> a section is unchanged from the repository query.</li>
+    <li>A user with no calendars at all sees no headers and no rows.</li>
+  </ol>
+
+  <h3>Visibility sheet</h3>
+  <ol class="ac" start="5" style="counter-reset:ac 4">
+    <li>Each row shows an eye icon in the <strong>trailing</strong> position: open eye when shown, crossed-out eye when hidden.</li>
+    <li>Tapping a row toggles only that calendar, flips its icon, and adds or removes its events from every calendar view.</li>
+    <li>The visibility state persists across app restarts and is unchanged by this ticket in mechanism (still the repository <code>displayed</code> flag).</li>
+    <li>The sheet keeps its title "Show or Hide Calendars" and its header ✓ dismiss action.</li>
+  </ol>
+
+  <h3>Subscriptions screen</h3>
+  <ol class="ac" start="9" style="counter-reset:ac 8">
+    <li>The screen is titled <strong>"Calendar subscriptions"</strong>.</li>
+    <li>Each row shows a real <code>Switch</code> in the <strong>leading</strong> position; the calendar-color palette stays trailing.</li>
+    <li>A calendar the user cannot unsubscribe from shows the switch <strong>on and disabled</strong>, and the row does not respond to taps.</li>
+    <li>Toggling then confirming with ✓ persists the change; reopening the screen shows the new state.</li>
+    <li>Leaving with unsaved changes still raises the discard-changes dialog.</li>
+    <li>Subscribing to a new calendar makes it appear in the visibility sheet, in the correct section.</li>
+  </ol>
+
+  <h3>Accessibility</h3>
+  <ol class="ac" start="15" style="counter-reset:ac 14">
+    <li>Each row is a <strong>single</strong> TalkBack focus target announcing the calendar name and its state — no separate stop for the eye or the switch.</li>
+    <li>The subscriptions row announces a switch role (it previously announced no role at all).</li>
+  </ol>
+
+  <div class="card">
+    <span class="tag opt">Optional</span>
+    <h3>Explicitly out of scope</h3>
+    <p>The mock renders each section as a grey filled card (the <code>SettingsScreen</code> treatment — label floating above a filled <code>Card</code>). Flat headers shipped instead. <strong>This is the one open design question.</strong></p>
+  </div>
+
+  <p style="color:var(--muted);font-size:14px">AC-1 through AC-4 and parts of AC-11/12 are covered by the eight automated tests. The rest are manual — see <a href="#verify">Verification</a>.</p>
+</section>
+
+<hr class="hr">
+
+<section id="audit">
+  <span class="tag imp">Important</span>
+  <h2>Codebase Convention Audit</h2>
+
+  <p>The first draft of the plan was audited against the codebase before any code was written. It broke three conventions and missed one existing file.</p>
+
+  <div class="card">
+    <h3>Three breaks, fixed before implementing</h3>
+    <ol>
+      <li><strong><code>groupBy</code> in the composable.</strong> 20 of 21 <code>groupBy</code> call sites in the app live in use cases. Moved.</li>
+      <li><strong>Ad-hoc section iteration in the UI.</strong> The house pattern is a sealed <code>UiModel</code> with a <code>Header</code> variant, built in the use case — <code>DirectoryUiModel</code>, <code>CovenantPathPerson</code>, <code>ProxySearchUiModel</code>. <code>ScheduleUiModel</code> in the very same file already did it.</li>
+      <li><strong>File named <code>CalendarSection.kt</code>.</strong> Extension files are <code>*Ext.kt</code> here — 39 such files exist and 25 hold exactly one declaration, so a small single-purpose file is the norm, not an exception. <code>OrdinanceTypeExt.kt</code> is a near-exact template.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>One miss</h3>
+    <p><span class="file">app/src/test/…/grid/GetCalendarGridUiStateUseCaseTest.kt</span> already existed and covers the use case being changed. It became the home for the sheet's sectioning tests instead of a new file.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag opt">Optional</span>
+    <h3>Confirmed already-conventional</h3>
+    <ul>
+      <li><code>Icons.Rounded.Visibility</code> / <code>VisibilityOff</code> — precedent in <code>SyncOptionsScreen</code>, <code>HomeUiModel</code></li>
+      <li><code>Switch(onCheckedChange = null)</code> + <code>role = Role.Switch</code> — <code>SettingSwitchRow</code></li>
+      <li><code>@param:StringRes</code> on header ids, <code>TextHeader(color = Color.Transparent)</code>, <code>contentType = "Header"</code></li>
+      <li><code>material-icons-extended</code> already on both modules — no new drawables, no Gradle change</li>
+    </ul>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section id="decisions">
+  <span class="tag must">Must Know</span>
+  <h2>Locked Decisions</h2>
+
+  <div class="card">
+    <h3>1. Flat <code>TextHeader</code> sections, no cards</h3>
+    <p>Matches every other sectioned list in the app and keeps the subscriptions <code>LazyColumn</code>'s per-row keys. Diverges from the mock. <strong>Still open with Jared.</strong></p>
+  </div>
+
+  <div class="card">
+    <h3>2. Plain <code>item</code>, not <code>stickyHeader</code></h3>
+    <p>Both appear here (25 sticky vs ~39 plain), and plain is the more recent pattern — Settings sections, Birthday list. Sticky also still needs <code>@OptIn(ExperimentalFoundationApi::class)</code>. Three short sections gain nothing from pinning.</p>
+  </div>
+
+  <div class="card">
+    <h3>3. Reuse <code>R.string.calendars</code> for the UNIT section</h3>
+    <p>Avoids a third string with identical English. That string is used in exactly two places — one is the filter chip that opens this very sheet — and its <code>"Status of Calendars"</code> comment is stale. Only two new strings added.</p>
+  </div>
+
+  <div class="card">
+    <h3>4. Title stays sentence case</h3>
+    <p>The existing <code>calendar_subscriptions</code> string reads "Calendar subscriptions" and was previously unused. No runtime title-casing: title case is an English convention and would mangle roughly 30 sentence-case locales.</p>
+  </div>
+
+  <div class="card">
+    <h3>5. <code>Switch</code> sits leading, not trailing</h3>
+    <p>Every <code>Switch</code> precedent in the app is a <em>single-control</em> row. This row has <strong>two</strong> controls and already put one leading with the palette trailing. Moving the switch trailing would force the interactive palette to leading: more churn, worse accessibility. A code comment records this.</p>
+  </div>
+
+  <div class="card">
+    <h3>6. Palette stays hidden on unsubscribed rows</h3>
+    <p>Pre-existing behavior (<code>if (isVisibleOnAgenda)</code>), carried forward unchanged. The mock appears to show a palette on every row regardless of toggle state. Kept as-is: you cannot meaningfully pick a color for a calendar you do not receive, and changing it is outside an icons ticket. <strong>Flag to Jared rather than change silently.</strong></p>
+  </div>
+
+  <div class="card">
+    <h3>7. Unit-name subtitle stays</h3>
+    <p>The mock has no subtitle; the build shows the unit under each calendar name. Redundant for a single-unit user, but essential when a stake user sees same-named calendars from several units at once. Kept.</p>
+  </div>
+
+  <div class="warnbox">
+    <h3>Accessibility note worth preserving</h3>
+    <p>MMA-6010 (commit <code>5d8ec3201a</code>) deliberately replaced eye-like glyphs with a real <code>Checkbox</code> after review flagged missing semantics. This change goes back to a glyph — but keeps <code>toggleable(role = Role.Checkbox)</code> on the row and makes the eye decorative, so TalkBack still announces state with one focus target. <strong>Lead the PR description with this</strong> so the same comment doesn't recur.</p>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section id="impl">
+  <span class="tag imp">Important</span>
+  <h2>Implementation Walkthrough</h2>
+
+  <p>Three commits, rebased onto <code>0b616e604c</code> (PR #2049, the alpha-5.7 merge). Ten files, +477 / −51.</p>
+
+  <div class="card">
+    <h3>Commit 1 — <code>3ba0538d83</code> — Section header labels</h3>
+    <ul>
+      <li>Two new strings with translator comments: headquarters and locations</li>
+      <li><code>CalendarTypeExt.getSectionLabel()</code> — exhaustive <code>when</code>, no <code>else</code>, so a new enum value breaks the build rather than silently falling through</li>
+    </ul>
+    <span class="file">app/…/model/repository/calendar/CalendarTypeExt.kt</span>
+  </div>
+
+  <div class="card">
+    <h3>Commit 2 — <code>6ad51c6cc2</code> — Visibility sheet</h3>
+    <ul>
+      <li><code>DisplayCalendarUiModel</code> becomes a sealed interface with <code>Header</code> and <code>Calendar</code></li>
+      <li>Grouping moves into <code>GetCalendarGridUiStateUseCase</code>, walking <code>CalendarType.entries</code></li>
+      <li>Row's <code>Checkbox</code> → trailing <code>Visibility</code> / <code>VisibilityOff</code></li>
+      <li>Sheet body extracted to <code>DisplayCalendarsContent</code> so it previews without a <code>ModalBottomSheet</code></li>
+      <li>4 new tests</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Commit 3 — <code>72fbd1bfc5</code> — Subscriptions screen</h3>
+    <ul>
+      <li><code>ManageCalendarsUiModel</code> mirrors the sheet's sealed shape</li>
+      <li>Leading glyph → real <code>Switch</code>, following <code>SettingSwitchRow</code></li>
+      <li><code>role = Role.Switch</code> added — the row had <strong>no role at all</strong> before</li>
+      <li>Title moves to the previously-unused <code>calendar_subscriptions</code> string</li>
+      <li>4 new tests — the first coverage this use case has ever had</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <span class="tag opt">Optional</span>
+    <h3>One deviation from the approved plan</h3>
+    <p>The plan put manage-screen grouping inside the use case. The preview provider needs the same logic, so <code>toSectionedCalendars()</code> became a shared top-level function beside the model, called by both.</p>
+    <p>Known duplication a reviewer may raise: <code>toSectionedDisplayCalendars()</code> and <code>toSectionedCalendars()</code> are the same ~8-line algorithm over different types. A generic version would need three lambdas — judged less readable than the duplication.</p>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section id="blocker">
+  <span class="tag opt">Resolved</span>
+  <h2>Build Blocker — Resolved</h2>
+
+  <div class="okbox">
+    <h3>Expired JFrog token, surfaced by a Gradle bump</h3>
+    <p>Fixed by rotating the Artifactory identity token. Recorded here because it will recur.</p>
+  </div>
+
+  <p>Three facts combined:</p>
+  <ol>
+    <li>The rebased base upgraded Gradle <strong>9.6.1 → 9.7.0</strong>, which needs <code>kotlin-dsl</code> plugin <code>6.7.3</code></li>
+    <li>Only <code>5.1.2</code> and <code>5.2.0</code> were cached, so that artifact had to hit the network — the first one in a long while</li>
+    <li>The Artifactory identity token had silently expired, so jfrog returned <strong>401</strong></li>
+  </ol>
+
+  <p>Teammates hit the same thing the same week; the fix in every case was generating a new token at <a href="https://icseng.jfrog.io/artifactory">icseng.jfrog.io/artifactory</a> and updating <code>icsJfrogPassword</code> in <code>~/.gradle/gradle.properties</code>.</p>
+
+  <div class="card">
+    <h3>Two misleading symptoms</h3>
+    <ul>
+      <li><strong>Android Studio</strong> reported <em>"The settings are not yet available for build ':'"</em> — an <code>IllegalStateException</code> during init-script processing, with no 401 anywhere in <code>idea.log</code>. It was the same expired token; the nested <code>build-logic</code> build failed to evaluate and Gradle reported it unhelpfully.</li>
+      <li><strong>A warm cache hid it for weeks.</strong> The token was probably dead long before anything broke.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <span class="tag opt">Optional</span>
+    <h3>Interim workaround used before the fix</h3>
+    <p>Verification initially ran with <code>composeRichEditor</code> pinned back to the cached <code>1.0.0-rc14</code> and <code>--offline</code>. That pin never entered a commit. It is no longer needed — the gates now run against the real dependency set.</p>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section id="verify">
+  <span class="tag imp">Important</span>
+  <h2>Verification</h2>
+
+  <h3>Automated — done</h3>
+  <ul class="check done">
+    <li><code>:app:assembleDebug</code></li>
+    <li><code>:app:lintDebug</code></li>
+    <li><code>:app:detektDebug</code> — no findings in changed files</li>
+    <li><code>:app:testDebugUnitTest</code> — 735 tests / 123 classes, 0 failures</li>
+    <li>8 new tests confirmed executing, not silently filtered</li>
+    <li>Both usually-flaky tests passed on the full-suite run</li>
+  </ul>
+
+  <pre><code>./gradlew :app:assembleDebug :app:lintDebug :app:detektDebug :app:testDebugUnitTest</code></pre>
+
+  <h3>Manual — on device</h3>
+  <p><strong>Visibility sheet:</strong> Drawer → Calendar → tap the "Calendars" chip.</p>
+  <ul class="check">
+    <li>Sections in order: Church Headquarters → Locations → Calendars (AC-1)</li>
+    <li>No header over a section you have no calendars for (AC-2)</li>
+    <li>Eye icon trailing; open = shown, crossed = hidden (AC-5)</li>
+    <li>Tapping flips the icon and changes events behind the sheet (AC-6)</li>
+  </ul>
+
+  <p><strong>Subscriptions:</strong> Calendar → overflow ⋮ → "Manage Calendars".</p>
+  <ul class="check">
+    <li>Title reads "Calendar subscriptions" (AC-9)</li>
+    <li>Switch leading, palette trailing (AC-10)</li>
+    <li>Non-subscribable rows: switch on, disabled, no tap response (AC-11)</li>
+    <li>Toggle → ✓ → reopen, state persisted (AC-12)</li>
+    <li>Toggle → X → discard dialog appears (AC-13)</li>
+    <li>Newly subscribed calendar appears in the sheet, right section (AC-14)</li>
+  </ul>
+
+  <p><strong>TalkBack</strong> over both lists:</p>
+  <ul class="check">
+    <li>One focus stop per row, name + state announced (AC-15)</li>
+    <li>Subscriptions rows announce a switch role (AC-16)</li>
+  </ul>
+
+  <p><strong>Previews</strong> for the PR:</p>
+  <ul class="check">
+    <li><code>DisplayCalendarsContentPreview</code> — light and dark</li>
+    <li><code>ManageCalendarsPreview</code> — light and dark</li>
+  </ul>
+
+  <div class="warnbox">
+    <h3>The check that can silently prove nothing</h3>
+    <p>If your unit only has UNIT-type calendars you will see a single "Calendars" header and no grouping. That is <em>correct</em> behavior (AC-2), but it means AC-1 went untested. Use a proxy unit with building or headquarters calendars to actually exercise the ordering.</p>
+  </div>
+</section>
+
+<hr class="hr">
+
+<section id="next">
+  <span class="tag must">Must Know</span>
+  <h2>What To Do Next</h2>
+  <ol>
+    <li><strong>Get the acceptance criteria agreed.</strong> They were reconstructed after the fact; nobody has signed off. Settling AC-1…AC-16 now is what keeps review focused on the code instead of the intent.</li>
+    <li><strong>Ask Jared two things:</strong> the grey section cards (shipped flat instead), and whether the palette should show on unsubscribed rows (currently hidden, mock suggests always visible). Neither blocks the PR, but both are visible mock deltas a reviewer will spot.</li>
+    <li><strong>Verify AC-1 on a unit that has building calendars.</strong> The device pass so far ran on Rexburg YSA 10th Ward, which has none — so no "Locations" section appeared and the section <em>ordering</em> is still unverified.</li>
+    <li><strong>Finish the manual pass</strong> — TalkBack on both lists, and preview screenshots for the PR.</li>
+    <li><strong>Open the PR against <code>ICS-Eng/MemberTools-Android</code></strong>, not the fork. Lead with the MMA-6010 accessibility note.</li>
+  </ol>
+</section>
+
+</main>
+
+<script>
+var nav=document.querySelector('.skipto');
+nav.querySelector('.skipto-toggle').addEventListener('click',function(){nav.classList.toggle('open')});
+document.addEventListener('click',function(e){if(!nav.contains(e.target))nav.classList.remove('open')});
+nav.querySelectorAll('.skipto-menu a').forEach(function(a){a.addEventListener('click',function(){
+  nav.classList.remove('open');
+  requestAnimationFrame(function(){document.activeElement&&document.activeElement.blur()});})});
+</script>
+</body>
+</html>

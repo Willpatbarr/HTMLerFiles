@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticket Workflow Checklist</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
+  --ok:#2E8B62; --blocked:#C24A4A;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.6 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+@media (max-width:1180px){main{padding-top:72px}}
+
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.6rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media (max-width:900px){.head{grid-template-columns:1fr}.head .lede{margin-top:1.1rem}}
+
+h2{font-size:1.3rem;margin:0 0 .5rem;font-weight:600;letter-spacing:-.01em}
+h3{font-size:1.06rem;margin:1.7rem 0 .45rem;font-weight:600}
+p{margin:.5rem 0 1rem;max-width:64ch}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:#00000040;padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+a{color:var(--accent);overflow-wrap:anywhere}
+
+/* CSS-only controls */
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.page{display:none}
+.tabpanel{display:none}
+#r-p-flow:checked ~ main #p-flow{display:block}
+#r-p-triage:checked ~ main #p-triage{display:block}
+#r-p-upkeep:checked ~ main #p-upkeep{display:block}
+#r-p-flow:checked ~ .skipto label[for="r-p-flow"],
+#r-p-triage:checked ~ .skipto label[for="r-p-triage"],
+#r-p-upkeep:checked ~ .skipto label[for="r-p-upkeep"]{background:var(--bg);color:var(--accent)}
+#r-t-p0:checked ~ main #t-p0,
+#r-t-p1:checked ~ main #t-p1,
+#r-t-p2:checked ~ main #t-p2,
+#r-t-p3:checked ~ main #t-p3,
+#r-t-p4:checked ~ main #t-p4,
+#r-t-flags:checked ~ main #t-flags,
+#r-t-never:checked ~ main #t-never,
+#r-t-weekly:checked ~ main #t-weekly,
+#r-t-why:checked ~ main #t-why{display:block}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+#r-t-p0:checked ~ main label[for="r-t-p0"],
+#r-t-p1:checked ~ main label[for="r-t-p1"],
+#r-t-p2:checked ~ main label[for="r-t-p2"],
+#r-t-p3:checked ~ main label[for="r-t-p3"],
+#r-t-p4:checked ~ main label[for="r-t-p4"]{color:var(--g1);border-bottom-color:var(--g1);
+  font-weight:600}
+#r-t-flags:checked ~ main label[for="r-t-flags"],
+#r-t-never:checked ~ main label[for="r-t-never"]{color:var(--g2);border-bottom-color:var(--g2);
+  font-weight:600}
+#r-t-weekly:checked ~ main label[for="r-t-weekly"],
+#r-t-why:checked ~ main label[for="r-t-why"]{color:var(--g3);border-bottom-color:var(--g3);
+  font-weight:600}
+
+/* floating nav */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;display:flex;
+  flex-direction:column;gap:5px;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:12px 12px 13px;box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 10px 4px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  .skipto:hover .skipto-toggle svg,.skipto:focus-within .skipto-toggle svg,
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+}
+
+/* units */
+.unit{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 20px 6px;margin:0 0 18px}
+.unit h3{margin:0 0 .2rem}
+.rail{font-weight:400;margin-right:.5rem}
+.g1 .rail{color:var(--g1)} .g2 .rail{color:var(--g2)} .g3 .rail{color:var(--g3)}
+.cost{color:var(--muted);font-size:13.5px;margin:.1rem 0 .9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));
+  gap:18px}
+
+/* checklists */
+ul.check{list-style:none;padding-left:0;margin:0 0 14px}
+ul.check li{display:grid;grid-template-columns:1.4rem 1fr;align-items:baseline;
+  margin:0 0 10px;font-size:15px}
+ul.check input{margin:0;accent-color:var(--ok);transform:translateY(2px)}
+ul.check .note{display:block;color:var(--faint);font-size:12.7px;margin-top:2px}
+
+/* tables */
+.tw{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{color:var(--faint);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  border-bottom:1px solid var(--border-strong)}
+
+/* callout */
+.note-box{border:1px solid var(--warn);background:var(--warn-soft);border-radius:10px;
+  padding:13px 17px;margin:0 0 18px}
+.note-box b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;margin:0 0 5px}
+
+/* code */
+.code{position:relative;margin:0 0 16px}
+.code pre{margin:0;background:#0f1214;border:1px solid var(--border);border-radius:10px;
+  padding:13px 15px;overflow-x:auto;max-width:100%;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.55}
+.code .lang{position:absolute;top:7px;right:10px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--card);
+  padding:1px 4px;border-radius:3px;pointer-events:none;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.k{color:#A25494} .ty{color:#4368A8} .add{color:#2E8B62} .cm{color:var(--faint)}
+.bad{color:var(--blocked)} .ok{color:var(--ok)}
+</style>
+</head>
+<body>
+
+<input class="st" type="radio" name="pg" id="r-p-flow" checked>
+<input class="st" type="radio" name="pg" id="r-p-triage">
+<input class="st" type="radio" name="pg" id="r-p-upkeep">
+<input class="st" type="radio" name="tflow" id="r-t-p0" checked>
+<input class="st" type="radio" name="tflow" id="r-t-p1">
+<input class="st" type="radio" name="tflow" id="r-t-p2">
+<input class="st" type="radio" name="tflow" id="r-t-p3">
+<input class="st" type="radio" name="tflow" id="r-t-p4">
+<input class="st" type="radio" name="ttriage" id="r-t-flags" checked>
+<input class="st" type="radio" name="ttriage" id="r-t-never">
+<input class="st" type="radio" name="tupkeep" id="r-t-weekly" checked>
+<input class="st" type="radio" name="tupkeep" id="r-t-why">
+<input class="st" type="checkbox" id="navtoggle">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-flow">Workflow</label>
+    <label for="r-p-triage">Triage</label>
+    <label for="r-p-upkeep">Upkeep</label>
+  </div>
+</nav>
+
+<main>
+
+<div class="head">
+  <h1>Ticket Workflow Checklist</h1>
+  <p class="lede">Five phases, a triage table for failures that are not yours, and a weekly
+  sweep. Every item here cost something once.</p>
+</div>
+
+<div class="code"><span class="lang">flow</span><pre><span class="k">/kickoff</span>  →  worktree  →  verified slices  →  <span class="add">device pass</span>  →  <span class="k">/preflight</span>  →  PR  →  close the worktree</pre></div>
+
+<!-- ============ PAGE 1 ============ -->
+<section class="page" id="p-flow">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-p0">0 · Setup</label>
+    <label class="tab" for="r-t-p1">1 · Plan</label>
+    <label class="tab" for="r-t-p2">2 · Build</label>
+    <label class="tab" for="r-t-p3">3 · Device</label>
+    <label class="tab" for="r-t-p4">4 · Preflight &amp; PR</label>
+  </div>
+
+  <div class="tabpanel" id="t-p0">
+    <h2>Phase 0 — before touching code</h2>
+    <div class="unit g1">
+      <h3><span class="rail">│</span>Setup</h3>
+      <p class="cost">Skipping this is what produces a red gate nobody can attribute.</p>
+      <ul class="check">
+        <li><input type="checkbox"><span><code>gh auth status</code> — active account is
+          <code>willbarr_church</code>
+          <span class="note">Check, never switch blind. Acting on the memory without checking
+          once had a correctly-pushed branch about to be deleted.</span></span></li>
+        <li><input type="checkbox"><span>Worktree lives outside the repo
+          <span class="note">~/.claude-worktrees/MemberTools-Android/&lt;branch&gt; — an
+          in-repo tree made Konsist scan 10,347 files and the gate took 17m29s.</span></span></li>
+        <li><input type="checkbox"><span>Branch off current <code>upstream/main</code>
+          <span class="note">Not a stale local main; the maltSync pin moves upstream without
+          you.</span></span></li>
+        <li><input type="checkbox"><span>Android Studio sync and your own Gradle runs are idle
+          <span class="note">Two builds in one checkout corrupt each other's
+          <code>build/</code>.</span></span></li>
+        <li><input type="checkbox"><span>Older branch of mine still unpushed? Finish it or park
+          it on purpose
+          <span class="note">Twelve worktrees exist right now; several hold green work nobody
+          is waiting on because nobody knows it is done.</span></span></li>
+      </ul>
+    </div>
+    <div class="code"><span class="lang">bash</span><pre><span class="k">gh</span> auth status
+<span class="k">git</span> worktree add <span class="ty">~/.claude-worktrees/MemberTools-Android/MMA-XXXX</span> -b MMA-XXXX upstream/main
+<span class="k">pgrep</span> -fl GradleDaemon   <span class="cm"># must be quiet before a background gate</span></pre></div>
+  </div>
+
+  <div class="tabpanel" id="t-p1">
+    <h2>Phase 1 — plan before code</h2>
+    <div class="unit g1">
+      <h3><span class="rail">│</span>Plan</h3>
+      <p class="cost">Tickets planned this way did not get re-scoped mid-build. MMA-5878 was
+      re-scoped after the first plan and the whole plan was reverted.</p>
+      <ul class="check">
+        <li><input type="checkbox"><span><code>/kickoff &lt;MMA-XXXX&gt;</code> — plan doc, no
+          code</span></li>
+        <li><input type="checkbox"><span>Walk the FRs with <code>/rubberDuckey</code>, one at a
+          time</span></li>
+        <li><input type="checkbox"><span>Open questions get asked, not designed around
+          <span class="note">A question answered in the plan doc costs a paragraph; answered in
+          code it costs the branch.</span></span></li>
+        <li><input type="checkbox"><span>Plan doc saved under
+          <code>~/Documents/TicketPlans/&lt;TICKET&gt;/</code> and actually opened</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-p2">
+    <h2>Phase 2 — build loop, one slice at a time</h2>
+    <div class="unit g1">
+      <h3><span class="rail">│</span>Build</h3>
+      <p class="cost">A long autonomous run is what produces a diff you cannot review and
+      commits you did not ask for.</p>
+      <ul class="check">
+        <li><input type="checkbox"><span>One slice, then pause at the next real fork</span></li>
+        <li><input type="checkbox"><span>Inner gate on the changed module only</span></li>
+        <li><input type="checkbox"><span>New Robolectric test carries
+          <code>@Config(sdk = [34])</code>
+          <span class="note">Paired with <code>@RunWith(AndroidJUnit4::class)</code> as one
+          unit; without it the test dies configuring, not asserting.</span></span></li>
+        <li><input type="checkbox"><span>Comment density matches the sibling file
+          <span class="note">Class KDoc for constraints, nothing on self-evident properties, no
+          FR or AC ids in code.</span></span></li>
+        <li><input type="checkbox"><span>Leave it uncommitted until I have read the diff
+          myself</span></li>
+      </ul>
+    </div>
+    <div class="code"><span class="lang">bash</span><pre><span class="ty">./verify.sh</span> --module <span class="ty">:feature:calendar</span> --inner
+<span class="ty">./verify.sh</span> --module <span class="ty">:feature:calendar</span> --full   <span class="cm"># mid-work checkpoint</span></pre></div>
+  </div>
+
+  <div class="tabpanel" id="t-p3">
+    <h2>Phase 3 — device pass</h2>
+    <div class="unit g1">
+      <h3><span class="rail">│</span>Device</h3>
+      <p class="cost">MMA-5917, 5903, 5928, 6010, 5964, 6040 all reached "green, uncommitted,
+      pending device pass" and stopped there.</p>
+      <ul class="check">
+        <li><input type="checkbox"><span>VPN up before the emulator cold-boots
+          <span class="note">Dev mode breaking is stale cached DNS; reconnecting the VPN while
+          the emulator runs does not take.</span></span></li>
+        <li><input type="checkbox"><span>Exercise every state the diff touches, not the happy
+          path</span></li>
+        <li><input type="checkbox"><span>Moved or renamed composables get a runtime
+          click-through
+          <span class="note">Unit tests cannot see a moved <code>@Composable</code>
+          regression.</span></span></li>
+        <li><input type="checkbox"><span>Screenshot or recording captured for the PR
+          body</span></li>
+      </ul>
+    </div>
+    <div class="note-box">
+      <b>Stop rule</b>
+      A ticket without a device pass is not "done pending review" — it is unfinished. Park it
+      with a note or finish it; do not start the next ticket on top of it.
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-p4">
+    <h2>Phase 4 — preflight and PR</h2>
+    <div class="unit g1">
+      <h3><span class="rail">│</span>Preflight and PR</h3>
+      <p class="cost">In-flux schema JSON and the maltSync pin are the two things that keep
+      leaking into diffs.</p>
+      <ul class="check">
+        <li><input type="checkbox"><span><code>/preflight</code> — add <code>--thorough</code>
+          for a wide diff, <code>--iso &lt;TestClass&gt;</code> for a flow test</span></li>
+        <li><input type="checkbox"><span>Diff against upstream carries no
+          <code>gradle/libs.versions.toml</code> and no stray files</span></li>
+        <li><input type="checkbox"><span>Schema JSON for an in-flux version stays untracked
+          <span class="note">Untracked right now: MemberDatabase 49, CalendarDatabase 9,
+          MapDatabase 2.</span></span></li>
+        <li><input type="checkbox"><span>PR opened against upstream with an explicit
+          head</span></li>
+        <li><input type="checkbox"><span>Worktree removed, or parked with a note saying
+          why</span></li>
+      </ul>
+    </div>
+    <div class="code"><span class="lang">bash</span><pre><span class="k">git</span> diff upstream/main..HEAD --stat
+<span class="k">git</span> push -u origin <span class="ty">&lt;branch&gt;</span>
+<span class="k">gh</span> pr create --repo <span class="ty">ICS-Eng/MemberTools-Android</span> \
+  --base main --head <span class="ty">willbarr_church:&lt;branch&gt;</span> --title <span class="ty">"MMA-XXXX ..."</span></pre></div>
+  </div>
+</section>
+
+<!-- ============ PAGE 2 ============ -->
+<section class="page" id="p-triage">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-flags">Red flags</label>
+    <label class="tab" for="r-t-never">Never unasked</label>
+  </div>
+
+  <div class="tabpanel" id="t-flags">
+    <h2>Red flags — read this before debugging</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>What you see</th><th>Cause</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Mass <code>NoClassDefFoundError</code>, missing <code>*-results.bin</code></td>
+            <td>Two Gradle builds colliding in one checkout</td>
+            <td><code>pgrep -fl GradleDaemon</code>, then <code>./gradlew --stop</code>, then one
+              exclusive run</td>
+          </tr>
+          <tr>
+            <td>Konsist or KoinModuleTest citing <code>.claude/worktrees/...</code></td>
+            <td>A worktree inside the repo; the hook was bypassed</td>
+            <td><code>git worktree move</code> it to
+              <code>~/.claude-worktrees/MemberTools-Android/</code></td>
+          </tr>
+          <tr>
+            <td><code>GetWelcomeUiState</code>, <code>GetSacramentAttendanceCounter</code>,
+              <code>GetClassQuorumAttendance</code> or <code>AuthorizedValidator</code> red in a
+              full run</td>
+            <td>Known ordering and shared-state flake; passes alone</td>
+            <td>Re-run in isolation to confirm, re-run the gate, do not debug the branch</td>
+          </tr>
+          <tr>
+            <td>23 golden diffs in <code>LocationScreenshotTest</code> and
+              <code>ManageEventsScreenshotTest</code></td>
+            <td>Stale reference PNGs on plain main</td>
+            <td>Reproduce in the CurrentProdVersion worktree; anything outside those two classes
+              is yours</td>
+          </tr>
+          <tr>
+            <td><code>initializationError</code>,
+              <code>targetSdkVersion=37 &gt; maxSdkVersion=36</code></td>
+            <td>Robolectric 4.16.1 caps at SDK 36</td>
+            <td>Add <code>@Config(sdk = [34])</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note-box">
+      <b>Order of operations</b>
+      Check this table before reading the stack trace. Four of the five rows produce failures
+      that look like a broken branch and are not.
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-never">
+    <h2>Never unasked</h2>
+    <div class="grid">
+      <div class="unit g2">
+        <h3><span class="rail">│</span>Git history</h3>
+        <p class="cost">Commit, push, stage, rebase, amend. Work stays visible in
+        <code>git status</code> so the diff is reviewable where you left it.</p>
+      </div>
+      <div class="unit g2">
+        <h3><span class="rail">│</span>The spec folder</h3>
+        <p class="cost"><code>feature/calendar/spec/</code> belongs to someone else. New spec
+        content goes in the Jira ticket or your own docs.</p>
+      </div>
+      <div class="unit g2">
+        <h3><span class="rail">│</span>The maltSync pin</h3>
+        <p class="cost">Bumped by the release owner. After a rebase, confirm the moved pin reads
+        as upstream's and not as a stray change in your PR.</p>
+      </div>
+      <div class="unit g2">
+        <h3><span class="rail">│</span>In-flux schema JSON</h3>
+        <p class="cost">A schema version still being edited stays untracked until that version
+        is locked.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE 3 ============ -->
+<section class="page" id="p-upkeep">
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-weekly">Weekly sweep</label>
+    <label class="tab" for="r-t-why">Why these items</label>
+  </div>
+
+  <div class="tabpanel" id="t-weekly">
+    <h2>Weekly sweep — ten minutes</h2>
+    <div class="unit g3">
+      <h3><span class="rail">│</span>Sweep</h3>
+      <p class="cost">Twelve worktrees, several with unpushed green work, is the state this
+      exists to catch.</p>
+      <ul class="check">
+        <li><input type="checkbox"><span><code>git worktree list</code> — remove anything
+          shipped or dead</span></li>
+        <li><input type="checkbox"><span>Each survivor: pushed, PR open, or a park note
+          written</span></li>
+        <li><input type="checkbox"><span><code>/preflight update &lt;PR #&gt;</code> on any PR
+          that came back with review comments
+          <span class="note">The rule store is how a reviewer's comment stops recurring; it has
+          49 rules and the top offenders repeat 4 to 7 times.</span></span></li>
+      </ul>
+    </div>
+    <div class="code"><span class="lang">bash</span><pre><span class="k">git</span> worktree list
+<span class="k">git</span> worktree remove <span class="ty">~/.claude-worktrees/MemberTools-Android/&lt;done&gt;</span></pre></div>
+  </div>
+
+  <div class="tabpanel" id="t-why">
+    <h2>Why these items and not others</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Item</th><th>What it cost</th><th>Drop it when</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Device pass as its own phase</td>
+            <td>Six tickets parked at green-and-unverified</td>
+            <td>Never — no JVM harness replaces it</td>
+          </tr>
+          <tr>
+            <td>Worktree outside the repo</td>
+            <td>10,347 files scanned, a 17m29s gate, two bogus Konsist failures</td>
+            <td>A native worktree-location setting exists</td>
+          </tr>
+          <tr>
+            <td>Quiet builds before a gate</td>
+            <td>Hundreds of unrelated <code>NoClassDefFoundError</code>s read as a broken
+              branch</td>
+            <td>Gradle isolates concurrent invocations per checkout</td>
+          </tr>
+          <tr>
+            <td>Flake list in triage</td>
+            <td>Four tests that redden full runs only; one had a branch under suspicion</td>
+            <td>Someone owns and fixes the shared-state teardown</td>
+          </tr>
+          <tr>
+            <td><code>gh auth status</code> first</td>
+            <td>A false alarm that nearly deleted a correctly-pushed branch</td>
+            <td>Only one account is authenticated</td>
+          </tr>
+          <tr>
+            <td>Uncommitted until reviewed</td>
+            <td>Four commits made unasked; the diff was buried and the review flow broke</td>
+            <td>Never — this one is a standing instruction</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

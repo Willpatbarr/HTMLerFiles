@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MMA-6006 pt 2 — Remove a Notification Recipient</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  --g1:#1C8E9C; --g2:#B06A1E; --g3:#5A8C33;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:74rem;margin-inline:auto;padding:4.5rem clamp(16px,4vw,40px) 5rem}
+/* 1580px, not 1180px: the column caps at 74rem (~1184px), so below ~1580px the fixed nav competes
+   with the column instead of sitting beside it. Moves together with the collapse further down. */
+@media (max-width:1580px){ main{padding-top:72px} }
+h1{font-size:clamp(26px,5.4vw,38px);margin:0 0 .85rem;color:var(--accent);
+  font-weight:600;letter-spacing:-.015em}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 1.6rem}
+.head h1{margin:0}
+.head .lede{margin:.35rem 0 0;color:var(--muted)}
+@media (max-width:900px){ .head{grid-template-columns:1fr} .head .lede{margin-top:1.1rem} }
+h2{font-size:1.32rem;margin:2.1rem 0 .9rem;font-weight:600;letter-spacing:-.01em}
+h2:first-child{margin-top:0}
+p{margin:0 0 .7rem}
+ul,ol{margin:0 0 .7rem;padding-left:1.2rem}
+li{margin:0 0 .28rem}
+a{color:var(--accent);overflow-wrap:anywhere}
+code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
+  border-radius:4px;overflow-wrap:anywhere}
+.m{font-family:var(--mono);font-size:.93em;letter-spacing:-.01em;overflow-wrap:anywhere}
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+.page{display:none}
+.tabpanel{display:none}
+#r-p-over:checked ~ main #p-over{display:block}
+#r-p-steps:checked ~ main #p-steps{display:block}
+#r-p-close:checked ~ main #p-close{display:block}
+#r-p-flight:checked ~ main #p-flight{display:block}
+#r-t-pf1:checked ~ main #t-pf1{display:block}
+#r-t-pf2:checked ~ main #t-pf2{display:block}
+#r-t-pf3:checked ~ main #t-pf3{display:block}
+#r-t-pf4:checked ~ main #t-pf4{display:block}
+#r-t-scope:checked ~ main #t-scope{display:block}
+#r-t-split:checked ~ main #t-split{display:block}
+#r-t-out:checked ~ main #t-out{display:block}
+#r-t-s1:checked ~ main #t-s1{display:block}
+#r-t-c1:checked ~ main #t-c1{display:block}
+#r-t-c2:checked ~ main #t-c2{display:block}
+#r-t-c3:checked ~ main #t-c3{display:block}
+#r-t-c4:checked ~ main #t-c4{display:block}
+#r-t-c5:checked ~ main #t-c5{display:block}
+#r-t-s6:checked ~ main #t-s6{display:block}
+#r-t-risk:checked ~ main #t-risk{display:block}
+#r-t-dev:checked ~ main #t-dev{display:block}
+#r-t-todo:checked ~ main #t-todo{display:block}
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:700;padding:2px 10px 4px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+#r-p-over:checked ~ .skipto label[for="r-p-over"],
+#r-p-steps:checked ~ .skipto label[for="r-p-steps"],
+#r-p-close:checked ~ .skipto label[for="r-p-close"],
+#r-p-flight:checked ~ .skipto label[for="r-p-flight"]{background:var(--bg);color:var(--accent)}
+@media (max-width:1580px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;
+  transition:.15s;margin-bottom:-2px;display:inline-block}
+.tab:hover{color:var(--ink)}
+#r-t-scope:checked ~ main label[for="r-t-scope"],
+#r-t-split:checked ~ main label[for="r-t-split"],
+#r-t-out:checked ~ main label[for="r-t-out"]{
+  color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t-s1:checked ~ main label[for="r-t-s1"],
+#r-t-c1:checked ~ main label[for="r-t-c1"],
+#r-t-c2:checked ~ main label[for="r-t-c2"],
+#r-t-c3:checked ~ main label[for="r-t-c3"],
+#r-t-c4:checked ~ main label[for="r-t-c4"],
+#r-t-c5:checked ~ main label[for="r-t-c5"],
+#r-t-s6:checked ~ main label[for="r-t-s6"]{
+  color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
+#r-t-risk:checked ~ main label[for="r-t-risk"],
+#r-t-dev:checked ~ main label[for="r-t-dev"],
+#r-t-pf1:checked ~ main label[for="r-t-pf1"],
+#r-t-pf2:checked ~ main label[for="r-t-pf2"],
+#r-t-pf3:checked ~ main label[for="r-t-pf3"],
+#r-t-pf4:checked ~ main label[for="r-t-pf4"],
+#r-t-todo:checked ~ main label[for="r-t-todo"]{
+  color:var(--g3);border-bottom-color:var(--g3);font-weight:600}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:15px 17px;margin:0 0 14px;position:relative}
+.card > *:last-child{margin-bottom:0}
+.ct{font-size:1.06rem;font-weight:650;color:#f5f7f9;margin:0 0 .55rem;letter-spacing:-.008em}
+.ct .m{font-size:.9em}
+.rail{font-weight:400}
+.r1{color:var(--g1)} .r2{color:var(--g2)} .r3{color:var(--g3)}
+.tag{position:absolute;top:12px;right:15px;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;font-weight:700;opacity:.6;pointer-events:none;font-family:var(--mono)}
+.typed .ct{padding-right:5.4rem}
+.card.hi{background:#242a32;border-color:var(--border-strong)}
+.card.hi .ct{font-size:1.18rem;color:#ffffff;font-weight:680;padding:0 0 .52rem;
+  margin:0 0 .62rem;border-bottom:1px solid rgba(255,255,255,.14)}
+.card.hi p:not(.ct),.card.hi li{color:var(--muted)}
+.card.c-new    {background:#16282b;border-color:#2c535b}
+.card.c-new-g  {background:#182430;border-color:#2d4a66}
+.card.c-add    {background:#182a1f;border-color:#2f5a3e}
+.card.c-edit   {background:#2a2319;border-color:#5b4629}
+.card.c-run    {background:#231d2c;border-color:#4a3a5d}
+.grid{display:grid;gap:14px;margin:0 0 14px;
+  grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.grid2{display:grid;gap:14px;margin:0 0 14px;
+  grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
+.grid .card,.grid2 .card,.grid .note,.grid2 .note{margin:0}
+.t-new{color:#2AB8C9} .t-new-g{color:#2E93DB} .t-add{color:#3DAF62}
+.t-add-g{color:#46B08C} .t-edit{color:#D98C3B} .t-replace{color:#C9705B}
+.t-replace-g{color:#C95B7A} .t-run{color:#A16BD9}
+.tw{overflow-x:auto;max-width:100%;margin:0;border:1px solid var(--border);
+  border-radius:9px;background:rgba(0,0,0,.16)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--faint);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;background:rgba(0,0,0,.24)}
+tr:last-child td{border-bottom:0}
+td code{white-space:normal}
+.loc{display:inline-block;max-width:100%;overflow-wrap:anywhere;font-family:var(--mono);
+  font-size:12.2px;line-height:1.5;color:var(--muted);background:rgba(0,0,0,.3);
+  border:1px solid rgba(255,255,255,.085);border-radius:6px;padding:3px 9px;margin:0 0 .5rem}
+.desc{color:var(--muted);font-size:13.6px;margin:0 0 .5rem}
+.code{position:relative;margin:0 0 .6rem}
+.code pre{margin:0;background:var(--bg);border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;padding:13px 15px;overflow-x:auto;max-width:100%;
+  font-family:var(--mono);font-size:12.8px;line-height:1.56}
+.code .lang{position:absolute;top:6px;right:9px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:700;color:var(--faint);background:var(--bg);
+  padding:1px 4px;border-radius:3px;pointer-events:none;font-family:var(--mono)}
+.k{color:#A25494} .ty{color:#4368A8} .ad{color:#2E8B62} .rm{color:#C24A4A}
+.cm{color:var(--faint)}
+.why{font-size:14px;margin:0;color:var(--muted)}
+.why > li{margin:0 0 .2rem}
+.note{--nc:var(--warn);--ns:var(--warn-soft);
+  border:1px solid var(--nc);background:var(--ns);border-radius:12px;
+  padding:13px 17px;margin:0 0 14px;position:relative}
+.note b{display:block;color:var(--nc);font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;font-weight:700;margin:0 0 5px}
+.note > *:last-child{margin-bottom:0}
+.note.good{--nc:#5FBF8F;--ns:#13291f}
+.note.calm{--nc:#8FD0E8;--ns:#152833}
+.note.pre {--nc:#B79CE8;--ns:#221b33}
+.note.ref {--nc:#5C9CD6;--ns:#141f2b}
+.note.bad {--nc:#E58A8A;--ns:#3B1D1D}
+.note.pre b,.note.good b,.note.calm b,.note.ref b,.note.bad b{
+  text-transform:none;font-size:1.04rem;letter-spacing:-.008em;font-weight:650;margin:0 0 .45rem}
+.note.pre b .m,.note.good b .m,.note.calm b .m,.note.ref b .m,.note.bad b .m{font-size:.9em}
+.note .tw{border-color:rgba(255,255,255,.1)}
+.outline{color:var(--ink);font-size:14px;margin:0}
+.outline li{margin:0 0 .28rem}
+.todo{list-style:none;padding-left:0;margin:0;font-size:14.2px}
+.todo li{margin:0 0 .5rem}
+.todo li:last-child{margin-bottom:0}
+.todo label{display:grid;grid-template-columns:1.1rem 1fr;gap:.6rem;align-items:start;cursor:pointer}
+.todo.boxed li{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.065);
+  border-radius:8px;padding:8px 11px}
+.cb{width:15px;height:15px;margin:.26rem 0 0;accent-color:var(--accent);cursor:pointer;flex:none}
+.cb:checked + span{color:var(--faint);text-decoration:line-through}
+@media (max-width:720px){ .tabs{flex-wrap:wrap} .typed .ct{padding-right:0}
+  .tag{position:static;display:block;margin:0 0 .3rem} }
+</style>
+</head>
+<body>
+
+<input class="st" type="radio" name="pg" id="r-p-over" checked>
+<input class="st" type="radio" name="pg" id="r-p-steps">
+<input class="st" type="radio" name="pg" id="r-p-close">
+<input class="st" type="radio" name="pg" id="r-p-flight">
+<input class="st" type="radio" name="tover" id="r-t-scope" checked>
+<input class="st" type="radio" name="tover" id="r-t-split">
+<input class="st" type="radio" name="tover" id="r-t-out">
+<input class="st" type="radio" name="tsteps" id="r-t-s1" checked>
+<input class="st" type="radio" name="tsteps" id="r-t-c1">
+<input class="st" type="radio" name="tsteps" id="r-t-c2">
+<input class="st" type="radio" name="tsteps" id="r-t-c3">
+<input class="st" type="radio" name="tsteps" id="r-t-c4">
+<input class="st" type="radio" name="tsteps" id="r-t-c5">
+<input class="st" type="radio" name="tsteps" id="r-t-s6">
+<input class="st" type="radio" name="tclose" id="r-t-risk" checked>
+<input class="st" type="radio" name="tclose" id="r-t-dev">
+<input class="st" type="radio" name="tclose" id="r-t-todo">
+<input class="st" type="radio" name="tflight" id="r-t-pf1" checked>
+<input class="st" type="radio" name="tflight" id="r-t-pf2">
+<input class="st" type="radio" name="tflight" id="r-t-pf3">
+<input class="st" type="radio" name="tflight" id="r-t-pf4">
+<input class="st" type="checkbox" id="navtoggle">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-over">Overview</label>
+    <label for="r-p-steps">Steps</label>
+    <label for="r-p-close">Close Out</label>
+    <label for="r-p-flight">Preflight</label>
+  </div>
+</nav>
+
+<main>
+<section class="page" id="p-over">
+
+<div class="head">
+  <h1>MMA-6006 pt 2 &mdash; Remove a Notification Recipient</h1>
+  <p class="lede"><span class="m">RecipientChipItem</span> already fires
+  <span class="m">RemoveRecipientClicked</span>. This gives it a write path &mdash; local first, then
+  a full-event echo PUT, with Undo.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-scope">Scope</label>
+  <label class="tab" for="r-t-split">Why Pt 2</label>
+  <label class="tab" for="r-t-out">Left Out</label>
+</div>
+
+<div class="tabpanel" id="t-scope">
+<h2><span class="rail r1">&#9474;</span> Scope</h2>
+
+<div class="note pre">
+  <b>Preface</b>
+  <p>Every line reference in this document is real and pinned to the working tree of
+  <span class="m">MemberTools-Android-MMA-6006-pt2</span>, branch
+  <span class="m">MMA-6006-2/2</span>, cut from <span class="m">a074078aed</span> &mdash; the head of
+  open PR <b>#2187</b>.</p>
+  <p>All seven steps are written. Three commits are in; the preflight fixes are staged and uncommitted. See the <b>Preflight</b> page.</p>
+</div>
+
+<div class="grid2">
+  <div class="card hi">
+    <p class="ct">Outline</p>
+    <ol class="outline">
+      <li>Step 1 &mdash; Branch Off Pt 1</li>
+      <li>Step 2 &mdash; Add the Optimistic Local Write</li>
+      <li>Step 3 &mdash; Build the Removal Use Case</li>
+      <li>Step 4 &mdash; Wire the Screen and the Snackbar</li>
+      <li>Step 5 &mdash; Keep the Existing Tests Compiling</li>
+      <li>Step 6 &mdash; Cover the New Behavior With Tests</li>
+      <li>Step 7 &mdash; Run the Gate</li>
+    </ol>
+  </div>
+
+  <div class="note good">
+    <b>No maltSync change, and no waiting on MTMS-151</b>
+    <p>MTMS-151 is Blocked pending server changes, but it gates only the <b>add</b> picker, which
+    needs a vocabulary of selectable types plus display names.</p>
+    <p>Removal sends back a <span class="m">String</span> the server already supplied.
+    <span class="m">CalendarService.putEvent</span> is maltSync, but at the pinned
+    <span class="m">29.0.1</span> &mdash; the pin does not move.</p>
+  </div>
+</div>
+
+<div class="card">
+  <p class="ct">Where the work stands</p>
+  <p class="desc">step numbering runs continuously; the Steps tabs follow the commit seams</p>
+  <div class="tw"><table>
+  <tr><th>Commit</th><th>Steps</th><th>State</th></tr>
+  <tr><td>&mdash;</td><td>Step 1</td><td>Worktree created</td></tr>
+  <tr><td>Commit 1</td><td>Step 2</td>
+      <td><b>Committed</b> as <code>9a2752ec9d</code> &mdash; see the warning below</td></tr>
+  <tr><td>Commit 2</td><td>Steps 3&ndash;5</td><td><b>Written, green, uncommitted</b></td></tr>
+  <tr><td>Commit 3</td><td>Step 6</td><td><b>Not written</b></td></tr>
+  <tr><td>&mdash;</td><td>Step 7</td><td>Last run green</td></tr>
+  </table></div>
+</div>
+
+<div class="note bad">
+  <b>Action required &mdash; Commit 1 contains a file it should not</b>
+  <p><span class="m">git add -A database/calendar</span> also staged
+  <span class="m">CalendarDatabase/9.json</span>: <b>787 of that commit's 846 insertions</b>. That
+  schema JSON stays untracked while version 9 is in flux, and migration 9 is pt 1's and still being
+  edited &mdash; it is absent from #2187 for exactly that reason.</p>
+  <p>Unpushed, so the fix is local. The command is on the Risks tab. It rewrites
+  <span class="m">9a2752ec9d</span>, so it is your call.</p>
+</div>
+
+<div class="card">
+  <p class="ct">Decisions locked</p>
+  <div class="tw"><table>
+  <tr><th>Question</th><th>Decision</th></tr>
+  <tr><td>Base</td><td><code>MMA-6006-1/2</code> @ <code>a074078aed</code></td></tr>
+  <tr><td>PR shape</td><td><b>Its own PR.</b> #2187 is OPEN and MERGEABLE &mdash; keep it reviewable</td></tr>
+  <tr><td>Shared library</td><td><b>No change.</b> maltSync 29.0.1 as pinned</td></tr>
+  <tr><td>Local write</td><td><b>Optimistic</b>, reverted on <code>WorkInfo.State.FAILED</code></td></tr>
+  <tr><td>Recurring scope</td>
+      <td><code>THIS_EVENT_AND_ALL_AFTER</code> when <code>recurrence</code> is non-null, else
+          <code>null</code></td></tr>
+  <tr><td>Mis-tap guard</td><td><b>Undo snackbar</b>, not a dialog</td></tr>
+  <tr><td>Chip tap target</td><td><b>Not ours.</b> Pt 1 assigned it app-wide to MMA-6076/6077</td></tr>
+  </table></div>
+</div>
+
+<div class="note bad">
+  <b>The constraint the whole change is shaped around</b>
+  <p>No coordinator endpoint exists. The only write is
+  <span class="m">PUT /v5/calendars/events/{eventId}</span>, and
+  <span class="m">DtoEventUpdate</span> declares <span class="m">calendarId</span>,
+  <span class="m">name</span>, <span class="m">description</span>,
+  <span class="m">startDate</span>, <span class="m">endDate</span> and
+  <span class="m">timeZone</span> as non-null.</p>
+  <p><span class="m">explicitNulls = false</span> cannot omit them, so
+  <b>every removal echoes the whole event back</b>. The nullable fields
+  (<span class="m">reminder</span>, <span class="m">contact</span>,
+  <span class="m">audience</span>) <i>are</i> omitted when null and survive untouched &mdash; which
+  is what makes the echo safe even though <span class="m">EventDetails</span> carries no
+  reminder.</p>
+</div>
+</div><!-- /t-scope -->
+
+<div class="tabpanel" id="t-split">
+<h2><span class="rail r1">&#9474;</span> Why this is its own PR</h2>
+
+<div class="card">
+  <p class="ct">PR #2187, as it stands</p>
+  <div class="tw"><table>
+  <tr><th>Field</th><th>Value</th></tr>
+  <tr><td>Title</td><td>MMA-6006-1/2 - Add the Manage RSVPs tab to Event Details</td></tr>
+  <tr><td>Branch</td><td><code>MMA-6006-1/2</code>, head <code>a074078aed</code></td></tr>
+  <tr><td>Size</td><td>23 files, <span class="ad">+1316</span> / <span class="rm">&minus;30</span></td></tr>
+  <tr><td>State</td><td><b>OPEN &middot; MERGEABLE &middot; REVIEW_REQUIRED</b></td></tr>
+  <tr><td>vs <code>upstream/main</code></td><td>4 ahead, 18 behind &mdash; mergeable as-is</td></tr>
+  </table></div>
+</div>
+
+<div class="grid2">
+  <div class="card hi">
+    <p class="ct">The reasons, ranked</p>
+    <ol>
+      <li>#2187 is open and reviewable. Folding a write path in re-opens the whole diff.</li>
+      <li>The Manage RSVPs tab ships without waiting on a device pass across recurring and facility
+      events.</li>
+      <li>Commit 1 opens <span class="m">:database:calendar</span> and
+      <span class="m">:repo:calendar</span>, which #2187 barely touches.</li>
+      <li>The destructive risk &mdash; the echo PUT mangling a facility booking or a recurrence
+      &mdash; gets reviewed on its own.</li>
+    </ol>
+  </div>
+
+  <div class="note calm">
+    <b>Observation</b>
+    <p>Do not rebase <span class="m">MMA-6006-1/2</span> before branching. It is 18 behind but
+    mergeable, so rebasing now forces a second rebase later. Rebase pt 2 onto #2187's new head only
+    if #2187 takes review commits &mdash; and then re-check every line number in this document.</p>
+  </div>
+</div>
+
+<div class="note ref">
+  <b>Two pt 1 decisions this change had to respect</b>
+  <p><b>1. <span class="m">calendar_event_remove_notification_recipient</span> was deleted, and
+  <span class="m">RecipientChipItem</span> carries no
+  <span class="m">contentDescription</span>.</b> Pt 1's comment says why: it would replace the label
+  and cost a TalkBack user the recipient's name. So 4.10 adds fresh strings and does not reintroduce
+  that description, and 6.3 must match the chip by label text.</p>
+  <p><b>2. <span class="m">RecipientChipItem</span> uses
+  <span class="m">InputChip</span>'s default visuals.</b> Pt 1 reverted the 16dp glyph overrides for
+  pushing the frame's gaps out.</p>
+</div>
+</div><!-- /t-split -->
+
+<div class="tabpanel" id="t-out">
+<h2><span class="rail r1">&#9474;</span> Deliberately left out</h2>
+<div class="grid">
+  <div class="card hi">
+    <p class="ct">The add recipient picker</p>
+    <p>MMA-5952 owns it and genuinely needs MTMS-151.
+    <span class="m">AddRecipientClicked</span> keeps
+    <span class="m">showUnderConstructionDialog</span> and its test.</p>
+  </div>
+  <div class="card hi">
+    <p class="ct">The RSVP-notification toggle</p>
+    <p>MMA-5952 FR-2. <span class="m">DtoEventUpdate</span> has no field to persist it to &mdash;
+    MTMS-151 Gap 1 asks whether it is a new boolean or implied by a non-empty
+    <span class="m">coordinatorPositions</span>.</p>
+  </div>
+  <div class="card hi">
+    <p class="ct">Populating <span class="m">EventRsvp</span></p>
+    <p>Pt 1 built the table, <span class="m">CalendarEventRsvpDao</span> and
+    <span class="m">getEventRsvpsFlow</span>. Nothing writes it, so
+    <span class="m">totalAttendees</span> sums to 0 by design.</p>
+  </div>
+  <div class="card hi">
+    <p class="ct">Chip tap-target sizing</p>
+    <p>MMA-6076/6077 own it app-wide. Worth knowing:
+    <span class="m">InputChip</span> renders through a clickable
+    <span class="m">Surface</span>, which applies
+    <span class="m">minimumInteractiveComponentSize()</span> &mdash; visual 32dp, target already
+    48dp. Legal today, which is why Undo covers the mis-tap.</p>
+  </div>
+</div>
+</div><!-- /t-out -->
+
+</section>
+
+<section class="page" id="p-steps">
+
+<div class="head">
+  <h1>Steps</h1>
+  <p class="lede">Seven steps across three commits. Every code block below is the change as it
+  actually sits in the worktree.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-s1">1 &mdash; Branch</label>
+  <label class="tab" for="r-t-c1">C1 &mdash; Local Write</label>
+  <label class="tab" for="r-t-c2">C2 &mdash; Use Case</label>
+  <label class="tab" for="r-t-c3">C2 &mdash; Wiring</label>
+  <label class="tab" for="r-t-c4">C2 &mdash; Test Fixes</label>
+  <label class="tab" for="r-t-c5">C3 &mdash; New Tests</label>
+  <label class="tab" for="r-t-s6">7 &mdash; Gate</label>
+</div>
+
+<div class="tabpanel" id="t-s1">
+<h2><span class="rail r2">&#9474;</span> Step 1 &mdash; Branch Off Pt 1</h2>
+<div class="note good">
+  <b>Done</b>
+  <p>Worktree <span class="m">MemberTools-Android-MMA-6006-pt2</span> on branch
+  <span class="m">MMA-6006-2/2</span>, cut from <span class="m">a074078aed</span> &mdash; the head of
+  PR #2187.</p>
+</div>
+<div class="card c-run typed">
+<span class="tag t-run">run</span>
+<p class="ct">1.1 &middot; RUN &mdash; Create the Pt 2 Worktree</p>
+<span class="loc">repo root</span>
+<p class="desc">a sibling of the repo, never inside it</p>
+<div class="code"><span class="lang">bash</span><pre>git worktree add -b 'MMA-6006-2/2' \
+    ../MemberTools-Android-MMA-6006-pt2 a074078aed</pre></div>
+<p class="why">Konsist's <span class="m">scopeFromProject</span> scans in-repo worktree copies, which makes <span class="m">KoinModuleTest</span> slow and its failures bogus.</p>
+</div>
+<div class="card c-run typed">
+<span class="tag t-run">run</span>
+<p class="ct">1.2 &middot; RUN &mdash; Copy `local.properties` In</p>
+<span class="loc">repo root</span>
+<p class="desc">gitignored, so a fresh worktree has no SDK path</p>
+<div class="code"><span class="lang">bash</span><pre>cp ../MemberTools-Android-MMA-6006/local.properties .</pre></div>
+<p class="why">Without it the first Gradle run dies in 8s with <span class="m">SDK location not found</span>, which reads like a code failure and is not one.</p>
+</div>
+</div><!-- /t-s1 -->
+<div class="tabpanel" id="t-c1">
+<h2><span class="rail r2">&#9474;</span> Step 2 &mdash; Add the Optimistic Local Write</h2>
+<div class="note good">
+  <b>Committed as <span class="m">9a2752ec9d</span></b>
+  <p>Green: <span class="m">:repo:calendar:testDebugUnitTest</span>,
+  <span class="m">:database:calendar:jvmTest</span> and
+  <span class="m">detektDebug</span>. 64 tests in
+  <span class="m">CalendarEventRepositoryTest</span>, 0 failures.</p>
+</div>
+<div class="note bad">
+  <b>Action required &mdash; this commit swept in a file it should not have</b>
+  <p><span class="m">git add -A database/calendar</span> also staged
+  <span class="m">CalendarDatabase/9.json</span>, which is <b>787 of the commit's 846
+  insertions</b>. That schema JSON is deliberately untracked while version 9 is in flux, and
+  migration 9 is pt 1's and still being edited. It is absent from PR #2187 for the same reason.</p>
+  <p>The commit is unpushed, so the fix is local. See the Risks tab for the exact command &mdash; it
+  rewrites <span class="m">9a2752ec9d</span>, so it is your call, not mine.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">2.1 &middot; ADD &mdash; Add the `updateCoordinatorPositions` Query</p>
+<span class="loc">database/calendar/&hellip;/event/CalendarEventDao.kt:23-31</span>
+<p class="desc">an UPDATE by event id; this DAO had none of any kind</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">interface</span> <span class="ty">CalendarEventDao</span> {
+    ...
+<span <span class="k">class</span>="ad"> + </span> @Query("UPDATE Event SET coordinatorPositions = :positions WHERE id = :eventId")
+<span <span class="k">class</span>="ad"> + </span> <span <span class="k">class</span>="k">suspend</span> <span class="k">fun</span> updateCoordinatorPositions(eventId: <span class="ty">Long</span>, positions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;?): <span class="ty">Int</span>
+    ...
+}</pre></div>
+<p class="why"><span class="m">List&lt;String&gt;</span> needs no new converter: <span class="m">StringListConverter</span> is already registered on <span class="m">CalendarDatabase</span>, and Room applies converters to query arguments. <b>No migration</b> &mdash; the column has existed since <span class="m">CalendarMigration8</span>.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">2.2 &middot; ADD &mdash; Add the `updateCoordinatorPositions` Function</p>
+<span class="loc">repo/calendar/&hellip;/CalendarEventRepository.kt:229-233</span>
+<p class="desc">wraps the DAO write on the IO dispatcher</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> <span class="ty">CalendarEventRepository</span>(
+    ...
+<span <span class="k">class</span>="ad"> + </span> <span <span class="k">class</span>="k">suspend</span> <span class="k">fun</span> updateCoordinatorPositions(eventId: <span class="ty">Long</span>, positions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;): <span class="ty">Int</span> =
+<span <span class="k">class</span>="ad"> + </span>     withContext(dispatchers.io) {
+<span <span class="k">class</span>="ad"> + </span>         calendarDatabaseProvider.getDatabase().calendarEventDao()
+<span <span class="k">class</span>="ad"> + </span>             .updateCoordinatorPositions(eventId, positions)
+<span <span class="k">class</span>="ad"> + </span>     }
+    ...
+}</pre></div>
+<p class="why">Two signature decisions. The parameter is <b>non-null here and nullable on the DAO</b>: an empty list clears the recipients, where null would mean leave whatever is there. And the row count is <b>returned rather than dropped</b>, because 0 means the event is not cached &mdash; reachable by deep-linking an event outside the synced month window.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">2.3 &middot; ADD &mdash; Add the Clear-With-Empty Test</p>
+<span class="loc">repo/calendar/src/test/&hellip;/CalendarEventRepositoryTest.kt:886-911</span>
+<p class="desc">the one test carrying the null-versus-empty decision</p>
+<div class="code"><span class="lang">kotlin</span><pre>@Test
+<span class="k">fun</span> `updateCoordinatorPositions clears the recipients with an empty list rather than a <span class="k">null</span>`() = runBlocking {
+    coEvery { calendarEventDao.updateCoordinatorPositions(any(), any()) } returns 1
+
+    repository.updateCoordinatorPositions(55L, emptyList())
+
+    coVerify { calendarEventDao.updateCoordinatorPositions(55L, emptyList()) }
+}</pre></div>
+<p class="why"><span class="m">coVerify</span> matches by equality, so an <span class="m">emptyList()</span> expectation cannot be satisfied by a null &mdash; the matcher <i>is</i> the assertion. Two siblings land with it: delegation with the exact list, and a 0 return when the event is not cached.</p>
+</div>
+<div class="note calm">
+  <b>Observation &mdash; the first attempt at 2.3 did not compile</b>
+  <p>It captured into <span class="m">slot&lt;List&lt;String&gt;?&gt;()</span> to mirror the DAO's
+  nullable parameter. MockK's <span class="m">capture</span> requires
+  <span class="m">T : Any</span>, so that is three compile errors. Dropping the slot for a literal
+  <span class="m">coVerify</span> argument says the same thing and says it more directly.</p>
+</div>
+</div><!-- /t-c1 -->
+<div class="tabpanel" id="t-c2">
+<h2><span class="rail r2">&#9474;</span> Step 3 &mdash; Build the Removal Use Case</h2>
+<p class="t-new-g"><b>NEW GUIDED</b></p>
+<div class="note ref">
+  <b>Example &mdash; the two mappers this reuses, unchanged</b>
+  <p><span class="m">EventFormModel.fromEventDetails</span>
+  (<span class="m">edit/EventDetailsFormMapper.kt:42</span>) then
+  <span class="m">EventFormModel.toEventCreateInput</span>
+  (<span class="m">edit/PublishEventUseCase.kt:132</span>). Both are
+  <span class="m">internal</span> to <span class="m">:feature:calendar</span> and already covered by
+  <span class="m">EventDetailsFormMapperTest</span>.</p>
+  <p>A second read-to-write conversion in <span class="m">:repo:calendar</span> would drift from
+  these, and the one that drifts silently is the one that writes to the server.</p>
+</div>
+<span class="loc">feature/calendar/&hellip;/detail/RemoveNotificationRecipientUseCase.kt (new)</span>
+<div class="card c-new">
+<p class="ct">3.1 &mdash; Add the Class and `remove`</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> <span class="ty">RemoveNotificationRecipientUseCase</span>(
+    <span <span class="k">class</span>="k">private</span> <span class="k">val</span> calendarEventRepository: <span class="ty">CalendarEventRepository</span>,
+    <span <span class="k">class</span>="k">private</span> <span class="k">val</span> stringResources: <span class="ty">StringResources</span>,
+) {
+    <span <span class="k">class</span>="k">suspend</span> <span class="k">fun</span> remove(eventId: <span class="ty">Long</span>, type: <span class="ty">String</span>): <span class="ty">Outcome</span> {
+        <span class="k">val</span> details = calendarEventRepository.getEventDetailsFlow(eventId).first()
+            ?: <span <span class="k">class</span>="k">return</span> <span class="ty">Outcome</span>.Failed
+        <span class="k">if</span> (type !<span class="k">in</span> details.coordinatorPositions) <span <span class="k">class</span>="k">return</span> <span class="ty">Outcome</span>.NotChanged
+        <span <span class="k">class</span>="k">return</span> write(details, details.coordinatorPositions - type)
+    }
+}</pre></div>
+<p class="why">Takes <span class="m">eventId</span>, not <span class="m">EventDetails</span>. <span class="m">EventDetailsViewModel</span> holds only the id and the mapped state, so passing details in would have made it read them purely to hand them over.</p>
+</div>
+<div class="card c-new">
+<p class="ct">3.2 &mdash; Add `restore` for Undo and Revert</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">suspend</span> <span class="k">fun</span> restore(eventId: <span class="ty">Long</span>, positions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;): <span class="ty">Outcome</span> {
+    <span class="k">val</span> details = calendarEventRepository.getEventDetailsFlow(eventId).first()
+        ?: <span <span class="k">class</span>="k">return</span> <span class="ty">Outcome</span>.Failed
+    <span <span class="k">class</span>="k">return</span> write(details, positions)
+}</pre></div>
+<p class="why">Undo and the failure-revert are the same write, so both funnel into the private <span class="m">write</span> below.</p>
+</div>
+<div class="card c-new">
+<p class="ct">3.3 &mdash; Add Both Guards to `write`</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">private</span> <span <span class="k">class</span>="k">suspend</span> <span class="k">fun</span> write(details: <span class="ty">EventDetails</span>, positions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;): <span class="ty">Outcome</span> {
+    <span class="k">val</span> recurrence = details.recurrence
+    <span class="k">if</span> (recurrence != <span class="k">null</span> &amp;&amp; recurrence.toRecurrenceFormModelOrNull() == <span class="k">null</span>) {
+        <span <span class="k">class</span>="k">return</span> <span class="ty">Outcome</span>.Unavailable
+    }
+    <span class="k">if</span> (calendarEventRepository.getDraftForSourceEvent(details.id)?.status == <span class="ty">DraftStatus</span>.PUBLISHING) {
+        <span <span class="k">class</span>="k">return</span> <span class="ty">Outcome</span>.Unavailable
+    }
+    ...
+}</pre></div>
+<p class="why"><b>Both guards are load-bearing.</b> An unnameable recurrence comes back out of the form as &quot;does not repeat&quot;, which destroys the series. And the echo reads the cached row, which lacks an edit that is still publishing &mdash; the update work is unique-per-event with <span class="m">REPLACE</span>, so sending now would replace that publish. <span class="m">recurrence</span> is bound locally because <span class="m">EventDetails.recurrence</span> is cross-module and does not smart-cast.</p>
+</div>
+<div class="card c-new">
+<p class="ct">3.4 &mdash; Build the Echo Payload</p>
+<div class="code"><span class="lang">kotlin</span><pre>    <span class="k">val</span> facilityRef = calendarEventRepository
+        .getCalendarFacilityRefFlow(details.calendarId).first()
+    <span class="k">val</span> form = <span class="ty">EventFormModel</span>.fromEventDetails(
+        details, facilityRef, priorForm = <span class="k">null</span>, stringResources = stringResources,
+    )
+    <span class="k">val</span> input = form.toEventCreateInput() ?: <span <span class="k">class</span>="k">return</span> <span class="ty">Outcome</span>.Failed</pre></div>
+<p class="why"><span class="m">priorForm = null</span> is deliberate: a reminder is unknowable from the read side, and a null reminder is omitted from the payload, so the server keeps what it has. The null from <span class="m">toEventCreateInput</span> <i>is</i> the cannot-echo-safely signal, so it needs no separate check.</p>
+</div>
+<div class="card c-new">
+<p class="ct">3.5 &mdash; Write Locally, Then Schedule the Echo</p>
+<div class="code"><span class="lang">kotlin</span><pre>    <span class="k">val</span> previousPositions = details.coordinatorPositions
+    calendarEventRepository.updateCoordinatorPositions(details.id, positions)
+    <span class="k">val</span> workId = calendarEventRepository.scheduleUpdateEvent(
+        input = <span class="ty">EventUpdateInput</span>(
+            eventId = details.id,
+            event = input,
+            modType = <span class="ty">EventModificationType</span>.THIS_EVENT_AND_ALL_AFTER.takeIf { recurrence != <span class="k">null</span> },
+            coordinatorPositions = positions,
+        ),
+        draftId = <span class="k">null</span>,
+        proxy = details.proxy,
+    )</pre></div>
+<p class="why">Three values that are easy to get wrong. <span class="m">coordinatorPositions</span> is <b>always an explicit list</b> &mdash; null means omit-and-preserve, so the last removal must send empty. <span class="m">draftId = null</span> keeps a one-chip change out of Manage Events. <span class="m">modType</span> is null for a one-off, per the service contract.</p>
+</div>
+<div class="card c-new">
+<p class="ct">3.6 &mdash; Add `awaitFailure`</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">suspend</span> <span class="k">fun</span> awaitFailure(workId: <span class="ty">UUID</span>): <span class="ty">Boolean</span> =
+    calendarEventRepository.getMutationWorkFlow(workId)
+        .filterNotNull()
+        .first { it.state.isFinished }
+        .state == <span class="ty">WorkInfo</span>.State.FAILED</pre></div>
+<p class="why">A work id WorkManager has already forgotten reads as <b>did not fail</b>: the write either succeeded or is nobody's responsibility now, and putting the chip back on a guess would contradict a change the server accepted.</p>
+</div>
+<div class="card c-new">
+<p class="ct">3.7 &mdash; Add the `Outcome` Sealed Interface</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">sealed</span> <span <span class="k">class</span>="k">interface</span> <span class="ty">Outcome</span> {
+    <span class="k">data</span> <span class="k">class</span> <span class="ty">Changed</span>(<span class="k">val</span> previousPositions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;, <span class="k">val</span> workId: <span class="ty">UUID</span>) : <span class="ty">Outcome</span>
+    <span class="k">data</span> <span <span class="k">class</span>="k">object</span> <span class="ty">NotChanged</span> : <span class="ty">Outcome</span>
+    <span class="k">data</span> <span <span class="k">class</span>="k">object</span> <span class="ty">Unavailable</span> : <span class="ty">Outcome</span>
+    <span class="k">data</span> <span <span class="k">class</span>="k">object</span> <span class="ty">Failed</span> : <span class="ty">Outcome</span>
+}</pre></div>
+<p class="why"><span class="m">Changed</span> carries both things the caller needs: the prior list for Undo, and the work id for <span class="m">awaitFailure</span>. <span class="m">NotChanged</span> is silent on purpose &mdash; nothing was written.</p>
+</div>
+</div><!-- /t-c2 -->
+<div class="tabpanel" id="t-c3">
+<h2><span class="rail r2">&#9474;</span> Step 4 &mdash; Wire the Screen and the Snackbar</h2>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.1 &middot; ADD &mdash; Expose `getWorkInfoFlow` on `CalendarEventWorkScheduler`</p>
+<span class="loc">repo/calendar/&hellip;/work/CalendarEventWorkScheduler.kt:47, 88-89</span>
+<p class="desc">the interface method and its override, which are siblings</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">interface</span> <span class="ty">CalendarEventWorkScheduler</span> {
+    ...
+<span <span class="k">class</span>="ad"> + </span> <span class="k">fun</span> getWorkInfoFlow(workId: <span class="ty">UUID</span>): <span class="ty">Flow</span>&lt;<span class="ty">WorkInfo</span>?&gt;
+}
+
+<span class="k">class</span> <span class="ty">CalendarEventWorkSchedulerImpl</span>(...) : <span class="ty">CalendarEventWorkScheduler</span> {
+    ...
+<span <span class="k">class</span>="ad"> + </span> <span <span class="k">class</span>="k">override</span> <span class="k">fun</span> getWorkInfoFlow(workId: <span class="ty">UUID</span>): <span class="ty">Flow</span>&lt;<span class="ty">WorkInfo</span>?&gt; =
+<span <span class="k">class</span>="ad"> + </span>     workManagerProvider.workManager.getWorkInfoByIdFlow(workId)
+    ...
+}</pre></div>
+<p class="why">Unlike the existing <span class="m">isWorkPending</span> this keeps emitting, so a caller can wait for the terminal state instead of sampling once.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.2 &middot; ADD &mdash; Add `getMutationWorkFlow` to `CalendarEventRepository`</p>
+<span class="loc">repo/calendar/&hellip;/CalendarEventRepository.kt:370</span>
+<p class="desc">a passthrough, so the feature never imports from work/</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> <span class="ty">CalendarEventRepository</span>(
+    ...
+<span <span class="k">class</span>="ad"> + </span> <span class="k">fun</span> getMutationWorkFlow(workId: <span class="ty">UUID</span>): <span class="ty">Flow</span>&lt;<span class="ty">WorkInfo</span>?&gt; = workScheduler.getWorkInfoFlow(workId)
+    ...
+}</pre></div>
+<p class="why"><span class="m">:feature:calendar</span> has never imported anything from <span class="m">repo/calendar/work/</span>, and this is not the change that should make it the first. Same reason every <span class="m">schedule*</span> call is already wrapped here.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.3 &middot; ADD &mdash; Add `snackbarFlow` to `EventDetailsUiState`</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsUiState.kt:74</span>
+<p class="desc">the screen's first snackbar channel</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">data</span> <span class="k">class</span> <span class="ty">EventDetailsUiState</span>(
+    ...
+    <span class="k">val</span> dialogFlow: <span class="ty">StateFlow</span>&lt;<span class="ty">DialogUiState</span>&lt;*&gt;?&gt; = <span class="ty">MutableStateFlow</span>(<span class="k">null</span>),
+<span <span class="k">class</span>="ad"> + </span> <span class="k">val</span> snackbarFlow: <span class="ty">EventStateFlow</span>&lt;<span class="ty">SnackbarUiModel</span>?&gt; = <span class="ty">MutableEventStateFlow</span>(<span class="k">null</span>),
+) {
+    ...
+}</pre></div>
+<p class="why">It goes <b>after</b> <span class="m">dialogFlow</span>, which is load-bearing: <span class="m">EventDetailsViewModelTest</span> stubs the state use case with <span class="m">thirdArg()</span> to carry the dialog flow through. Slotting the snackbar earlier would feed it into <span class="m">dialogFlow</span> and break the dialog tests confusingly. The class already had a body, so the parameter sits above it.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.4 &middot; ADD &mdash; Add the `UndoRemoveRecipientClicked` Event</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsUiState.kt:170</span>
+<p class="desc">carries the whole prior list, not the one type</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">sealed</span> <span <span class="k">class</span>="k">interface</span> <span class="ty">EventDetailsEvent</span> {
+    ...
+    <span class="k">data</span> <span class="k">class</span> <span class="ty">RemoveRecipientClicked</span>(<span class="k">val</span> type: <span class="ty">String</span>) : <span class="ty">EventDetailsEvent</span>
+ +
+<span <span class="k">class</span>="ad"> + </span> <span class="k">data</span> <span class="k">class</span> <span class="ty">UndoRemoveRecipientClicked</span>(<span class="k">val</span> positions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;) : <span class="ty">EventDetailsEvent</span>
+    ...
+}</pre></div>
+<p class="why">The write replaces the event's recipients wholesale, so the list is what it sends. Undoing from a single type would need the use case to re-derive the rest.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">4.5 &middot; EDIT &mdash; Thread `snackbarFlow` Through `GetEventDetailsUiStateUseCase`</p>
+<span class="loc">feature/calendar/&hellip;/detail/GetEventDetailsUiStateUseCase.kt:79, 168</span>
+<p class="desc">one new parameter, carried into the built state</p>
+<div class="code"><span class="lang">kotlin</span><pre>    operator <span class="k">fun</span> invoke(
+        ...
+        dialogFlow: <span class="ty">StateFlow</span>&lt;<span class="ty">DialogUiState</span>&lt;*&gt;?&gt;,
+<span <span class="k">class</span>="ad"> + </span>     snackbarFlow: <span class="ty">EventStateFlow</span>&lt;<span class="ty">SnackbarUiModel</span>?&gt;,
+        onEvent: (<span class="ty">EventDetailsEvent</span>) -&gt; <span class="ty">Unit</span>,
+    ): <span class="ty">Flow</span>&lt;<span class="ty">EventDetailsUiState</span>&gt; {</pre></div>
+<p class="why">Carried, never created here &mdash; the same contract <span class="m">dialogFlow</span> already has. The ViewModel owns the instance so it survives every re-emission; a fresh flow per emission would drop messages.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">4.6 &middot; EDIT &mdash; Route `RemoveRecipientClicked` in `EventDetailsViewModel`</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsViewModel.kt:79-80</span>
+<p class="desc">replaces the under-construction stub</p>
+<div class="code"><span class="lang">kotlin</span><pre>    <span class="k">fun</span> onEvent(event: <span class="ty">EventDetailsEvent</span>) {
+        <span class="k">when</span> (event) {
+            ...
+<span <span class="k">class</span>="rm"> - </span>         <span class="cm">// TODO(MMA-5952): drop event.type from the recipients once this screen has a write flow.</span>
+<span <span class="k">class</span>="rm"> - </span>         <span class="k">is</span> <span class="ty">EventDetailsEvent</span>.RemoveRecipientClicked -&gt; showUnderConstructionDialog()
+<span <span class="k">class</span>="ad"> + </span>         <span class="k">is</span> <span class="ty">EventDetailsEvent</span>.RemoveRecipientClicked -&gt; removeRecipient(event.type)
+<span <span class="k">class</span>="ad"> + </span>         <span class="k">is</span> <span class="ty">EventDetailsEvent</span>.UndoRemoveRecipientClicked -&gt; restoreRecipients(event.positions)
+            ...
+        }
+    }</pre></div>
+<p class="why"><span class="m">AddRecipientClicked</span> keeps its stub &mdash; MMA-5952 still owns the picker, and it genuinely needs MTMS-151.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.7 &middot; ADD &mdash; Add the `removeRecipient` Shell</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsViewModel.kt:167-188</span>
+<p class="desc">the function and its dispatch; the arms follow in 4.8</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">private</span> <span class="k">fun</span> removeRecipient(type: <span class="ty">String</span>) {
+    viewModelScope.launch {
+        <span class="k">when</span> (<span class="k">val</span> outcome = removeNotificationRecipientUseCase.remove(eventId, type)) {
+            ...
+        }
+    }
+}</pre></div>
+<p class="why"><span class="m">Unavailable</span> and <span class="m">Failed</span> each raise a snackbar; <span class="m">NotChanged</span> is deliberately silent, because nothing was written.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.8 &middot; ADD &mdash; In `removeRecipient`, Offer Undo and Revert</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsViewModel.kt:169-177</span>
+<p class="desc">the Changed arm: snackbar first, then wait on the write</p>
+<div class="code"><span class="lang">kotlin</span><pre>        <span class="k">when</span> (<span class="k">val</span> outcome = removeNotificationRecipientUseCase.remove(eventId, type)) {
+            <span class="k">is</span> <span class="ty">RemoveNotificationRecipientUseCase</span>.Outcome.Changed -&gt; {
+                showUndoSnackbar(outcome.previousPositions)
+                <span class="k">if</span> (removeNotificationRecipientUseCase.awaitFailure(outcome.workId)) {
+                    removeNotificationRecipientUseCase.restore(eventId, outcome.previousPositions)
+                    showSnackbar(R.string.calendar_event_recipient_remove_failed)
+                }
+            }
+            ...
+        }</pre></div>
+<p class="why">The wait runs in the <b>same coroutine</b> as the removal rather than its own collector: it is scoped to this one change, and <span class="m">previousPositions</span> is only correct for this change.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.9 &middot; ADD &mdash; Add `showUndoSnackbar`</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsViewModel.kt:205-213</span>
+<p class="desc">the message plus the Undo action that re-enters onEvent</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">private</span> <span class="k">fun</span> showUndoSnackbar(previousPositions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;) {
+    snackbarFlow.forceSend(
+        <span class="ty">SnackbarUiModel</span>(
+            message = { stringResources.getString(R.string.calendar_event_recipient_removed) },
+            action = { stringResources.getString(CoreR.string.undo) },
+            onAction = { onEvent(<span class="ty">EventDetailsEvent</span>.UndoRemoveRecipientClicked(previousPositions)) },
+        ),
+    )
+}</pre></div>
+<p class="why">Undo routes back through <span class="m">onEvent</span> rather than calling <span class="m">restoreRecipients</span> directly, so the action goes through the same single dispatch every other intent does and stays visible in tests.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.10 &middot; ADD &mdash; Add the `SnackbarHost` to `EventDetailsScreen`</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsScreen.kt:126-131</span>
+<p class="desc">the screen had no host at all; ScreenScaffold already has the slot</p>
+<div class="code"><span class="lang">kotlin</span><pre>    HandleDialogUiState(uiState.dialogFlow)
+ +
+<span <span class="k">class</span>="ad"> + </span> <span class="k">val</span> snackbarHostState = remember { <span class="ty">SnackbarHostState</span>() }
+<span <span class="k">class</span>="ad"> + </span> HandleSnackbar(uiState.snackbarFlow, snackbarHostState)
+
+    ScreenScaffold(
+        modifier = modifier,
+<span <span class="k">class</span>="ad"> + </span>     snackbarHost = { <span class="ty">SnackbarHost</span>(snackbarHostState) },
+        ...
+    ) {</pre></div>
+<p class="why">Worth an eyeball on device: the RSVP <span class="m">FloatingActionButton</span> sits in the same corner.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.11 &middot; ADD &mdash; Add the Four Strings</p>
+<span class="loc">feature/calendar/src/main/res/values/strings.xml:218-221</span>
+<p class="desc">all new &mdash; pt 1 deleted the old remove string</p>
+<div class="code"><span class="lang">xml</span><pre>&lt;string name="calendar_event_recipient_removed"&gt;Notification recipient removed&lt;/string&gt;
+&lt;string name="calendar_event_recipient_remove_failed"&gt;Couldn’t remove that notification recipient&lt;/string&gt;
+&lt;string name="calendar_event_recipient_restore_failed"&gt;Couldn’t undo that change&lt;/string&gt;
+&lt;string name="calendar_event_recipient_change_unavailable"&gt;Can’t change this event’s notification recipients right now&lt;/string&gt;</pre></div>
+<p class="why"><b>Typographic apostrophes, not ASCII.</b> aapt rejects an unescaped <span class="m">'</span> in an unquoted string, and every sibling in this file already uses <span class="m">’</span>. Restore-failed is its own string: reusing remove-failed when <i>Undo</i> is refused would state the opposite of what happened. <span class="m">comment=</span> attributes elided here for width.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">4.12 &middot; ADD &mdash; Register the Use Case in `FeatureCalendarKoinModule`</p>
+<span class="loc">feature/calendar/&hellip;/di/FeatureCalendarKoinModule.kt:73</span>
+<p class="desc">one line, beside the existing detail registrations</p>
+<div class="code"><span class="lang">kotlin</span><pre>    factoryOf(::GetEventDetailsUiStateUseCase)
+<span <span class="k">class</span>="ad"> + </span> factoryOf(::<span class="ty">RemoveNotificationRecipientUseCase</span>)</pre></div>
+<p class="why"><span class="m">KoinModuleTest</span> is what catches a miss here.</p>
+</div>
+</div><!-- /t-c3 -->
+<div class="tabpanel" id="t-c4">
+<h2><span class="rail r2">&#9474;</span> Step 5 &mdash; Keep the Existing Tests Compiling</h2>
+<div class="note pre">
+  <b>Preface &mdash; why this is Commit 2 and not Commit 3</b>
+  <p>Two signatures gained required parameters, so ten existing call sites stopped compiling. Those
+  fixes are not new coverage &mdash; they are what keeps the branch green <i>between</i> commits, so
+  they ride with the change that broke them. Step 6's new tests stay separate.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">5.1 &middot; EDIT &mdash; Add the Two New Mocks to `EventDetailsViewModelTest`</p>
+<span class="loc">feature/calendar/src/test/&hellip;/detail/EventDetailsViewModelTest.kt:78-84</span>
+<p class="desc">one strict mock, one relaxed</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> EventDetailsViewModelTest {
+    ...
+    @MockK
+    lateinit <span class="k">var</span> calendarEventRepository: <span class="ty">CalendarEventRepository</span>
+ +
+<span <span class="k">class</span>="ad"> + </span> @MockK
+<span <span class="k">class</span>="ad"> + </span> lateinit <span class="k">var</span> removeNotificationRecipientUseCase: <span class="ty">RemoveNotificationRecipientUseCase</span>
+ +
+<span <span class="k">class</span>="ad"> + </span> @RelaxedMockK
+<span <span class="k">class</span>="ad"> + </span> lateinit <span class="k">var</span> stringResources: <span class="ty">StringResources</span>
+    ...
+}</pre></div>
+<p class="why"><span class="m">StringResources</span> is <b>relaxed</b> on purpose: <span class="m">getString</span> is called on every snackbar path, and stubbing each one individually would be noise that asserts nothing.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">5.2 &middot; EDIT &mdash; Widen the State Use-Case Stubs</p>
+<span class="loc">feature/calendar/src/test/&hellip;/detail/EventDetailsViewModelTest.kt:110, 258</span>
+<p class="desc">four any() matchers become five</p>
+<div class="code"><span class="lang">kotlin</span><pre>    @BeforeEach
+    <span class="k">fun</span> setUp() {
+        ...
+<span <span class="k">class</span>="rm"> - </span>     every { getEventDetailsUiStateUseCase(any(), any(), any(), any()) } answers {
+<span <span class="k">class</span>="ad"> + </span>     every { getEventDetailsUiStateUseCase(any(), any(), any(), any(), any()) } answers {
+            flowOf(uiState.copy(dialogFlow = thirdArg()))
+        }
+    }</pre></div>
+<p class="why"><span class="m">thirdArg()</span> is untouched and still resolves to <span class="m">dialogFlow</span>, because 4.3 put <span class="m">snackbarFlow</span> <i>after</i> it. That is the whole reason for that ordering.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">5.3 &middot; EDIT &mdash; Pass `snackbarFlow` at Six `GetEventDetailsUiStateUseCaseTest` Call Sites</p>
+<span class="loc">feature/calendar/src/test/&hellip;/detail/GetEventDetailsUiStateUseCaseTest.kt:212, 753, 765, 778, 1003</span>
+<p class="desc">one new argument per call</p>
+<div class="code"><span class="lang">kotlin</span><pre>    useCase(
+        stateScope,
+        flowOf(eventDetails()),
+        dialogFlow,
+<span <span class="k">class</span>="ad"> + </span>     <span class="ty">MutableEventStateFlow</span>(<span class="k">null</span>),
+        onEvent = {},
+    ).test {
+        ...
+    }</pre></div>
+<p class="why">One path, the line numbers as a list &mdash; the edit is identical at every site.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">5.4 &middot; EDIT &mdash; Delete the Stale Under-Construction Assertion</p>
+<span class="loc">feature/calendar/src/test/&hellip;/detail/EventDetailsViewModelTest.kt:190-193</span>
+<p class="desc">it asserted the opposite of the feature</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">class</span> EventDetailsViewModelTest {
+    ...
+<span <span class="k">class</span>="rm"> - </span> @Test
+<span <span class="k">class</span>="rm"> - </span> <span class="k">fun</span> `Remove recipient shows the under-construction dialog until MMA-5952 lands`() {
+<span <span class="k">class</span>="rm"> - </span>     assertRaisesUnderConstructionDialog(<span class="ty">EventDetailsEvent</span>.RemoveRecipientClicked(type = "BISHOP"))
+<span <span class="k">class</span>="rm"> - </span> }
+    ...
+}</pre></div>
+<p class="why">This was the run's only test failure, and it was correct to fail. Its <span class="m">AddRecipientClicked</span> sibling stays &mdash; that stub is still real behavior.</p>
+</div>
+</div><!-- /t-c4 -->
+<div class="tabpanel" id="t-c5">
+<h2><span class="rail r2">&#9474;</span> Step 6 &mdash; Cover the New Behavior With Tests</h2>
+<div class="note bad">
+  <b>Action required &mdash; not written yet</b>
+  <p>Everything above is on disk and green. This step is the remaining work, and it is the only
+  reason the branch is not ready for a PR.</p>
+</div>
+<div class="card">
+  <p class="ct">6.1 &middot; NEW &mdash; <span class="m">RemoveNotificationRecipientUseCaseTest</span></p>
+  <span class="loc">feature/calendar/src/test/&hellip;/detail/RemoveNotificationRecipientUseCaseTest.kt (new)</span>
+  <p class="desc">the real coverage &mdash; the guards and the empty-list case are the point</p>
+  <div class="tw"><table>
+  <tr><th>Case</th><th>Asserts</th></tr>
+  <tr><td>Happy path</td>
+      <td><code>updateCoordinatorPositions</code> with the remaining list, <b>then</b>
+          <code>scheduleUpdateEvent</code> with the same list and
+          <code>EventDetails.proxy</code></td></tr>
+  <tr><td>Removing the last chip</td>
+      <td>Sends <b><code>emptyList()</code>, not null</b>. Capture the
+          <code>EventUpdateInput</code> in a <code>slot</code></td></tr>
+  <tr><td><code>draftId</code></td><td>Null</td></tr>
+  <tr><td>Recurring versus single</td>
+      <td><code>THIS_EVENT_AND_ALL_AFTER</code> when <code>recurrence</code> is non-null, else
+          <code>null</code></td></tr>
+  <tr><td>Unsupported recurrence</td>
+      <td><code>Outcome.Unavailable</code>, and <b>neither</b> write called</td></tr>
+  <tr><td>Publish in flight</td><td><code>Outcome.Unavailable</code>, no writes</td></tr>
+  <tr><td><code>toEventCreateInput</code> null</td><td><code>Outcome.Failed</code>, no writes</td></tr>
+  <tr><td>Type not in the list</td><td><code>Outcome.NotChanged</code>, no writes</td></tr>
+  <tr><td><code>awaitFailure</code> on a FAILED work id</td>
+      <td>True; and on a forgotten id, false</td></tr>
+  </table></div>
+  <p class="why"><b>The slot works here</b> where it failed in 2.3: the captured type is
+  <code>EventUpdateInput</code>, which is non-null, so MockK's <code>T : Any</code> bound is
+  satisfied.</p>
+</div>
+<div class="card">
+  <p class="ct">6.2 &middot; ADD &mdash; Four Cases in <span class="m">EventDetailsViewModelTest</span></p>
+  <span class="loc">feature/calendar/src/test/&hellip;/detail/EventDetailsViewModelTest.kt</span>
+  <p class="desc">replaces what 5.4 deleted</p>
+  <ul class="why">
+    <li>Removal invokes the use case with the tapped type.</li>
+    <li>Success emits a <span class="m">SnackbarUiModel</span> carrying an Undo action.</li>
+    <li>Invoking that action re-runs <span class="m">restore</span> with the original list.</li>
+    <li>A failed work id reverts and emits the failure snackbar.</li>
+  </ul>
+</div>
+<div class="card">
+  <p class="ct">6.3 &middot; ADD &mdash; Chip Tap in <span class="m">EventDetailsScreenTest</span></p>
+  <span class="loc">feature/calendar/src/test/&hellip;/detail/EventDetailsScreenTest.kt</span>
+  <p class="desc">extends pt 1's Manage RSVPs block &mdash; Robolectric, JUnit 4, sdk 34</p>
+  <p class="why"><b>Match the chip by its label text.</b>
+  <span class="m">RecipientChipItem</span> carries no
+  <span class="m">contentDescription</span> &mdash; pt 1 removed it so TalkBack keeps the
+  recipient's name &mdash; so there is no &quot;Remove &hellip;&quot; node to find.</p>
+</div>
+</div><!-- /t-c5 -->
+<div class="tabpanel" id="t-s6">
+<h2><span class="rail r2">&#9474;</span> Step 7 &mdash; Run the Gate</h2>
+<div class="note good">
+  <b>Last run: BUILD SUCCESSFUL in 47s</b>
+  <p>998 tests in <span class="m">:feature:calendar</span>, 191 in
+  <span class="m">:repo:calendar</span>, 0 failures, plus
+  <span class="m">:database:calendar:jvmTest</span> and <span class="m">detektDebug</span>.</p>
+</div>
+<div class="card c-run typed">
+<span class="tag t-run">run</span>
+<p class="ct">7.1 &middot; RUN &mdash; Run the Module Suites and Detekt</p>
+<span class="loc">MemberTools-Android-MMA-6006-pt2</span>
+<p class="desc">background it &mdash; this exceeds the 120s tool timeout</p>
+<div class="code"><span class="lang">bash</span><pre>./gradlew :feature:calendar:testDebugUnitTest \
+    :repo:calendar:testDebugUnitTest \
+    :database:calendar:jvmTest detektDebug &gt; /tmp/pt2.log 2&gt;&amp;1 &amp;</pre></div>
+<p class="why">A killed foreground command reports an exit code that masks the real failure, so write to a log and poll it.</p>
+</div>
+<div class="card c-run typed">
+<span class="tag t-run">run</span>
+<p class="ct">7.2 &middot; RUN &mdash; Run the Koin Gate</p>
+<span class="loc">MemberTools-Android-MMA-6006-pt2</span>
+<p class="desc">catches a missing 4.11 registration</p>
+<div class="code"><span class="lang">bash</span><pre>./gradlew :app:testDebugUnitTest --tests KoinModuleTest \
+    lintDebug &gt; /tmp/pt2-gates.log 2&gt;&amp;1 &amp;</pre></div>
+<p class="why">Recompile after any lint auto-fix &mdash; stripping a <span class="m">!!</span> can break compilation even when the earlier build was green.</p>
+</div>
+<div class="note">
+  <b>Remember &mdash; known red, not yours</b>
+  <p><span class="m">validateDebugScreenshotTest</span> already fails on plain main: 23 diffs, all in
+  <span class="m">LocationScreenshotTest</span> and
+  <span class="m">ManageEventsScreenshotTest</span>. Check against the
+  <span class="m">CurrentProdVersion</span> worktree rather than debugging this branch.</p>
+  <p><span class="m">GetWelcomeUiStateUseCaseTest</span> and
+  <span class="m">GetSacramentAttendanceCounterUiStateUseCaseTest</span> redden full-suite runs only.
+  Re-run them.</p>
+  <p>Two concurrent Gradle builds corrupt each other. Check
+  <span class="m">pgrep GradleDaemon</span> before debugging a
+  <span class="m">NoClassDefFoundError</span> storm.</p>
+</div>
+</div><!-- /t-s6 -->
+
+</section>
+
+<section class="page" id="p-close">
+
+<div class="head">
+  <h1>Close Out</h1>
+  <p class="lede">The echo payload is the whole risk surface, and no JVM test reaches it. The device
+  pass is not optional here.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-risk">Risks</label>
+  <label class="tab" for="r-t-dev">Device Pass</label>
+  <label class="tab" for="r-t-todo">TODO</label>
+</div>
+
+<div class="tabpanel" id="t-risk">
+<h2><span class="rail r3">&#9474;</span> Open risks and assumptions</h2>
+
+<div class="note bad">
+  <b>Action required &mdash; drop <span class="m">9.json</span> from Commit 1</b>
+  <p>Unstage the file and amend. This rewrites <span class="m">9a2752ec9d</span>, which is safe only
+  because it is unpushed &mdash; run it yourself rather than having me do it.</p>
+  <div class="code"><span class="lang">bash</span><pre>git rm --cached database/calendar/schemas/*/9.json
+git commit --amend --no-edit
+git status --short   <span class="cm"># 9.json should be back to ?? untracked</span></pre></div>
+</div>
+
+<div class="card">
+  <p class="ct">What could go wrong, and what covers it</p>
+  <div class="tw"><table>
+  <tr><th>Risk</th><th>Why it exists</th><th>Cover</th></tr>
+  <tr><td><b>Series scope</b></td>
+      <td><code>THIS_EVENT_AND_ALL_AFTER</code> is an assumption, taken because
+          <code>coordinatorPositions</code> reads as series-level</td>
+      <td>Device step 6. Fall back to <code>THIS_EVENT_ONLY</code></td></tr>
+  <tr><td><b>Recurring end date</b></td>
+      <td><code>DtoEventUpdate</code> requires <code>endDate</code> to equal
+          <code>startDate</code> when <code>recurrence</code> is non-null</td>
+      <td>Inherited from <code>fromEventDetails</code>. Glance at a multi-day recurring
+          occurrence</td></tr>
+  <tr><td><b>Facility conflict</b></td>
+      <td><code>putEvent</code> answers 409 on a facility-reservation conflict</td>
+      <td>The echo re-sends the existing booking, so it should be a no-op. A real conflict surfaces
+          as the generic failure snackbar</td></tr>
+  <tr><td><b>Editor clobber</b></td>
+      <td><code>CalendarEventUpdate_$eventId</code> is unique-per-event with
+          <code>REPLACE</code>, and the echo reads a cache lacking the in-flight edit</td>
+      <td>3.3's second guard. The one risk with real data loss behind it</td></tr>
+  <tr><td><b>Lost reminder</b></td>
+      <td><code>EventDetails</code> carries no reminder</td>
+      <td><b>Not a risk.</b> A null <code>EventReminderInput</code> is omitted, so the server keeps
+          it</td></tr>
+  </table></div>
+</div>
+
+<div class="note pre">
+  <b>Preface &mdash; if the echo fails on device</b>
+  <p>The fallback is not a second mapper. It is asking MTMS for a narrow endpoint taking an event id
+  and a <span class="m">coordinatorPositions</span> list. Every risk on this page comes from having
+  to reconstruct an entire <span class="m">DtoEventUpdate</span> to change one field.</p>
+</div>
+</div><!-- /t-risk -->
+
+<div class="tabpanel" id="t-dev">
+<h2><span class="rail r3">&#9474;</span> Device pass</h2>
+<div class="note bad">
+  <b>Action required &mdash; step 5 is the one that matters</b>
+  <p>Every other step checks the feature. Step 5 checks that the feature did not quietly damage the
+  event on its way out, which is the failure no JVM test can see.</p>
+</div>
+<div class="card">
+  <p class="ct">In order, on a public event on an editable calendar</p>
+  <ol>
+    <li>Open the event, then the Manage RSVPs tab.</li>
+    <li>Tap a chip. It disappears immediately; a snackbar offers Undo.</li>
+    <li>Tap Undo. The chip returns.</li>
+    <li>Remove one, background the app, pull-to-refresh. It <b>stays</b> removed.</li>
+    <li><b>Re-open and check nothing else moved</b> &mdash; name, description, date and time,
+    timezone, location (especially a facility booking with rooms), organizer, audience, photo,
+    recurrence pattern.</li>
+    <li>Repeat step 5 on a <b>recurring</b> event, then check its sibling occurrences.</li>
+    <li>Airplane mode: remove a chip, watch it disappear locally, re-enable, watch the PUT land.</li>
+    <li>Remove the <b>last</b> chip. <code>coordinatorPositions</code> clears server-side.</li>
+  </ol>
+</div>
+<div class="note calm">
+  <b>Observation</b>
+  <p>Dev mode breaking on the emulator is stale cached DNS. Cold boot with the VPN already up
+  &mdash; reconnecting the VPN while it runs will not take.</p>
+</div>
+</div><!-- /t-dev -->
+
+<div class="tabpanel" id="t-todo">
+<h2><span class="rail r3">&#9474;</span> TODO</h2>
+<div class="card">
+  <p class="ct">Checklist</p>
+  <ul class="todo boxed">
+    <li><label><input class="cb" type="checkbox" checked><span>Step 1 &mdash; worktree
+    <span class="m">MMA-6006-2/2</span> @ <span class="m">a074078aed</span></span></label></li>
+    <li><label><input class="cb" type="checkbox" checked><span>Step 2 &mdash; DAO query, repo
+    function, three tests</span></label></li>
+    <li><label><input class="cb" type="checkbox"><span><b>Drop
+    <span class="m">9.json</span> from <span class="m">9a2752ec9d</span></b></span></label></li>
+    <li><label><input class="cb" type="checkbox" checked><span>Step 3 &mdash; use case, both guards,
+    echo payload, <span class="m">awaitFailure</span></span></label></li>
+    <li><label><input class="cb" type="checkbox" checked><span>Step 4 &mdash; scheduler flow, repo
+    passthrough, snackbar, routing, strings, Koin</span></label></li>
+    <li><label><input class="cb" type="checkbox" checked><span>Step 5 &mdash; call sites fixed, stale
+    assertion deleted</span></label></li>
+    <li><label><input class="cb" type="checkbox"><span>Commit 2 reviewed and
+    committed</span></label></li>
+    <li><label><input class="cb" type="checkbox"><span>Step 6 &mdash; the three test
+    files</span></label></li>
+    <li><label><input class="cb" type="checkbox"><span>Device pass, all eight steps</span></label></li>
+    <li><label><input class="cb" type="checkbox"><span>Series-scope assumption confirmed or switched
+    to <span class="m">THIS_EVENT_ONLY</span></span></label></li>
+  </ul>
+</div>
+</div><!-- /t-todo -->
+
+</section>
+<section class="page" id="p-flight">
+
+<div class="head">
+  <h1>Preflight</h1>
+  <p class="lede">The gate found what two AI reviewers did not: a Konsist rule that rejected the use
+  case's whole shape. Fixing it forced a better design.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-pf1">Verdict</label>
+  <label class="tab" for="r-t-pf2">Blocking</label>
+  <label class="tab" for="r-t-pf3">Restructure</label>
+  <label class="tab" for="r-t-pf4">Settled</label>
+</div>
+
+<div class="tabpanel" id="t-pf1">
+<h2><span class="rail r3">&#9474;</span> Verdict</h2>
+<div class="note bad">
+  <b>NOT READY &mdash; at the time the preflight ran</b>
+  <p><span class="m">VERIFY: FAIL tier=T2</span> &middot; code review CONCERNS &middot; test review
+  CONCERNS. Five blocking items, all now fixed and staged but <b>not committed</b>.</p>
+</div>
+<div class="card">
+  <p class="ct">What ran</p>
+  <div class="tw"><table>
+  <tr><th>Stage</th><th>Result</th></tr>
+  <tr><td>Base</td><td><code>MMA-6006-1/2</code> @ <code>a074078aed</code>, 3 commits</td></tr>
+  <tr><td>Gate &mdash; <code>verify.sh --full</code></td>
+      <td><b>FAIL tier=T2</b> &mdash; 3 Konsist <code>UseCaseTest</code> assertions</td></tr>
+  <tr><td><code>ai-code-reviewer</code></td><td>CONCERNS &mdash; 1 High, 6 Medium, 4 Low</td></tr>
+  <tr><td><code>ai-test-reviewer</code></td><td>CONCERNS &mdash; 7 High, 4 Medium, 2 Low</td></tr>
+  </table></div>
+</div>
+<div class="note calm">
+  <b>Observation &mdash; the gate earned its place</b>
+  <p>Both reviewers read the same diff and neither flagged the Konsist violation. It is a structural
+  rule enforced by a test, not a convention visible in the surrounding code, so only running the
+  suite finds it. That is the argument for not treating an all-green agent review as a verdict.</p>
+</div>
+<div class="note">
+  <b>Remember &mdash; what a --full gate does not cover</b>
+  <p><span class="m">--fast</span> runs <span class="m">verify.sh --full</span>, which skips the
+  full-project detekt and kover CI-parity pass. Whole-project lint, kover thresholds and
+  <span class="m">assembleDebug</span> are deferred to CI. A green verdict here is not CI
+  parity.</p>
+</div>
+</div><!-- /t-pf1 -->
+<div class="tabpanel" id="t-pf2">
+<h2><span class="rail r3">&#9474;</span> Blocking findings, and the fix for each</h2>
+<div class="card">
+  <p class="ct">B1 &mdash; Konsist <span class="m">UseCaseTest</span> rejects the class shape</p>
+  <span class="loc">app/src/test/java/org/lds/ldstools/konsist/usecase/UseCaseTest.kt</span>
+  <p class="desc">three assertions failed; the source of the tier-T2 gate failure</p>
+  <div class="tw"><table>
+  <tr><th>Assertion</th><th>Why it failed</th></tr>
+  <tr><td>every use case has an <code>operator fun invoke</code></td>
+      <td>The class had <code>remove</code>, <code>restore</code>, <code>awaitFailure</code> &mdash;
+          no <code>invoke</code></td></tr>
+  <tr><td>only <code>invoke</code> is public</td><td>Three public methods</td></tr>
+  <tr><td>all <code>invoke</code>s share a return type</td><td>No <code>invoke</code> at all</td></tr>
+  </table></div>
+  <p class="why">Not a nit. See the Restructure tab &mdash; conforming produced a better
+  design than the one the reviewers were reading.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">B2 &middot; EDIT &mdash; Fix the `awaitFailure` Hang</p>
+<span class="loc">repo/calendar/&hellip;/CalendarEventRepository.kt:375-378</span>
+<p class="desc">a null emission is terminal, not filtered out</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="rm"> - </span> .filterNotNull()
+<span <span class="k">class</span>="rm"> - </span> .first { it.state.isFinished }
+<span <span class="k">class</span>="rm"> - </span> .state == <span class="ty">WorkInfo</span>.State.FAILED
+<span <span class="k">class</span>="ad"> + </span> .first { it == <span class="k">null</span> || it.state.isFinished }
+<span <span class="k">class</span>="ad"> + </span> ?.state == <span class="ty">WorkInfo</span>.State.FAILED</pre></div>
+<p class="why">WorkManager's flow for an id it no longer knows emits null and then <b>stays open forever</b>, so filtering nulls hung the coroutine for the ViewModel's life. <span class="m">ExistingWorkPolicy.REPLACE</span> makes this reachable: a second mutation on the same event disposes of the first one's WorkSpec. The old test passed only because it stubbed <span class="m">flowOf(null, SUCCEEDED)</span>, which terminates on the second item.</p>
+</div>
+<div class="card c-add typed">
+<span class="tag t-add">add</span>
+<p class="ct">B3 &middot; ADD &mdash; Serialize the Read-Modify-Write</p>
+<span class="loc">feature/calendar/&hellip;/detail/SaveNotificationRecipientsUseCase.kt:41</span>
+<p class="desc">a Mutex around the whole guarded write</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="ad"> + </span> <span <span class="k">class</span>="k">private</span> <span class="k">val</span> mutex = Mutex()
+
+    <span <span class="k">class</span>="k">suspend</span> operator <span class="k">fun</span> invoke(eventId: <span class="ty">Long</span>, positions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;): <span class="ty">Outcome</span> = mutex.withLock {
+        ...
+    }</pre></div>
+<p class="why">Two taps in quick succession both read the pre-change list across five suspension points before either wrote, and <span class="m">REPLACE</span> meant the second PUT discarded the first &mdash; so the first recipient came back, locally and on the server, with two success snackbars shown. Removing two of three recipients is ordinary use, not an exotic input.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">B4 &middot; EDIT &mdash; Branch on the Revert's Own Outcome</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsViewModel.kt</span>
+<p class="desc">the restore runs the same guards, so it can be refused too</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="k">private</span> <span <span class="k">class</span>="k">suspend</span> <span class="k">fun</span> revert(positions: <span class="ty">List</span>&lt;<span class="ty">String</span>&gt;) {
+    <span class="k">val</span> restored = saveNotificationRecipientsUseCase(eventId, positions)
+    <span class="k">if</span> (restored <span class="k">is</span> SaveNotificationRecipientsUseCase.Outcome.Changed) {
+        showSnackbar(R.string.calendar_event_recipient_remove_failed)
+    } <span class="k">else</span> {
+        showSnackbar(R.string.calendar_event_recipient_change_unavailable)
+    }
+}</pre></div>
+<p class="why">The outcome was discarded and the failure message shown unconditionally, so the user could be told &quot;couldn&rsquo;t remove&quot; while the chip was still gone &mdash; the message and the screen contradicting each other, with no second chance to revert.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">B5 &middot; EDIT &mdash; Watch the Undo Write Too</p>
+<span class="loc">feature/calendar/&hellip;/detail/EventDetailsViewModel.kt</span>
+<p class="desc">Undo fires a real PUT; nobody was watching it</p>
+<div class="code"><span class="lang">kotlin</span><pre><span class="k">is</span> SaveNotificationRecipientsUseCase.Outcome.Changed -&gt;
+    <span class="k">if</span> (calendarEventRepository.awaitMutationFailure(outcome.workId)) {
+        showSnackbar(R.string.calendar_event_recipient_restore_failed)
+    }</pre></div>
+<p class="why">An Undo refused while offline left the chip on screen and absent on the server, silently, until the next calendar sync.</p>
+</div>
+</div><!-- /t-pf2 -->
+<div class="tabpanel" id="t-pf3">
+<h2><span class="rail r3">&#9474;</span> What conforming to Konsist changed</h2>
+<div class="note good">
+  <b>The constraint produced the better design</b>
+  <p>Remove and Undo were always the same write with different lists &mdash; the wire replaces the
+  recipients wholesale. Two methods hid that. One <span class="m">invoke</span> taking the list to
+  end up with makes it obvious, and it fixes B5 for free: both paths are now the same code, so both
+  are watched the same way.</p>
+</div>
+<div class="card">
+  <p class="ct">Before and after</p>
+  <div class="tw"><table>
+  <tr><th></th><th>Before</th><th>After</th></tr>
+  <tr><td>Class</td><td><code>RemoveNotificationRecipientUseCase</code></td>
+      <td><code>SaveNotificationRecipientsUseCase</code></td></tr>
+  <tr><td>Public API</td><td><code>remove</code>, <code>restore</code>, <code>awaitFailure</code></td>
+      <td><code>operator fun invoke(eventId, positions)</code></td></tr>
+  <tr><td>Work watching</td><td>on the use case</td>
+      <td><code>CalendarEventRepository.awaitMutationFailure</code></td></tr>
+  <tr><td>Who subtracts the type</td><td>the use case</td>
+      <td>the view model, from the chips it already renders</td></tr>
+  <tr><td><code>androidx.work</code> in the feature</td><td>yes</td><td><b>no longer needed</b></td></tr>
+  </table></div>
+  <p class="why"><code>Save</code> is on the Konsist verb allowlist, and it is the honest name: the
+  use case saves whatever list it is handed.</p>
+</div>
+<div class="card c-edit typed">
+<span class="tag t-edit">edit</span>
+<p class="ct">R1 &middot; EDIT &mdash; Move the Wait Down to the Repository</p>
+<span class="loc">repo/calendar/&hellip;/CalendarEventRepository.kt:375</span>
+<p class="desc">a suspend boolean, not a raw WorkInfo flow</p>
+<div class="code"><span class="lang">kotlin</span><pre><span <span class="k">class</span>="rm"> - </span> <span class="k">fun</span> getMutationWorkFlow(workId: <span class="ty">UUID</span>): <span class="ty">Flow</span>&lt;<span class="ty">WorkInfo</span>?&gt; = workScheduler.getWorkInfoFlow(workId)
+<span <span class="k">class</span>="ad"> + </span> <span <span class="k">class</span>="k">suspend</span> <span class="k">fun</span> awaitMutationFailure(workId: <span class="ty">UUID</span>): <span class="ty">Boolean</span> =
+<span <span class="k">class</span>="ad"> + </span>     workScheduler.getWorkInfoFlow(workId)
+<span <span class="k">class</span>="ad"> + </span>         .first { it == <span class="k">null</span> || it.state.isFinished }
+<span <span class="k">class</span>="ad"> + </span>         ?.state == <span class="ty">WorkInfo</span>.State.FAILED</pre></div>
+<p class="why">The null-is-terminal rule now lives in one place with the KDoc that explains it, instead of in every caller. The feature module stops needing <span class="m">androidx.work.WorkInfo</span> at all.</p>
+</div>
+<div class="card">
+  <p class="ct">New Outcome: <span class="m">Unwritable</span></p>
+  <p class="desc">split out of Failed, because retrying cannot help</p>
+  <p class="why">Both reviewers found the same reachable path: <span class="m">EventDetails</span>
+  has a nullable <span class="m">description</span> and <span class="m">timeZone</span>, and
+  <span class="m">toEventCreateInput</span> refuses a blank one. Such an event&rsquo;s recipients can
+  <b>never</b> be changed from this screen &mdash; reporting that as the same transient-sounding
+  &quot;couldn&rsquo;t remove&quot; as a network refusal invites the user to keep tapping.</p>
+</div>
+</div><!-- /t-pf3 -->
+<div class="tabpanel" id="t-pf4">
+<h2><span class="rail r3">&#9474;</span> Settled by verification, and still open</h2>
+<div class="note good">
+  <b>The reviewers&rsquo; highest-stakes unknown is safe</b>
+  <p>The code reviewer flagged this as &quot;the single highest-stakes unverified assumption in the
+  change&quot;: if the outbound serializer kept <span class="m">explicitNulls = true</span>, every
+  recipient removal would <b>clear the event&rsquo;s email reminder</b>, because the read model
+  carries no reminder to echo back.</p>
+  <p>Checked against the maltSync 29.0.1 sources.
+  <span class="m">CalendarService</span> sets <span class="m">explicitNulls = false</span> on the
+  Json it uses for the multipart event body, with a KDoc saying exactly why &mdash;
+  <i>&quot;DtoEventUpdate is mostly nullable fields that must stay omitted&quot;</i>. The reminder
+  survives.</p>
+</div>
+<div class="card">
+  <p class="ct">Test findings acted on</p>
+  <div class="tw"><table>
+  <tr><th>Finding</th><th>Fix</th></tr>
+  <tr><td>The echo&rsquo;s field fidelity was never asserted &mdash; swapping the editor&rsquo;s
+          mappers for a minimal hand-built form kept all 13 tests green</td>
+      <td>New test asserting all 12 payload fields against a fixture with a location, organizer,
+          audience and photo</td></tr>
+  <tr><td>&quot;A forgotten work id&quot; test did not test its name</td>
+      <td>Retired with the method; the null-terminal rule is now the repository&rsquo;s</td></tr>
+  <tr><td>Snackbar assertions were <code>isNotNull</code>, so the two error branches were
+          interchangeable</td>
+      <td>Distinct stubbed strings per key; assertions invoke the message lambda</td></tr>
+  <tr><td><code>restoreRecipients</code> failure branches untested</td>
+      <td>Two tests, one per branch</td></tr>
+  <tr><td>Row count plumbed through but discarded &mdash; <code>Changed</code> was a lie on 0
+          rows</td>
+      <td>0 rows now returns <code>Failed</code>; test pins it</td></tr>
+  <tr><td>Overlapping removals uncovered</td>
+      <td>Test driving two saves whose details flow reflects the first write</td></tr>
+  <tr><td>Fully-qualified <code>io.mockk.verify</code></td><td>Imported</td></tr>
+  </table></div>
+</div>
+<div class="note bad">
+  <b>Action required &mdash; still open, needs your call</b>
+  <div class="tw"><table>
+  <tr><th>Item</th><th>Why it is still open</th></tr>
+  <tr><td><code>9.json</code> in commit <code>9a2752ec9d</code></td>
+      <td>787 insertions of in-flux schema. The amend rewrites a commit, so it is yours to run
+          &mdash; command on the Risks tab</td></tr>
+  <tr><td>No DAO-level test for <code>updateCoordinatorPositions</code></td>
+      <td><code>CalendarEventDaoTest</code> exists in <code>src/jvmTest</code>; the repo tests mock
+          the DAO, so the SQL and the <code>StringListConverter</code> round-trip are unproven</td></tr>
+  <tr><td>No Robolectric test for the <code>SnackbarHost</code> wiring</td>
+      <td>Delete the <code>snackbarHost</code> argument and nothing fails &mdash; Undo is the only
+          recovery from an optimistic delete</td></tr>
+  <tr><td>The local write covers one occurrence; the PUT covers the series tail</td>
+      <td>Sibling occurrences show the stale chip until the next sync. Needs a product call before
+          code</td></tr>
+  <tr><td>Device pass</td><td>Not run. The echo payload is the real risk surface</td></tr>
+  </table></div>
+</div>
+</div><!-- /t-pf4 -->
+</section><!-- /p-flight -->
+
+</main>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-LAM-0002 — Repo Structure &amp; Frontend Architecture</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+  --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+  --warn:#e0a458; --warn-soft:#33280f;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+main{max-width:74rem;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);
+  padding-block:4.5rem 80px}
+h1{font-size:clamp(26px,5.4vw,38px);line-height:1.15;margin:0 0 .85rem;
+  letter-spacing:-.015em;color:var(--accent)}
+h1::after{content:"";display:block;width:3.2rem;height:3px;background:var(--accent);
+  border-radius:2px;margin-top:.85rem}
+.head{display:grid;grid-template-columns:minmax(14rem,22rem) 1fr;gap:0 2.6rem;
+  align-items:start;margin:0 0 26px}
+.head h1{margin:0}
+.head .sub{margin:.35rem 0 0}
+@media (max-width:900px){.head{grid-template-columns:1fr}
+  .head .sub{margin-top:1.1rem}}
+h2{font-size:clamp(19px,3.4vw,23px);margin:0 0 14px;letter-spacing:-.2px}
+h3{font-size:clamp(15px,2.6vw,16.5px);margin:22px 0 8px;color:var(--ink)}
+h3.cardtop{margin-top:0}
+p{margin:0 0 14px;max-width:68ch}
+a{color:var(--accent);overflow-wrap:anywhere}
+code{background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:1px 5px;font-size:.88em;overflow-wrap:anywhere;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.sub{color:var(--faint);font-size:14px;margin:0 0 26px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px 22px;box-shadow:var(--shadow);margin:0 0 18px}
+.grid{display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));margin:0 0 18px}
+.tablewrap{overflow-x:auto;margin:0 0 18px;border:1px solid var(--border);
+  border-radius:var(--radius)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);
+  vertical-align:top}
+td:first-child{white-space:nowrap}
+@media (max-width:820px){td:first-child{white-space:normal}}
+th{color:var(--faint);font-size:12px;letter-spacing:.6px;text-transform:uppercase;
+  font-weight:600;background:rgba(255,255,255,.02)}
+tr:last-child td{border-bottom:0}
+ul,ol{margin:0 0 16px;padding-left:20px}
+li{margin:0 0 9px}
+.diff{white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12.5px}
+/* priority tag - filled rectangle, no outline. status pills are outlined; the shape
+   says which vocabulary you are reading, the colour says which value */
+.prio{display:inline-block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;border:0}
+.prio.blocking{background:#3B1D1D;color:#E58A8A}
+.prio.high    {background:#33280F;color:#E0A458}
+.prio.medium  {background:#33300F;color:#DCC55E}
+.prio.low     {background:#16301F;color:#6FBF95}
+.prio.none    {background:#24292F;color:#A4ACB5}
+ol.tagged{list-style:none;padding-left:0}
+ol.tagged li{display:grid;grid-template-columns:5.4rem 1.7rem 1fr;align-items:baseline;
+  margin:0 0 11px}
+ol.tagged .num{color:var(--faint);font-variant-numeric:tabular-nums}
+ol.tagged .prio{justify-self:start}
+@media (max-width:560px){
+  ol.tagged li{grid-template-columns:1.7rem 1fr}
+  ol.tagged .prio{grid-column:1/-1;margin:0 0 3px;justify-self:start}
+}
+.diff .add{color:#2E8B62}
+.diff .del{color:#C24A4A}
+.note{border:1px solid var(--warn);background:var(--warn-soft);
+  border-radius:10px;padding:13px 17px;margin:0 0 18px;font-size:14.5px}
+.note p:last-child{margin:0}
+.note b{display:block;color:var(--warn);font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;margin:0 0 5px}
+.todo li{list-style:none;margin-left:-20px;padding-left:26px;position:relative}
+.todo li::before{content:"";position:absolute;left:0;top:6px;width:14px;height:14px;
+  border:1.5px solid var(--border-strong);border-radius:4px}
+.page{display:none}
+.tabpanel{display:none}
+.st{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+#r-p-overview:checked ~ main #p-overview{display:block}
+#r-p-overview:checked ~ .skipto label[for="r-p-overview"]{background:var(--bg);color:var(--accent)}
+#r-p-repos:checked ~ main #p-repos{display:block}
+#r-p-repos:checked ~ .skipto label[for="r-p-repos"]{background:var(--bg);color:var(--accent)}
+#r-p-decisions:checked ~ main #p-decisions{display:block}
+#r-p-decisions:checked ~ .skipto label[for="r-p-decisions"]{background:var(--bg);color:var(--accent)}
+#r-p-deferred:checked ~ main #p-deferred{display:block}
+#r-p-deferred:checked ~ .skipto label[for="r-p-deferred"]{background:var(--bg);color:var(--accent)}
+#r-p-next:checked ~ main #p-next{display:block}
+#r-p-next:checked ~ .skipto label[for="r-p-next"]{background:var(--bg);color:var(--accent)}
+#r-t-snapshot:checked ~ main #t-snapshot{display:block}
+#r-t-snapshot:checked ~ main label[for="r-t-snapshot"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-tickets:checked ~ main #t-tickets{display:block}
+#r-t-tickets:checked ~ main label[for="r-t-tickets"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-numbers:checked ~ main #t-numbers{display:block}
+#r-t-numbers:checked ~ main label[for="r-t-numbers"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-backend:checked ~ main #t-backend{display:block}
+#r-t-backend:checked ~ main label[for="r-t-backend"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-frontend:checked ~ main #t-frontend{display:block}
+#r-t-frontend:checked ~ main label[for="r-t-frontend"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-decisions:checked ~ main #t-decisions{display:block}
+#r-t-decisions:checked ~ main label[for="r-t-decisions"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-conventions:checked ~ main #t-conventions{display:block}
+#r-t-conventions:checked ~ main label[for="r-t-conventions"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-why:checked ~ main #t-why{display:block}
+#r-t-why:checked ~ main label[for="r-t-why"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-deferred:checked ~ main #t-deferred{display:block}
+#r-t-deferred:checked ~ main label[for="r-t-deferred"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-next:checked ~ main #t-next{display:block}
+#r-t-next:checked ~ main label[for="r-t-next"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+#r-t-todo:checked ~ main #t-todo{display:block}
+#r-t-todo:checked ~ main label[for="r-t-todo"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
+  border-radius:10px 10px 0 0;padding:4px 6px 0;
+  border-bottom:2px solid var(--border-strong)}
+.tab{background:none;border:0;display:inline-block;border-bottom:2px solid transparent;color:var(--muted);
+  font-size:13.5px;padding:9px 12px;cursor:pointer;border-radius:8px 8px 0 0;transition:.15s;
+  font-family:inherit;margin-bottom:-2px}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;
+  padding:6px 10px;border-radius:8px;transition:.15s;cursor:pointer;
+  display:block}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:var(--faint);
+  padding:0 10px 4px;font-weight:600}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;
+  height:40px;padding:0;background:none;border:0;color:var(--muted);cursor:pointer;
+  border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+  main{padding-top:72px}
+}
+@media (max-width:720px){
+  .grid{grid-template-columns:1fr}
+  .card{padding:15px 16px}
+}
+</style>
+</head>
+<body>
+<!-- state: radios drive pages and tabs with no script -->
+<input class="st" type="checkbox" id="navtoggle">
+<input class="st" type="radio" name="pg" id="r-p-overview" checked>
+<input class="st" type="radio" name="pg" id="r-p-repos">
+<input class="st" type="radio" name="pg" id="r-p-decisions">
+<input class="st" type="radio" name="pg" id="r-p-deferred">
+<input class="st" type="radio" name="pg" id="r-p-next">
+<input class="st" type="radio" name="tg-p-overview" id="r-t-snapshot" checked>
+<input class="st" type="radio" name="tg-p-overview" id="r-t-tickets">
+<input class="st" type="radio" name="tg-p-overview" id="r-t-numbers">
+<input class="st" type="radio" name="tg-p-repos" id="r-t-backend" checked>
+<input class="st" type="radio" name="tg-p-repos" id="r-t-frontend">
+<input class="st" type="radio" name="tg-p-decisions" id="r-t-decisions" checked>
+<input class="st" type="radio" name="tg-p-decisions" id="r-t-conventions">
+<input class="st" type="radio" name="tg-p-deferred" id="r-t-why" checked>
+<input class="st" type="radio" name="tg-p-deferred" id="r-t-deferred">
+<input class="st" type="radio" name="tg-p-next" id="r-t-next" checked>
+<input class="st" type="radio" name="tg-p-next" id="r-t-todo">
+
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18" height="18"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-overview">Overview</label>
+    <label for="r-p-repos">The Repos</label>
+    <label for="r-p-decisions">Decisions</label>
+    <label for="r-p-deferred">Deferred</label>
+    <label for="r-p-next">What's Next</label>
+  </div>
+</nav>
+
+<main>
+
+<section class="page" id="p-overview">
+  <div class="head">
+    <h1>E-LAM-0002 — Repo Structure &amp; Frontend Architecture</h1>
+    <p class="sub">Six tickets · two repos · 2026-09-05 to 2026-09-06 · Completed</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-snapshot">Snapshot</label>
+    <label class="tab" for="r-t-tickets">The Six Tickets</label>
+    <label class="tab" for="r-t-numbers">By the Numbers</label>
+  </div>
+
+  <div class="tabpanel" id="t-snapshot">
+    <h2>Where things stand</h2>
+    <div class="grid">
+      <div class="card">
+        <h3 class="cardtop">Merged</h3>
+        <p>Both epic branches are on <code>main</code> — backend PR #15, frontend
+        PR #9. Ten ticket pull requests merged into the two epic branches first.</p>
+      </div>
+      <div class="card">
+        <h3 class="cardtop">Closed out</h3>
+        <p>All six Linear issues are Done and the project is Completed. Each has an
+        instruction document in this folder, written before the work.</p>
+      </div>
+    </div>
+    <div class="note">
+      <b>Note</b>
+      <p>The epic changed no product behaviour. Every route the backend answered on
+      2026-09-05 it still answers, and the frontend still builds the same bundle —
+      what changed is where the code lives and what enforces it.</p>
+    </div>
+  </div>
+
+  <div class="tabpanel" id="t-tickets">
+    <h2>The six tickets</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Ticket</th><th>What landed</th><th>Repos</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><strong>LAM-6</strong></td><td>READMEs stating each repo's role, linking the other</td><td>both</td></tr>
+        <tr><td>2</td><td><strong>LAM-41</strong></td><td>Image build moved to <code>release.yml</code>, tags and dispatch</td><td>backend</td></tr>
+        <tr><td>3</td><td><strong>LAM-8</strong></td><td><code>internal/api/</code>, and the folder map written down</td><td>backend</td></tr>
+        <tr><td>4</td><td><strong>LAM-40</strong></td><td>Vitest, RTL, jsdom, and <code>npm test</code> in CI</td><td>frontend</td></tr>
+        <tr><td>5</td><td><strong>LAM-9</strong></td><td>TanStack Router, feature folders, Playwright smoke test</td><td>frontend</td></tr>
+        <tr><td>6</td><td><strong>LAM-7</strong></td><td>A generated OpenAPI contract, Go to TypeScript</td><td>both</td></tr>
+      </tbody>
+    </table></div>
+    <p>LAM-41 and LAM-40 did not exist when the epic started. Both were filed during
+    the epic, from gaps found while auditing the tickets in front of them.</p>
+  </div>
+
+  <div class="tabpanel" id="t-numbers">
+    <h2>By the numbers</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th></th><th>Backend</th><th>Frontend</th></tr></thead>
+      <tbody>
+        <tr><td>Pull requests merged</td><td>5</td><td>5</td></tr>
+        <tr><td>Files changed</td><td>16</td><td>33</td></tr>
+        <tr><td>Lines added / removed</td><td>+618 / −193</td><td>+3,119 / −733</td></tr>
+        <tr><td>CI jobs at the end</td><td>2 — <code>check</code>, plus <code>image</code> in <code>release.yml</code></td><td>2 — <code>check</code> and <code>e2e</code></td><td class="diff"><span class="add">+142</span> / <span class="del">−0</span></td></tr>
+      </tbody>
+    </table></div>
+    <p>The frontend count includes <code>package-lock.json</code> and two generated
+    files. Hand-written, it is closer to 300 lines.</p>
+    <p>The backend's headline number is a deletion: <code>ci.yml</code> went from 174
+    lines to 47, and <code>main.go</code> lost 56.</p>
+  </div>
+
+</section>
+
+<section class="page" id="p-repos">
+  <div class="head">
+    <h1>The repos</h1>
+    <p class="sub">What each one looks like now, and what moved to get there</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-backend">Backend</label>
+    <label class="tab" for="r-t-frontend">Frontend</label>
+  </div>
+
+  <div class="tabpanel" id="t-backend">
+    <h2>LaminarFlow-Backend</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Path</th><th>What it is</th><th>What the change does</th><th>Diff</th></tr></thead>
+      <tbody>
+        <tr><td><code>main.go</code></td>
+            <td>the entrypoint</td>
+            <td>Now startup only — config, pool, schema check, listen. Routes moved out, so adding an endpoint no longer touches startup</td><td class="diff"><span class="add">+2</span> / <span class="del">−54</span></td></tr>
+        <tr><td><code>internal/api/</code></td>
+            <td>the HTTP layer</td>
+            <td>New. One file per resource, thin handlers, huma declarations. Handlers are unexported and <code>NewMux</code> is the package's whole surface, so nothing outside it can register a route the mux does not know about</td><td class="diff"><span class="add">+200</span> / <span class="del">−6</span></td></tr>
+        <tr><td><code>cmd/openapi/</code></td>
+            <td>a command</td>
+            <td>New. Prints <code>api/openapi.json</code>, and CI runs it and diffs — so a handler change without a regeneration is a red build rather than a runtime surprise</td><td class="diff"><span class="add">+46</span> / <span class="del">−0</span></td></tr>
+        <tr><td><code>api/openapi.json</code></td>
+            <td>the API contract</td>
+            <td>New. Committed rather than fetched at build, so neither repo's build depends on the other being present</td><td class="diff"><span class="add">+153</span> / <span class="del">−0</span></td></tr>
+        <tr><td><code>ci.yml</code></td>
+            <td>the pull-request workflow</td>
+            <td>The <code>check</code> job and nothing else. Image building moved out, so an ordinary PR no longer waits on a Docker build</td><td class="diff"><span class="add">+5</span> / <span class="del">−124</span></td></tr>
+        <tr><td><code>release.yml</code></td>
+            <td>the release workflow</td>
+            <td>New. Builds and pushes the image, fired by a <code>v*</code> tag, a manual dispatch with a <code>frontend_ref</code> input, or a PR touching the Dockerfile</td></tr>
+        <tr><td><code>README.md</code></td>
+            <td>the repo's front page</td>
+            <td>Now records the folder layout, rather than an ADR — <code>docs/adr/README.md</code> rules out records that describe how the code currently looks</td><td class="diff"><span class="add">+35</span> / <span class="del">−2</span></td></tr>
+        <tr><td>everything else</td>
+            <td><code>go.mod</code>, <code>go.sum</code>, <code>COMMANDS.md</code>, <code>docs/deploy.md</code></td>
+            <td>Dependency bumps and two docs. Nothing structural</td>
+            <td class="diff"><span class="add">+35</span> / <span class="del">−7</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="tabpanel" id="t-frontend">
+    <h2>LaminarFlow-Frontend</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Path</th><th>What it is</th><th>What the change does</th><th>Diff</th></tr></thead>
+      <tbody>
+        <tr><td><code>src/routes/</code></td>
+            <td>the URL layer</td>
+            <td>New. One file per URL, thin — TanStack Router, file-based. URL state is typed and validated, so a saved view can be search params rather than app state</td><td class="diff"><span class="add">+86</span> / <span class="del">−0</span></td></tr>
+        <tr><td><code>src/features/</code></td>
+            <td>domain code</td>
+            <td>New. One folder per feature, starting with <code>tickets/</code>. One feature lives in one place, which is the arrangement that is expensive to retrofit later</td><td class="diff"><span class="add">+31</span> / <span class="del">−0</span></td></tr>
+        <tr><td><code>src/components/ui/</code></td>
+            <td>shared components</td>
+            <td>New. Domain-agnostic blocks — currently one unstyled <code>Button</code>, shipped to prove the folder rather than to start a library</td><td class="diff"><span class="add">+42</span> / <span class="del">−0</span></td></tr>
+        <tr><td><code>src/api/</code></td>
+            <td>the backend client</td>
+            <td>New. Generated schema, typed client, one call. Types come from the backend's contract, so a spec change that breaks the client fails the build</td><td class="diff"><span class="add">+183</span> / <span class="del">−0</span></td></tr>
+        <tr><td><code>e2e/</code></td>
+            <td>browser tests</td>
+            <td>New. Playwright, one smoke test — the third layer, alongside component tests under jsdom and a contract test with a stubbed <code>fetch</code>. There were none before</td><td class="diff"><span class="add">+10</span> / <span class="del">−0</span></td></tr>
+        <tr><td><code>App.tsx</code>, <code>App.css</code>, <code>src/assets/</code>, <code>public/icons.svg</code></td>
+            <td>the Vite starter</td>
+            <td>Deleted. Replaced by a router and a real screen</td><td class="diff"><span class="add">+0</span> / <span class="del">−333</span></td></tr>
+        <tr><td><code>api/openapi.json</code></td>
+            <td>the pulled contract</td>
+            <td>New. Copied from the backend by <code>npm run api:pull</code>, then regenerated into <code>schema.d.ts</code></td>
+            <td class="diff"><span class="add">+153</span> / <span class="del">−0</span></td></tr>
+        <tr><td>everything else</td>
+            <td>lockfile, config, tooling</td>
+            <td>Mostly <code>package-lock.json</code> at +2,436. Also Vitest and Playwright config, the CI workflow, and <code>scripts/api-pull.mjs</code></td>
+            <td class="diff"><span class="add">+2,614</span> / <span class="del">−400</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="note">
+      <b>Constraint</b>
+      <p>Imports run one way — <code>routes/</code> → <code>features/</code> →
+      <code>components/</code> — documented in the README and in two folder-level READMEs.
+      Nothing enforces the direction at compile time.</p>
+    </div>
+  </div>
+
+</section>
+
+<section class="page" id="p-decisions">
+  <div class="head">
+    <h1>Decisions</h1>
+    <p class="sub">Choices made once here that every later ticket inherits</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-decisions">The Seven</label>
+    <label class="tab" for="r-t-conventions">Conventions Set</label>
+  </div>
+
+  <div class="tabpanel" id="t-decisions">
+    <h2>Decisions that outlive the epic</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Decision</th><th>Why</th><th>Source</th></tr></thead>
+      <tbody>
+        <tr><td><strong>TanStack Router</strong> over React Router</td><td>Typed, validated URL state — saved views <em>are</em> search params</td><td>Library Research</td></tr>
+        <tr><td><strong>Vitest + RTL</strong> over Jest</td><td>Reuses <code>vite.config.ts</code>, no second build config</td><td>Testing Strategy</td></tr>
+        <tr><td><strong>Huma</strong>, Go-first OpenAPI</td><td>Recursive schemas, RFC 9457 errors, validation pre-handler</td><td>Library Research</td></tr>
+        <tr><td><strong><code>/api/v1/</code></strong> from the first endpoint</td><td>Cheapest place to set a prefix, worst place to retrofit one</td><td>API Design §4</td></tr>
+        <tr><td><strong>Feature folders</strong> over type folders</td><td>One feature in one place; retrofitting later is expensive</td><td>Repo Structure §3</td></tr>
+        <tr><td><strong>Contract committed</strong>, not fetched at build</td><td>Neither build depends on the other repo being present</td><td>LAM-7</td></tr>
+        <tr><td><strong>The image build is a release</strong></td><td>The coupling was in the trigger, not the architecture</td><td>LAM-41</td></tr>
+      </tbody>
+    </table></div>
+    <p>Only two of these were open questions when the epic started. The router and
+    the API framework were already settled in the E-LAM-0000 research documents —
+    the tickets just had not been told.</p>
+  </div>
+
+  <div class="tabpanel" id="t-conventions">
+    <h2>Conventions now in force</h2>
+    <ul>
+      <li><strong>Thin handlers.</strong> A handler parses a request and formats a response; anything that queries Postgres belongs in <code>internal/document/</code> or a sibling.</li>
+      <li><strong>Shared or feature.</strong> A component used by more than one feature, or with no domain knowledge, is shared; anything else stays in its feature.</li>
+      <li><strong>Generated files are committed.</strong> <code>api/openapi.json</code>, <code>schema.d.ts</code>, and <code>routeTree.gen.ts</code> are all in git, and CI regenerates and diffs the first two.</li>
+      <li><strong>Both CIs fail on drift.</strong> A handler change without a regeneration, or a spec pulled without regenerating types, is a red build rather than a runtime surprise.</li>
+      <li><strong>New files carry OMLR comment boxes.</strong> Adopted in LAM-7; existing files are deliberately not backfilled.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="page" id="p-deferred">
+  <div class="head">
+    <h1>Deferred</h1>
+    <p class="sub">Flagged in an instruction doc, not quietly skipped — and none has a ticket</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-why">The Design System</label>
+    <label class="tab" for="r-t-deferred">Open Items</label>
+  </div>
+
+  <div class="tabpanel" id="t-why">
+    <h2>Design system undefined</h2>
+    <p>It is the one item worth filing today. The next frontend ticket that builds real UI
+    will pick a styling approach on the spot, and that choice is expensive to reverse once
+    components exist.</p>
+    <p>The rest are safe to sit. Each is written into a ticket's instruction doc with the
+    reasoning intact, so nothing has to be reconstructed later.</p>
+  </div>
+
+  <div class="tabpanel" id="t-deferred">
+    <h2>Open items</h2>
+    <ol class="tagged">
+      <li><span class="prio high">High</span><span class="num">1.</span>
+        <span><strong>The design system.</strong> Base UI plus Tailwind, with shadcn as a scaffold. LAM-9 shipped one unstyled <code>Button</code> to prove the folder, not to start a library.</span></li>
+      <li><span class="prio low">Low</span><span class="num">2.</span>
+        <span><strong>Enforced import boundaries.</strong> The one-way rule is documented and unenforced; React has no compile-time module boundary.</span></li>
+      <li><span class="prio medium">Medium</span><span class="num">3.</span>
+        <span><strong>End-to-end against the real stack.</strong> Playwright boots <code>npm run dev</code>, not the Go binary.</span></li>
+      <li><span class="prio medium">Medium</span><span class="num">4.</span>
+        <span><strong>The optimistic-write integration test.</strong> Testing Strategy §2 chose a real backend against a disposable database. That flow does not exist yet.</span></li>
+      <li><span class="prio low">Low</span><span class="num">5.</span>
+        <span><strong>MSW</strong>, for 401-mid-flight, 422 field errors, and network failure.</span></li>
+      <li><span class="prio none">None</span><span class="num">6.</span>
+        <span><strong>oasdiff</strong> as a breaking-change gate, and <strong>TanStack Query wrappers</strong> — both need a second consumer or real server state first.</span></li>
+      <li><span class="prio none">None</span><span class="num">7.</span>
+        <span><strong>openapi-typescript as a devDependency.</strong> Every published version pins <code>typescript@^5.x</code> and this repo is on 6.0.3, so the generator runs through <code>npx</code>.</span></li>
+    </ol>
+    <div class="note">
+      <b>Constraint</b>
+      <p>Imports run one way — <code>routes/</code> → <code>features/</code> →
+      <code>components/</code> — documented in the README and in two folder-level READMEs.
+      Nothing enforces the direction at compile time.</p>
+    </div>
+  </div>
+
+</section>
+
+<section class="page" id="p-next">
+  <div class="head">
+    <h1>What's next</h1>
+    <p class="sub">Where the epic hands off</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <label class="tab" for="r-t-next">Next Epic</label>
+    <label class="tab" for="r-t-todo">TODO</label>
+  </div>
+
+  <div class="tabpanel" id="t-next">
+    <h2>E-LAM-0003 — Database Schema</h2>
+    <p>E-LAM-0003 is the only epic in Planned; E-LAM-0004 through E-LAM-0008 sit in Backlog.
+    Nothing in E-LAM-0002 blocks it.</p>
+    <p>The handoff worth naming: <code>/api/v1/ping</code> is the only endpoint in the
+    contract. The first real resource will exercise Huma's recursive schema support,
+    which is the property the whole pipeline was chosen for.</p>
+  </div>
+
+  <div class="tabpanel" id="t-todo">
+    <h2>TODO</h2>
+    <ul class="todo">
+      <li>File a ticket for the design system — Base UI, Tailwind, shadcn as scaffold</li>
+      <li>File the remaining six deferred items, or consciously drop them</li>
+      <li>Decide whether <code>ping.go</code>'s comment box widths (89 / 67) or the format's (88 / 68) win</li>
+      <li>Re-run <code>npm run api:pull</code> with no <code>API_REF</code> to confirm the <code>main</code> default resolves</li>
+      <li>Consider backfilling OMLR comment boxes into pre-LAM-7 files</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+</body>
+</html>

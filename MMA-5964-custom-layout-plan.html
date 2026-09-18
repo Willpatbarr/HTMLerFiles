@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MMA-5964 — Month View Custom Layout Plan</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg:#14171a; --card:#1d2126; --ink:#e8eaed; --muted:#a4acb5; --faint:#737c86;
+    --border:#2b3138; --border-strong:#3a424b; --accent:#6cc394; --accent-soft:#1c3128;
+    --warn:#e0a458; --warn-soft:#33280f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35); --radius:14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0; padding: 48px 24px 80px; line-height: 1.55;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  @media (min-width: 1181px) { main { margin-left: 230px; } }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  h2 { font-size: 19px; margin: 0 0 14px; color: var(--ink); }
+  h3 { font-size: 15px; margin: 18px 0 8px; color: var(--ink); }
+  p { margin: 0 0 12px; color: var(--muted); }
+  strong { color: var(--ink); }
+  .sub { color: var(--faint); font-size: 14px; margin-bottom: 36px; }
+  section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 26px; margin-bottom: 22px;
+    box-shadow: var(--shadow); scroll-margin-top: 70px;
+  }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; color: var(--muted); }
+  li { margin-bottom: 7px; }
+  code {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 5px; padding: 1px 6px; font-size: 13px; color: var(--accent);
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  }
+  pre {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.5;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; color: var(--ink);
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px;
+  }
+  .must { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+  .imp  { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); }
+  .opt  { background: var(--bg); color: var(--faint); border: 1px solid var(--border-strong); }
+  .onesentence {
+    border-left: 3px solid var(--accent); background: var(--accent-soft);
+  }
+  .onesentence p { color: var(--ink); font-size: 16px; margin: 0; }
+  .callout {
+    border-left: 3px solid var(--warn); background: var(--warn-soft);
+    border-radius: 8px; padding: 12px 16px; margin: 12px 0; color: var(--muted);
+  }
+  .callout strong { color: var(--warn); }
+  .keep { border-left: 3px solid var(--accent); background: var(--bg);
+    border-radius: 8px; padding: 10px 14px; margin: 8px 0; }
+  .del { border-left: 3px solid #c97070; background: var(--bg);
+    border-radius: 8px; padding: 10px 14px; margin: 8px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+  .mini {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .mini h4 { margin: 0 0 6px; font-size: 13px; color: var(--ink); }
+  .mini p { font-size: 13px; margin: 0; }
+  .three { counter-reset: three; list-style: none; padding: 0; }
+  .three li {
+    counter-increment: three; display: flex; gap: 14px; align-items: flex-start;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .three li::before {
+    content: counter(three); flex-shrink: 0;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+  }
+  .todo { list-style: none; padding: 0; }
+  .todo li {
+    display: flex; gap: 12px; align-items: flex-start; padding: 10px 4px;
+    border-bottom: 1px solid var(--border); color: var(--muted);
+  }
+  .todo li:last-child { border-bottom: none; }
+  .todo li::before {
+    content: ""; flex-shrink: 0; width: 16px; height: 16px; margin-top: 3px;
+    border: 2px solid var(--border-strong); border-radius: 4px;
+  }
+  .skipto {
+    position: fixed; top: 50%; left: 18px; transform: translateY(-50%);
+    z-index: 60; display: flex; flex-direction: column; gap: 5px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 12px 13px; box-shadow: var(--shadow);
+    width: 172px;
+  }
+  .skipto a {
+    text-decoration: none; color: var(--muted); font-size: 13px;
+    padding: 6px 10px; border-radius: 8px; transition: .15s;
+  }
+  .skipto a:hover { background: var(--bg); color: var(--accent); }
+  .skipto .navtitle { font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--faint); padding: 0 10px 4px; }
+  @media (max-width: 1180px) {
+    .skipto { top:0; left:0; right:0; transform:none; width:auto;
+      flex-direction:row; overflow-x:auto; border-radius:0; border-width:0 0 1px; }
+    .skipto .navtitle { display: none; }
+    body { padding-top: 70px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="skipto">
+  <span class="navtitle">Skip To</span>
+  <a href="#onesentence">One Sentence</a>
+  <a href="#why">Why</a>
+  <a href="#decision">The Big Decision</a>
+  <a href="#step1">1 · Grid Helpers</a>
+  <a href="#step2">2 · MonthWeekLayout</a>
+  <a href="#measureplace">Measure vs Place</a>
+  <a href="#step3">3 · Rewire + Delete</a>
+  <a href="#stays">What Stays</a>
+  <a href="#tradeoff">Honest Tradeoff</a>
+  <a href="#verify">Verification</a>
+  <a href="#three">Remember 3 Things</a>
+  <a href="#todo">What To Do Next</a>
+</nav>
+
+<main>
+  <h1>Month View → Custom Layout</h1>
+  <p class="sub">MMA-5964 · branch <code>MMA-5964-CustomLayout</code> · plan guide</p>
+
+  <section class="onesentence" id="onesentence">
+    <span class="badge must">One-Sentence Version</span>
+    <p>Replace the month grid's fragile weight-and-Spacer bar alignment with <strong>one custom <code>Layout</code> per week row</strong> that measures and places cells and bars from a <strong>single shared column-edge function</strong>.</p>
+  </section>
+
+  <section id="why">
+    <span class="badge must">Must Know</span>
+    <h2>Why — the fragility being removed</h2>
+    <p>Multi-day bars currently span cells via <strong>two independent weighted Rows that must agree</strong>:</p>
+    <ul>
+      <li>The 7 day cells: a <code>Row</code> of <code>weight(1f)</code> children.</li>
+      <li>Each bar lane: a <em>separate</em> <code>Row</code> where bars claim <code>weight(span)</code> and <code>Spacer</code>s fill gaps (<code>MonthBarLaneRow</code>, CalendarMonthView.kt:380–407).</li>
+      <li>Vertical bar placement: a hand-maintained <code>padding(top = calendarCellGap/2 + monthDayNumberHeight)</code> contract.</li>
+    </ul>
+    <p>Alignment only holds because both Rows happen to distribute width identically. A custom <code>Layout</code> replaces both with one measured/placed source of truth.</p>
+  </section>
+
+  <section id="decision">
+    <span class="badge must">Must Know</span>
+    <h2>The Big Decision — scope: one Layout per week row</h2>
+    <p><strong>Not</strong> a whole-grid Layout. <strong>Not</strong> a bars-only Layout.</p>
+    <div class="grid2">
+      <div class="mini">
+        <h4>Whole-grid Layout — rejected</h4>
+        <p>Weeks are geometrically independent. It would collapse per-week <code>remember(week, eventsByDate, chipCapacity)</code> recomposition scopes and force rework of the verticalScroll/PTR nested-scroll hack — for zero benefit.</p>
+      </div>
+      <div class="mini">
+        <h4>Bars-only Layout — rejected</h4>
+        <p>Leaves cells and bars as two width computations that must agree. That is the exact fragility being removed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="step1">
+    <span class="badge must">Step 1 · Must Know</span>
+    <h2>MonthGrid.kt — two new pure helpers</h2>
+    <p>No behavior change. This is the <strong>single source of geometry</strong> both cells and bars will use.</p>
+<pre><code>/** Left edge of column [col] (0..7). xForCol(7) == totalWidthPx. */
+internal fun monthColumnStartX(col: Int, totalWidthPx: Int): Int =
+    col * totalWidthPx / DAYS_IN_WEEK
+
+/** Top of bar lane [lane]. Replaces the padding contract. */
+internal fun monthBarLaneTop(lane: Int, fontScale: Float): Dp =
+    calendarCellGap / 2 + monthDayNumberHeight(fontScale) +
+        monthCellLineHeight(fontScale) * lane</code></pre>
+    <ul>
+      <li><code>cellWidth(col) = xForCol(col+1) − xForCol(col)</code></li>
+      <li><code>barWidth(a..b) = xForCol(b+1) − xForCol(a)</code></li>
+      <li>Integer math distributes remainder pixels deterministically — a bar spanning cols a..b meets cell a's left edge and cell b's right edge <strong>exactly</strong>.</li>
+    </ul>
+  </section>
+
+  <section id="step2">
+    <span class="badge must">Step 2 · Must Know</span>
+    <h2>New file: MonthWeekLayout.kt</h2>
+<pre><code>@Composable
+internal fun MonthWeekLayout(
+    segments: List&lt;MonthBarSegment&gt;,   // pre-filtered: lane &lt; displayedLanes
+    modifier: Modifier = Modifier,
+    dayCells: @Composable () -&gt; Unit,  // exactly 7, week order
+    bars: @Composable () -&gt; Unit,      // one EventBar per segment, same order
+)</code></pre>
+    <ul>
+      <li>Uses the <strong>multi-content-slot overload</strong> <code>Layout(contents = listOf(dayCells, bars))</code> — slot index = role, list index = column/segment. No <code>ParentDataModifier</code> boilerplate (the parent already owns the segment data).</li>
+      <li><strong>Measure</strong> (single pass, all <code>Constraints.fixed</code>): cell <code>col</code> → <code>cellWidth(col) × maxHeight</code>; bar <code>i</code> → <code>barWidth(start..end) × lineHeight.roundToPx()</code>.</li>
+      <li><strong>Place</strong>: cells at <code>placeRelative(xForCol(col), 0)</code>; bars at <code>placeRelative(xForCol(startCol), monthBarLaneTop(lane).roundToPx())</code>. <code>placeRelative</code> = RTL mirroring for free.</li>
+      <li>Bars placed after cells → drawn on top (replaces the Box layering). <code>EventBar</code> stays <code>onClick = null</code> so taps fall through — day-cell hit targets remain the full cell.</li>
+    </ul>
+  </section>
+
+  <section id="measureplace">
+    <span class="badge must">Must Know</span>
+    <h2>The two steps — what maps to Measure vs Place</h2>
+    <p>A custom <code>Layout</code>'s measure policy runs in <strong>two passes</strong>: measure (how big is each child?) then place (where does it go?). Compose forbids measuring a child twice, so every child gets <code>Constraints.fixed</code> once.</p>
+
+    <div class="grid2">
+      <div class="mini">
+        <h4>1 · Measure pass (MeasureScope)</h4>
+        <p><strong>Sizes come from column geometry.</strong></p>
+        <p style="margin-top:8px">Day cell <code>col</code> (7 of them):<br>
+        <code>Constraints.fixed(cellWidth(col), maxHeight)</code></p>
+        <p style="margin-top:8px">Bar <code>i</code> (one per segment):<br>
+        <code>Constraints.fixed(barWidth(start..end), lineHeight.roundToPx())</code></p>
+        <p style="margin-top:8px">Both widths derive from <code>monthColumnStartX(col, constraints.maxWidth)</code> — the shared edge function. The layout's own size is just <code>layout(maxWidth, maxHeight)</code>.</p>
+      </div>
+      <div class="mini">
+        <h4>2 · Place pass (PlacementScope)</h4>
+        <p><strong>Positions come from column x + lane y.</strong></p>
+        <p style="margin-top:8px">Day cell <code>col</code>:<br>
+        <code>placeRelative(xForCol(col), 0)</code></p>
+        <p style="margin-top:8px">Bar <code>i</code>:<br>
+        <code>placeRelative(xForCol(startCol), monthBarLaneTop(lane).roundToPx())</code></p>
+        <p style="margin-top:8px">Cells placed first, bars after → bars draw on top (replaces the Box layering). <code>placeRelative</code> mirrors both in RTL.</p>
+      </div>
+    </div>
+
+    <h3>What each old mechanism becomes</h3>
+    <ul>
+      <li><code>Modifier.weight(1f)</code> on the 7 cells → <strong>measure</strong>: fixed <code>cellWidth(col)</code>.</li>
+      <li><code>Modifier.weight(span)</code> + gap <code>Spacer</code>s on bars → <strong>measure</strong> (bar width) + <strong>place</strong> (bar x). The Spacers vanish — gaps are just un-placed space.</li>
+      <li><code>padding(top = calendarCellGap/2 + monthDayNumberHeight)</code> → <strong>place</strong>: bar y from <code>monthBarLaneTop(lane, fontScale)</code>.</li>
+      <li>Box layering (overlay drawn over cells) → <strong>place order</strong>: bars placed after cells.</li>
+      <li>Row's RTL handling → <code>placeRelative</code> in the <strong>place</strong> pass.</li>
+    </ul>
+    <div class="callout">
+      <strong>Not in either pass:</strong> <code>chipCapacity</code> / what to compose (chips vs "+N"). That's decided <em>before</em> measure ever runs — at composition time, via <code>BoxWithConstraints</code>. The measure policy only sizes and positions what composition already created.
+    </div>
+  </section>
+
+  <section id="step3">
+    <span class="badge imp">Step 3 · Important</span>
+    <h2>CalendarMonthView.kt — rewire and delete</h2>
+    <p><code>MonthWeekRow</code> keeps its <code>remember { monthWeekBarLayout(...) }</code>, then:</p>
+<pre><code>val visibleSegments = barLayout.segments
+    .filter { it.lane &lt; barLayout.displayedLanes }
+MonthWeekLayout(
+    segments = visibleSegments,
+    modifier = modifier.height(rowHeight).fillMaxWidth(),
+    dayCells = { week.forEach { MonthDayCell(...) } },  // drop .weight(1f)
+    bars = { visibleSegments.forEach { EventBar(...) } },
+)</code></pre>
+    <div class="callout">
+      <strong>Required filter:</strong> <code>lane &lt; displayedLanes</code>. Today <code>MonthWeekBars</code> drops clipped lanes <em>implicitly</em> by iterating <code>0 until displayedLanes</code>. Hoist the filtered list once so <code>segments</code> and the <code>bars</code> lambda can't disagree.
+    </div>
+    <div class="del"><strong>Delete:</strong> <code>MonthWeekBars</code>, <code>MonthBarLaneRow</code>, the Box+Row layering in <code>MonthWeekRow</code>, the <code>padding(top = ...)</code> contract (its "asymmetric on purpose" comment moves to <code>monthBarLaneTop</code>'s kdoc).</div>
+    <div class="keep"><strong>Unchanged:</strong> <code>MonthDayCell</code> internals — BarSpace spacers stay so chips still slot under bars.</div>
+  </section>
+
+  <section id="stays">
+    <span class="badge imp">Important</span>
+    <h2>What stays untouched</h2>
+    <ul>
+      <li><strong><code>chipCapacity</code> + <code>BoxWithConstraints</code> stay.</strong> Capacity decides <em>what to compose</em> (chips vs "+N") — a composition-time decision a <code>Layout</code> can't feed back post-measure. <code>SubcomposeLayout</code> could, but the codebase has none, docs warn on perf, and capacity is uniform (rowHeight = maxHeight/6 everywhere).</li>
+      <li><code>MonthGrid.kt</code> logic + <code>MonthGridTest.kt</code> — untouched.</li>
+      <li><code>EventBar.kt</code> — shared with the time grid's <code>AllDayEventsSection</code>; must not change.</li>
+      <li>Pager, <code>PullToRefreshBox</code>, the verticalScroll nested-scroll hack.</li>
+      <li><span class="badge opt">Optional follow-up</span> <code>WeekdayHeaderRow</code> stays weighted — worst case ≤1px header-vs-grid drift, invisible since labels are centered. Could reuse <code>monthColumnStartX</code> later.</li>
+    </ul>
+  </section>
+
+  <section id="tradeoff">
+    <span class="badge imp">Important</span>
+    <h2>Honest tradeoff</h2>
+    <p>The vertical alignment contract is <strong>reduced, not eliminated</strong>: cells still consume <code>monthCellLineHeight</code> / <code>monthDayNumberHeight</code> for their line slots while the layout computes bar y from the same helpers.</p>
+    <p>It shrinks from "two composable trees must agree on padding + weights" to <strong>one tested pure function + the existing height helpers</strong>. Full elimination would mean layouting every chip as a child of a whole-grid Layout — the overkill option already rejected.</p>
+  </section>
+
+  <section id="verify">
+    <span class="badge imp">Important</span>
+    <h2>Verification</h2>
+    <h3>Unit tests (new, in MonthGridTest.kt)</h3>
+    <ul>
+      <li><code>monthColumnStartX</code>: partition properties over widths not divisible by 7 (1080, 1083, 719, 6, 0) — <code>xForCol(0)==0</code>, <code>xForCol(7)==width</code>, monotone, <code>barWidth(a..b) == Σ cellWidth</code>.</li>
+      <li><code>monthBarLaneTop</code> at fontScale 1.0 / 1.3 / 2.0 — lane 0 equals the old padding value; lane n adds n line heights.</li>
+    </ul>
+    <h3>Build + existing tests</h3>
+    <ul>
+      <li><code>./gradlew :feature:calendar:testDebugUnitTest</code> — existing MonthGridTest must stay green.</li>
+      <li>Background build: <code>./gradlew assembleDebug &gt; build.log 2&gt;&amp;1 &amp;</code>, poll the log.</li>
+    </ul>
+    <h3>Manual on-device</h3>
+    <ul>
+      <li>Bar/cell edges flush at boundaries; cross-week bars square off (continuesLeft/Right).</li>
+      <li>Font scale 1.0 / 1.3 / 2.0 · RTL locale (ar) · 4-week (Feb 2026) / 5-week / 6-week (May 2026) months.</li>
+      <li>PTR gesture still works · taps under bars still open the day · "+N" counts match current branch.</li>
+    </ul>
+  </section>
+
+  <section id="three">
+    <span class="badge must">Must Know</span>
+    <h2>Remember Only 3 Things</h2>
+    <ol class="three">
+      <li><strong>One Layout per week row</strong> — replaces the weighted cell Row + weighted bar-lane Rows + the top-padding contract. Whole-grid and bars-only were both rejected.</li>
+      <li><strong><code>monthColumnStartX</code> is the single geometry source</strong> — cells and bars both derive edges from it, so alignment is exact by construction, not by coincidence.</li>
+      <li><strong>Filter <code>lane &lt; displayedLanes</code> before passing segments</strong> — the old code dropped clipped lanes implicitly; the new one must do it explicitly.</li>
+    </ol>
+  </section>
+
+  <section id="todo">
+    <h2>What To Do Next</h2>
+    <ul class="todo">
+      <li>Add <code>monthColumnStartX</code> + <code>monthBarLaneTop</code> to MonthGrid.kt, with unit tests first.</li>
+      <li>Create <code>MonthWeekLayout.kt</code> with the two-slot <code>Layout(contents = ...)</code> measure policy.</li>
+      <li>Rewire <code>MonthWeekRow</code>; delete <code>MonthWeekBars</code> / <code>MonthBarLaneRow</code>.</li>
+      <li>Run <code>:feature:calendar:testDebugUnitTest</code> + background assembleDebug.</li>
+      <li>On-device pass: font scale, RTL, 4/5/6-week months, PTR, tap-through, "+N" parity.</li>
+    </ul>
+  </section>
+</main>
+
+</body>
+</html>
