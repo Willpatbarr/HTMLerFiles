@@ -52,12 +52,45 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 .tabpanel{display:none}
 
 #r-p-issue:checked ~ main #p-issue{display:block}
+#r-p-fix:checked   ~ main #p-fix  {display:block}
 
 #r-t-sym:checked   ~ main #t-sym  {display:block}
 #r-t-zomb:checked  ~ main #t-zomb {display:block}
 #r-t-app:checked   ~ main #t-app  {display:block}
 #r-t-dead:checked  ~ main #t-dead {display:block}
 #r-t-led:checked   ~ main #t-led  {display:block}
+
+#r-t-idea:checked ~ main #t-idea{display:block}
+#r-t-f1:checked   ~ main #t-f1  {display:block}
+#r-t-f2:checked   ~ main #t-f2  {display:block}
+#r-t-f3:checked   ~ main #t-f3  {display:block}
+#r-t-f4:checked   ~ main #t-f4  {display:block}
+
+/* ---------- floating page nav ---------- */
+.skipto{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:60;
+  display:flex;flex-direction:column;gap:5px;background:var(--card);
+  border:1px solid var(--border);border-radius:14px;padding:12px 12px 13px;
+  box-shadow:var(--shadow);width:172px}
+.skipto label{text-decoration:none;color:var(--muted);font-size:13px;padding:6px 10px;
+  border-radius:8px;transition:.15s;cursor:pointer}
+.skipto label:hover{background:var(--bg);color:var(--accent)}
+.navlabel{color:var(--faint);font-size:10.5px;letter-spacing:.11em;
+  text-transform:uppercase;font-weight:700;padding:2px 10px 4px}
+.skipto-toggle{display:none;align-items:center;justify-content:center;width:40px;height:40px;
+  padding:0;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:9px}
+.skipto-toggle:hover{color:var(--accent);background:var(--bg)}
+.skipto-toggle svg{transition:.15s}
+.skipto-menu{display:flex;flex-direction:column;gap:5px}
+#r-p-issue:checked ~ .skipto label[for="r-p-issue"],
+#r-p-fix:checked   ~ .skipto label[for="r-p-fix"]{background:var(--bg);color:var(--accent)}
+@media (max-width:1180px){
+  .skipto{top:10px;left:10px;transform:none;width:auto;padding:5px;border-radius:12px}
+  .skipto-toggle{display:flex}
+  .skipto-menu{display:none;padding:4px 6px 8px;min-width:172px}
+  .skipto:hover .skipto-menu,.skipto:focus-within .skipto-menu,
+  #navtoggle:checked ~ .skipto .skipto-menu{display:flex}
+  #navtoggle:checked ~ .skipto .skipto-toggle svg{transform:rotate(180deg)}
+}
 
 /* ---------- tab bar ---------- */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 24px;background:var(--card);
@@ -72,6 +105,12 @@ code{font-family:var(--mono);font-size:.88em;background:#22272d;padding:1px 5px;
 #r-t-dead:checked ~ main label[for="r-t-dead"],
 #r-t-led:checked  ~ main label[for="r-t-led"]{
   color:var(--g1);border-bottom-color:var(--g1);font-weight:600}
+#r-t-idea:checked ~ main label[for="r-t-idea"],
+#r-t-f1:checked   ~ main label[for="r-t-f1"],
+#r-t-f2:checked   ~ main label[for="r-t-f2"],
+#r-t-f3:checked   ~ main label[for="r-t-f3"],
+#r-t-f4:checked   ~ main label[for="r-t-f4"]{
+  color:var(--g2);border-bottom-color:var(--g2);font-weight:600}
 
 /* ---------- the container ---------- */
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
@@ -184,11 +223,29 @@ td code{white-space:normal}
 <body>
 
 <input class="st" type="radio" name="pg" id="r-p-issue" checked>
+<input class="st" type="radio" name="pg" id="r-p-fix">
 <input class="st" type="radio" name="tissue" id="r-t-sym" checked>
 <input class="st" type="radio" name="tissue" id="r-t-zomb">
 <input class="st" type="radio" name="tissue" id="r-t-app">
 <input class="st" type="radio" name="tissue" id="r-t-dead">
 <input class="st" type="radio" name="tissue" id="r-t-led">
+<input class="st" type="radio" name="tfix" id="r-t-idea" checked>
+<input class="st" type="radio" name="tfix" id="r-t-f1">
+<input class="st" type="radio" name="tfix" id="r-t-f2">
+<input class="st" type="radio" name="tfix" id="r-t-f3">
+<input class="st" type="radio" name="tfix" id="r-t-f4">
+<input class="st" type="checkbox" id="navtoggle">
+
+<nav class="skipto" aria-label="Pages">
+  <label class="skipto-toggle" for="navtoggle" aria-label="Page menu"><svg width="18"
+    height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></label>
+  <div class="skipto-menu">
+    <div class="navlabel">Pages</div>
+    <label for="r-p-issue">Issue</label>
+    <label for="r-p-fix">Proposed Fix</label>
+  </div>
+</nav>
 
 <main>
 
@@ -679,6 +736,458 @@ PredictiveBackHandler(enabled = backHandlerEnabled &amp;&amp; state.<span class=
 </div><!-- /t-led -->
 
 </section><!-- /p-issue -->
+
+<!-- ================= PAGE 2 — PROPOSED FIX ================= -->
+<section class="page" id="p-fix">
+
+<div class="head">
+  <h1>Proposed fix — the position is the dismissal</h1>
+  <p class="lede">Stop trusting one callback to report a dismissal. Watch where the sheet
+  actually is, and treat reaching Hidden as the dismissal however it got there.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <label class="tab" for="r-t-idea">The Idea</label>
+  <label class="tab" for="r-t-f1">1 · Watch the Sheet</label>
+  <label class="tab" for="r-t-f2">2 · Fresh State Per Show</label>
+  <label class="tab" for="r-t-f3">3 · The Test</label>
+  <label class="tab" for="r-t-f4">Not Doing</label>
+</div>
+
+<!-- ---------------- THE IDEA ---------------- -->
+<div class="tabpanel" id="t-idea">
+
+<h2><span class="rail r2">│</span> One sentence, then two pictures</h2>
+
+<div class="note pre">
+  <b>The sheet already knows it is gone. Nobody asks it.</b>
+  <p>Today the app learns about a dismissal by being told, through
+  <span class="m">onDismissRequest</span>. The fix is to stop waiting to be told and look
+  instead — the sheet's own <span class="m">SheetValue</span> is public, always correct, and
+  reaching <span class="m">Hidden</span> means exactly one thing.</p>
+</div>
+
+<div class="card hi">
+  <p class="ct">Today — one edge, and it can be missed</p>
+  <div class="flow">  <span class="dim">flag</span> = true  ──▶  sheet composed  ──▶  show()  ──▶  Expanded
+                                                        │
+                                                    drag down
+                                                        ▼
+<span class="ok">   flag = false  ◀──  onDismissRequest  ◀──  Hidden        the happy path</span>
+<span class="no">   flag = TRUE   ◀──      (nothing)      ◀──  Hidden        MMA-6047</span>
+                        │
+                        └─▶ <span class="no">still composed · alpha 0 · eats every tap · forever</span></div>
+  <p>Nothing re-checks. The two halves disagree from that moment until the process dies.</p>
+</div>
+
+<div class="card hi">
+  <p class="ct">After — a second edge that cannot be missed</p>
+  <div class="flow">  <span class="dim">flag</span> = true  ──▶  sheet composed  ──▶  show()  ──▶  Expanded
+                                                        │
+                                                    drag down
+                                                        ▼
+<span class="ok">   flag = false  ◀──  onDismissRequest  ◀──  Hidden        still the fast path</span>
+<span class="ok">   flag = false  ◀──  watcher sees it   ◀──  Hidden        the backstop</span></div>
+  <p>The watcher does not replace <span class="m">onDismissRequest</span> — it runs beside it.
+  Whichever notices first clears the flag; the second finds nothing left to do.</p>
+</div>
+
+<div class="card">
+  <p class="ct">What actually changes</p>
+  <div class="tw"><table>
+  <tr><th></th><th>Today</th><th>After</th></tr>
+  <tr>
+    <td>Decides the sheet is gone</td>
+    <td>A callback fired from a coroutine's completion</td>
+    <td>The sheet's own settled position</td>
+  </tr>
+  <tr>
+    <td>Fails when</td>
+    <td>That coroutine is interrupted, cancelled, or stalls</td>
+    <td>The sheet never reaches Hidden at all — in which case it is still on screen and
+        still usable</td>
+  </tr>
+  <tr>
+    <td>Worst case</td>
+    <td>The whole app is frozen until it is force-killed</td>
+    <td>A dismissal is recorded a frame or two later than it might have been</td>
+  </tr>
+  </table></div>
+</div>
+
+<div class="card">
+  <p class="ct">Why not chase the race instead</p>
+  <p>Three candidate triggers were listed on the Issue page and none has been isolated. All
+  three land in the same terminal state, and so would a fourth nobody has found yet. Watching
+  the position closes every one of them at once without needing to name any of them.</p>
+  <p>It is also the smaller change: two edits in one file, plus a test.</p>
+</div>
+
+<div class="note">
+  <b>The assumption this fix rests on, stated plainly</b>
+  <p>It assumes <span class="m">SheetState.currentValue</span> does reach
+  <span class="m">Hidden</span> in the stuck state. The window dump proves the
+  <i>offset</i> reached the Hidden anchor — the scrim had faded and the sheet had left the
+  screen — so the settle animation completed and
+  <span class="m">currentValue</span> should have followed it.</p>
+  <p><b>To falsify:</b> reproduce with a logging <span class="m">snapshotFlow</span> on
+  <span class="m">currentValue</span> and confirm it reads <span class="m">Hidden</span> while
+  the app is frozen. If it reads <span class="m">Expanded</span>, the watcher must move to
+  <span class="m">SheetState.isVisible</span> instead and the arming rule changes with it.</p>
+</div>
+
+</div><!-- /t-idea -->
+
+<!-- ---------------- STEP 1 ---------------- -->
+<div class="tabpanel" id="t-f1">
+
+<h2><span class="rail r2">│</span> Step 1 — Watch the sheet</h2>
+
+<div class="card typed">
+  <span class="tag t-add">ADD</span>
+  <p class="ct">1.1 — Add <span class="m">DismissWhenHidden</span> Composable</p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt</span>
+  <p class="desc">arms once the sheet has been on screen, then fires on the return to Hidden</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="an">@OptIn</span>(ExperimentalMaterial3Api::<span class="k">class</span>)
+<span class="an">@Composable</span>
+<span class="k">internal fun</span> <span class="fn">DismissWhenHidden</span>(sheetState: SheetState, onHidden: () -&gt; Unit) {
+    LaunchedEffect(sheetState) {
+        <span class="cm">// Hidden is also the initial value, so arm only once the sheet has been shown.</span>
+        snapshotFlow { sheetState.<span class="fld">currentValue</span> }.first { it != SheetValue.<span class="fld">Hidden</span> }
+        snapshotFlow { sheetState.<span class="fld">currentValue</span> }.first { it == SheetValue.<span class="fld">Hidden</span> }
+        onHidden()
+    }
+}</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>B</b> — MMA-6047: a dismissal that never reports itself freezes the whole app</li>
+    <li><b>C</b> — <code>onDismissRequest</code> is the only edge back, and all three of its
+    call sites are coroutine completion handlers</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">Where the idea came from</p>
+  <div class="tw"><table>
+  <tr><th>Piece</th><th>Source</th></tr>
+  <tr>
+    <td>Watch the position rather than the callback</td>
+    <td>The ticket's own suggested fix — "reset the show-flag … when its state reaches Hidden
+        … rather than relying solely on <code>onDismissRequest</code>"</td>
+  </tr>
+  <tr>
+    <td>Use <code>currentValue</code>, not <code>targetValue</code></td>
+    <td><code>SheetDefaults.kt:205-212</code> — <code>targetValue</code> flips to Hidden
+        mid-drag, before release, so it would tear the sheet out while the user is still
+        holding it and could still drag back up</td>
+  </tr>
+  <tr>
+    <td>The arming step</td>
+    <td><code>HelpScreen.kt:82</code> — <code>initialValue = SheetValue.Hidden</code>, so
+        without it the effect dismisses the sheet before it ever opens</td>
+  </tr>
+  <tr>
+    <td><code>internal</code> rather than <code>private</code></td>
+    <td>Step 3 drives this directly from a test with a state the test owns; a
+        <code>private</code> one could only be reached through the whole sheet</td>
+  </tr>
+  </table></div>
+</div>
+
+<div class="card typed">
+  <span class="tag t-edit">EDIT</span>
+  <p class="ct">1.2 — Call It From <span class="m">WhatsNewBottomSheet</span></p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt:84-89</span>
+  <p class="desc">one line, inside the branch that composes the sheet</p>
+  <div class="code"><span class="lang">kotlin</span><pre>    <span class="k">if</span> (whatsNewItems != <span class="k">null</span>) {
+ <span class="ad">+</span>      DismissWhenHidden(bottomSheetState, dismissBottomSheet)
+ <span class="ad">+</span>
+        ModalBottomSheet(
+            sheetState = bottomSheetState,
+            onDismissRequest = { dismissBottomSheet() },
+            modifier = Modifier.sizeBottomSheetForLarge()
+        ) {
+            ...
+        }
+    }</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — inside the branch, so the watcher's lifetime is the sheet's lifetime and it
+    is torn down with it</li>
+  </ul>
+</div>
+
+<div class="card typed">
+  <span class="tag t-add">ADD</span>
+  <p class="ct">1.3 — Add the Four Imports</p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt:3-43</span>
+  <p class="desc">alphabetical, into the existing import block</p>
+  <div class="code"><span class="lang">kotlin</span><pre>    ...
+ <span class="ad">+</span>  <span class="k">import</span> androidx.compose.material3.SheetState
+    <span class="k">import</span> androidx.compose.material3.SheetValue
+    ...
+ <span class="ad">+</span>  <span class="k">import</span> androidx.compose.runtime.LaunchedEffect
+ <span class="ad">+</span>  <span class="k">import</span> androidx.compose.runtime.snapshotFlow
+    ...
+ <span class="ad">+</span>  <span class="k">import</span> kotlinx.coroutines.flow.first
+    ...</pre></div>
+</div>
+
+</div><!-- /t-f1 -->
+
+<!-- ---------------- STEP 2 ---------------- -->
+<div class="tabpanel" id="t-f2">
+
+<h2><span class="rail r2">│</span> Step 2 — Give every show a fresh state</h2>
+
+<div class="card typed">
+  <span class="tag t-edit">EDIT</span>
+  <p class="ct">2.1 — Move <span class="m">rememberBottomSheetState</span> Inside the Branch</p>
+  <span class="loc">app/.../ux/help/HelpScreen.kt:80-89</span>
+  <p class="desc">the state is created when the sheet is, not before it and not after</p>
+  <div class="code"><span class="lang">kotlin</span><pre>    <span class="k">val</span> whatsNewItems = whatsNewState.<span class="fld">value</span>
+ <span class="rm">-</span>  <span class="k">val</span> bottomSheetState = rememberBottomSheetState(initialValue = SheetValue.<span class="fld">Hidden</span>, ...)
+
+    <span class="k">if</span> (whatsNewItems != <span class="k">null</span>) {
+ <span class="ad">+</span>      <span class="k">val</span> bottomSheetState = rememberBottomSheetState(
+ <span class="ad">+</span>          initialValue = SheetValue.<span class="fld">Hidden</span>,
+ <span class="ad">+</span>          enabledValues = setOf(SheetValue.<span class="fld">Hidden</span>, SheetValue.<span class="fld">Expanded</span>),
+ <span class="ad">+</span>      )
+        DismissWhenHidden(bottomSheetState, dismissBottomSheet)
+        ...
+    }</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — hoisted, the state is <code>rememberSaveable</code>-backed and outlives
+    every show, so a stale <code>Hidden</code> can pair with a live flag and produce the
+    zombie with no race involved at all</li>
+    <li><b>C</b> — a fresh state guarantees the Step 1 watcher starts un-armed</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">Where the idea came from</p>
+  <div class="tw"><table>
+  <tr><th>Piece</th><th>Source</th></tr>
+  <tr>
+    <td>The hoisted state is a hazard, not just style</td>
+    <td><code>SheetDefaults.kt:683-744</code> — <code>rememberBottomSheetState</code> is
+        <code>rememberSaveable</code> and saves <code>currentValue</code>, so the position
+        survives the dismiss and survives process death</td>
+  </tr>
+  <tr>
+    <td>A fresh state makes Material 3 re-open reliably</td>
+    <td><code>ModalBottomSheet.kt:175-186</code> — the opening
+        <code>show()</code> is guarded by <code>targetValue == Hidden</code> under
+        <code>isModalBottomSheetStateRestorationFixEnabled</code>, which defaults to
+        <code>true</code> (<code>ComposeMaterial3Flags.kt:153</code>)</td>
+  </tr>
+  <tr>
+    <td>Safe to discard the saved position</td>
+    <td>When the branch is not taken there is no sheet to restore a position for. Rotating
+        while the sheet is up keeps the branch taken, so the Expanded position still
+        restores.</td>
+  </tr>
+  </table></div>
+</div>
+
+<div class="note calm">
+  <b>This step is independently useful</b>
+  <p>Step 1 handles a dismissal that is never reported. Step 2 handles a show that inherits a
+  position from a previous one. Neither subsumes the other, and either alone leaves a
+  reachable path to the same frozen screen.</p>
+</div>
+
+</div><!-- /t-f2 -->
+
+<!-- ---------------- STEP 3 ---------------- -->
+<div class="tabpanel" id="t-f3">
+
+<h2><span class="rail r2">│</span> Step 3 — Pin the behaviour with a test</h2>
+
+<div class="card typed">
+  <span class="tag t-new">NEW</span>
+  <p class="ct">3.1 — Add <span class="m">WhatsNewBottomSheetRobolectricTest</span></p>
+  <span class="loc">app/src/test/java/org/lds/ldstools/ux/help/WhatsNewBottomSheetRobolectricTest.kt (new)</span>
+  <p class="desc">JVM only, no emulator; the runner Konsist sanctions for Compose UI tests</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="an">@RunWith</span>(RobolectricTestRunner::<span class="k">class</span>)
+<span class="an">@Config</span>(sdk = [<span class="n">34</span>], application = Application::<span class="k">class</span>)
+<span class="an">@GraphicsMode</span>(GraphicsMode.Mode.<span class="fld">NATIVE</span>)
+<span class="k">class</span> WhatsNewBottomSheetRobolectricTest {
+    <span class="an">@get:Rule</span>
+    <span class="k">val</span> composeRule = createComposeRule()
+
+    <span class="k">private var</span> dismissCount = <span class="n">0</span>
+    <span class="k">private lateinit var</span> sheetState: SheetState
+}</pre></div>
+</div>
+
+<div class="card typed">
+  <span class="tag t-add">ADD</span>
+  <p class="ct">3.2 — Assert the Initial Hidden Does Not Dismiss</p>
+  <span class="loc">app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt</span>
+  <p class="desc">the arming rule; without it the sheet dismisses before it opens</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="an">@Test</span>
+<span class="k">fun</span> <span class="fn">`a sheet that has never been shown is not treated as dismissed`</span>() {
+    setWatcher()
+
+    composeRule.waitForIdle()
+
+    assertThat(dismissCount).isEqualTo(<span class="n">0</span>)
+}</pre></div>
+</div>
+
+<div class="card typed">
+  <span class="tag t-add">ADD</span>
+  <p class="ct">3.3 — Assert Hidden After Expanded Does Dismiss</p>
+  <span class="loc">app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt</span>
+  <p class="desc">drives the state directly, so it covers the path onDismissRequest misses</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="an">@Test</span>
+<span class="k">fun</span> <span class="fn">`settling back at Hidden dismisses without onDismissRequest`</span>() {
+    setWatcher()
+
+    runBlocking { sheetState.show() }
+    composeRule.waitForIdle()
+    assertThat(dismissCount).isEqualTo(<span class="n">0</span>)
+
+    runBlocking { sheetState.hide() }
+    composeRule.waitForIdle()
+    assertThat(dismissCount).isEqualTo(<span class="n">1</span>)
+}</pre></div>
+  <ul class="why">
+    <li><b>Why:</b></li>
+    <li><b>C</b> — nothing here calls <code>onDismissRequest</code>, so a regression that
+    reverts to the callback-only design fails this test and only this test</li>
+  </ul>
+</div>
+
+<div class="card typed">
+  <span class="tag t-add">ADD</span>
+  <p class="ct">3.4 — Add the <span class="m">setWatcher</span> Helper</p>
+  <span class="loc">app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt</span>
+  <p class="desc">composes the watcher alone and hands the test the state it watches</p>
+  <div class="code"><span class="lang">kotlin</span><pre><span class="k">private fun</span> <span class="fn">setWatcher</span>() {
+    composeRule.setContent {
+        sheetState = rememberBottomSheetState(
+            initialValue = SheetValue.<span class="fld">Hidden</span>,
+            enabledValues = setOf(SheetValue.<span class="fld">Hidden</span>, SheetValue.<span class="fld">Expanded</span>),
+        )
+        DismissWhenHidden(sheetState) { dismissCount++ }
+    }
+}</pre></div>
+  <ul class="why">
+    <li><b>New here:</b></li>
+    <li><code>show()</code> with no sheet laid out — <code>SheetDefaults.kt:307-319</code>
+    documents that a target with no anchor updates <code>currentValue</code> without moving an
+    offset, which is exactly what the watcher reads</li>
+  </ul>
+</div>
+
+<div class="card">
+  <p class="ct">Where the idea came from</p>
+  <div class="tw"><table>
+  <tr><th>Piece</th><th>Source</th></tr>
+  <tr>
+    <td>Robolectric rather than screenshot or instrumented</td>
+    <td>The behaviour is state-driven and invisible — a golden PNG cannot see it, and an
+        emulator is not needed to drive a <code>SheetState</code></td>
+  </tr>
+  <tr>
+    <td>The harness shape</td>
+    <td><code>ux/sync/options/SyncOptionsScreenRobolectricTest.kt:35-42</code> — the runner,
+        <code>@Config</code>, <code>@GraphicsMode</code> and rule are copied from it</td>
+  </tr>
+  <tr>
+    <td>JUnit 4 here, JUnit 5 everywhere else</td>
+    <td><code>konsist/JunitTest.kt:10-11, 31-44</code> — Robolectric runners are the one
+        sanctioned exception, and the rule matches on the runner name</td>
+  </tr>
+  <tr>
+    <td><code>@Config(sdk = [34])</code></td>
+    <td>Robolectric 4.16.1 tops out below this project's <code>targetSdk</code>; without the
+        cap the class fails at initialisation rather than on an assertion</td>
+  </tr>
+  </table></div>
+</div>
+
+</div><!-- /t-f3 -->
+
+<!-- ---------------- NOT DOING ---------------- -->
+<div class="tabpanel" id="t-f4">
+
+<h2><span class="rail r2">│</span> Deliberately left out</h2>
+
+<div class="note pre">
+  <b>Four things this fix does not touch, and why</b>
+  <p>Each is real. None of them is the defect, and folding any of them in would make a
+  two-edit bug fix into something a reviewer has to take on faith.</p>
+</div>
+
+<div class="grid2">
+
+  <div class="card">
+    <p class="ct">The duplicate host in <span class="m">HelpScreen</span></p>
+    <p><span class="m">HelpScreen.Content</span> composes its own
+    <span class="m">WhatsNewBottomSheet</span> from a second
+    <span class="m">HelpViewModel</span> instance. Removing it means unifying the flag into a
+    shared holder, because the Help menu item writes to the Help copy's flow.</p>
+    <p><b>Left out because</b> the Step 1 watcher lives inside
+    <span class="m">WhatsNewBottomSheet</span>, so both hosts are protected either way. Worth
+    a follow-up ticket, not this one.</p>
+  </div>
+
+  <div class="card">
+    <p class="ct">The write inside <span class="m">mapLatest</span></p>
+    <p><span class="m">whatNewBottomSheetHasShownFlow.value = true</span> is written from
+    inside <span class="m">mapLatest</span> into that same <span class="m">combine</span>'s
+    own upstream, which cancels and restarts the block it sits in.</p>
+    <p><b>Left out because</b> it is a real smell with no demonstrated link to the freeze, and
+    changing when the sheet is eligible to appear is a behaviour change riding along on a bug
+    fix.</p>
+  </div>
+
+  <div class="card">
+    <p class="ct">MMA-6046, the pool-closed crash</p>
+    <p>The reporter notes MMA-6046 had fired earlier in every observed reproduction and asks
+    for both together and in isolation.</p>
+    <p><b>Left out because</b> the fix does not depend on the answer. If MMA-6046 is the
+    trigger, the watcher still clears the flag; if it is not, nothing changes.</p>
+  </div>
+
+  <div class="card">
+    <p class="ct">A timeout for "never opened"</p>
+    <p>If <span class="m">show()</span> were cancelled before the sheet moved at all, the
+    watcher would never arm. A bounded wait would cover it.</p>
+    <p><b>Left out because</b> a timeout trades a rare stuck state for a routine flaky one on
+    slow devices, and Step 2 makes the case much harder to reach by guaranteeing a fresh state
+    at every show.</p>
+  </div>
+
+</div>
+
+<div class="card">
+  <p class="ct">Files this fix touches</p>
+  <div class="tw"><table>
+  <tr><th>Path</th><th>What it is</th><th>What the change does</th></tr>
+  <tr>
+    <td><code>app/.../ux/help/HelpScreen.kt</code></td>
+    <td>The Help menu screen and the shared What's New sheet composable</td>
+    <td>Adds the position watcher and scopes the sheet state to a single show, so reaching
+        Hidden always tears the sheet down</td>
+  </tr>
+  <tr>
+    <td><code>app/.../ux/help/WhatsNewBottomSheetRobolectricTest.kt</code></td>
+    <td>New — JVM Compose test for the watcher</td>
+    <td>Fails if the dismissal ever goes back to depending on
+        <code>onDismissRequest</code> alone</td>
+  </tr>
+  </table></div>
+  <p class="desc">line counts land on the Change Log page, once the edits exist</p>
+</div>
+
+</div><!-- /t-f4 -->
+
+</section><!-- /p-fix -->
 
 </main>
 </body>
